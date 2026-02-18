@@ -90,7 +90,8 @@ frontend/node_modules/.cache/default-development/8.pack
 *token.json*
 *credentials.json*
 google_service_account.json
--e 
-# Environment files
-*.env
-*.env.*
+
+# Environment files - DO NOT ignore .env files as they are needed for deployment
+# The deployment system reads from these files
+# *.env  -- REMOVED: blocking .env breaks Emergent deployment
+# *.env.* -- REMOVED: blocking .env breaks Emergent deployment
