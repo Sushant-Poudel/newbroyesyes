@@ -87,7 +87,7 @@ async def send_discord_order_notification(
     
     # Build Discord message with embed
     embed = {
-        "content": f"@everyone{custom_fields_text}",
+        "content": f"@here{custom_fields_text}",
         "embeds": [{
             "color": color,
             "fields": [
@@ -177,7 +177,7 @@ async def send_discord_order_status_update(
     
     # Build Discord embed
     embed = {
-        "content": f"@everyone 📢 **Order Status Updated!**",
+        "content": f"@here 📢 **Order Status Updated!**",
         "embeds": [{
             "title": f"{new_emoji} Order Status Changed - #{order_id[:8].upper()}",
             "description": f"Status: {old_emoji} **{old_status.upper()}** → {new_emoji} **{new_status.upper()}**",
