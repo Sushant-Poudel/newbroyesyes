@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Disallow: /panelgsnadminbackend/
+Disallow: /admin/
+Disallow: /api/
+
+# Sitemaps
+Sitemap: https://git-sync-13.preview.emergentagent.com/sitemap.xml
+
+# Crawl-delay for better server performance
+Crawl-delay: 1
+
+# Allow Google bots full access
+User-agent: Googlebot
+Allow: /
+
+# Allow Bing bots
+User-agent: Bingbot
+Allow: /
