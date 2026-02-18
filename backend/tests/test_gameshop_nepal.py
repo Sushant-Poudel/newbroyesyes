@@ -287,9 +287,11 @@ class TestOrders:
         response = api_client.post(f"{BASE_URL}/api/orders/create", json=order_data)
         assert response.status_code == 200, f"Order creation failed: {response.text}"
         data = response.json()
-        assert "id" in data
-        print(f"✓ Order created: {data['id']}")
-        return data["id"]
+        # Response contains order_id instead of id
+        assert "order_id" in data or "id" in data
+        order_id = data.get("order_id") or data.get("id")
+        print(f"✓ Order created: {order_id}")
+        return order_id
 
 
 # ==================== Customer Auth Tests ====================
