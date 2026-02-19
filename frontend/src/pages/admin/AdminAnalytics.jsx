@@ -51,7 +51,7 @@ export default function AdminAnalytics() {
       const chartData = chartRes.data.map(item => ({
         ...item,
         orders: item.orders || 0,
-        visits: item.visits || Math.floor(Math.random() * 50) + 10, // Placeholder if not available
+        visits: item.visits || 0,
         avgOrderValue: item.orders > 0 ? Math.round(item.revenue / item.orders) : 0
       }));
       
