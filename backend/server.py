@@ -3216,10 +3216,11 @@ async def get_top_products(current_user: dict = Depends(get_current_user), limit
 
 @api_router.get("/analytics/revenue-chart")
 async def get_revenue_chart(current_user: dict = Depends(get_current_user), days: int = 30):
-    """Get daily revenue for chart"""
+    """Get daily revenue and visits for chart"""
     now = datetime.now(timezone.utc)
     start_date = (now - timedelta(days=days)).isoformat()
     
+    # Get orders data
     pipeline = [
         {"$match": {"created_at": {"$gte": start_date}, "status": {"$ne": "cancelled"}}},
         {"$addFields": {
@@ -3235,6 +3236,19 @@ async def get_revenue_chart(current_user: dict = Depends(get_current_user), days
     
     daily_data = await db.orders.aggregate(pipeline).to_list(days)
     
+    # Get visits data
+    visits_pipeline = [
+        {"$match": {"date": {"$gte": (now - timedelta(days=days)).strftime("%Y-%m-%d")}}},
+        {"$group": {
+            "_id": "$date",
+            "visits": {"$sum": 1}
+        }},
+        {"$sort": {"_id": 1}}
+    ]
+    
+    visits_data = await db.visits.aggregate(visits_pipeline).to_list(days)
+    visits_map = {v["_id"]: v["visits"] for v in visits_data}
+    
     # Fill in missing dates with zero values
     result = []
     current = now - timedelta(days=days)
@@ -3242,14 +3256,13 @@ async def get_revenue_chart(current_user: dict = Depends(get_current_user), days
     
     for i in range(days + 1):
         date_str = current.strftime("%Y-%m-%d")
-        if date_str in data_map:
-            result.append({
-                "date": date_str,
-                "orders": data_map[date_str]["orders"],
-                "revenue": data_map[date_str]["revenue"]
-            })
-        else:
-            result.append({"date": date_str, "orders": 0, "revenue": 0})
+        orders_data = data_map.get(date_str, {"orders": 0, "revenue": 0})
+        result.append({
+            "date": date_str,
+            "orders": orders_data.get("orders", 0),
+            "revenue": orders_data.get("revenue", 0),
+            "visits": visits_map.get(date_str, 0)
+        })
         current += timedelta(days=1)
     
     return result
