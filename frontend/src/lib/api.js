@@ -46,7 +46,7 @@ export const productsAPI = {
   getAll: (categoryId = null, activeOnly = true) => {
     const params = new URLSearchParams();
     if (categoryId) params.append('category_id', categoryId);
-    if (activeOnly) params.append('active_only', 'true');
+    params.append('active_only', activeOnly ? 'true' : 'false');
     return api.get(`/products?${params.toString()}`);
   },
   getOne: (id) => api.get(`/products/${id}`),
