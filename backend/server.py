@@ -4407,7 +4407,7 @@ async def get_store_context():
 @api_router.post("/chat")
 async def chat_endpoint(data: ChatMessage):
     """AI Chatbot endpoint"""
-    if not OPENAI_API_KEY:
+    if not CHAT_API_KEY:
         raise HTTPException(status_code=500, detail="Chatbot not configured")
     
     session_id = data.session_id
