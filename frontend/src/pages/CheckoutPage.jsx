@@ -37,8 +37,9 @@ export default function CheckoutPage() {
   const [creditBalance, setCreditBalance] = useState(0);
   const [useCredits, setUseCredits] = useState(false);
   const [customCreditAmount, setCustomCreditAmount] = useState('');
-  const [creditSettings, setCreditSettings] = useState({ cashback_percentage: 5, is_enabled: true });
+  const [creditSettings, setCreditSettings] = useState({ cashback_percentage: 5, is_enabled: true, max_credit_per_order: 0 });
   const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [creditValidation, setCreditValidation] = useState({ can_use_credits: true, max_usable: 0, unlimited: true });
 
   // Auto-fill form for logged-in users
   useEffect(() => {
