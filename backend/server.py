@@ -2758,15 +2758,27 @@ async def get_bundles():
     """Get all active bundles with populated product details"""
     bundles = await db.bundles.find({"is_active": True}).sort("sort_order", 1).to_list(100)
     
+    # Collect all product IDs from all bundles
+    all_product_ids = []
+    for bundle in bundles:
+        for bp in bundle.get("products", []):
+            pid = bp.get("product_id")
+            if pid and pid not in all_product_ids:
+                all_product_ids.append(pid)
+    
+    # Batch fetch all products at once
+    products_list = await db.products.find({"id": {"$in": all_product_ids}}, {"_id": 0}).to_list(len(all_product_ids)) if all_product_ids else []
+    product_map = {p['id']: p for p in products_list}
+    
     # Populate product details for each bundle
     for bundle in bundles:
         bundle.pop("_id", None)
         populated_products = []
         for bp in bundle.get("products", []):
-            product = await db.products.find_one({"id": bp.get("product_id")}, {"_id": 0})
-            if product:
+            product_id = bp.get("product_id")
+            if product_id and product_id in product_map:
                 populated_products.append({
-                    "product": product,
+                    "product": product_map[product_id],
                     "variation_id": bp.get("variation_id")
                 })
         bundle["populated_products"] = populated_products
