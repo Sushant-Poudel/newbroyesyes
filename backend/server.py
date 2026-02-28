@@ -4380,29 +4380,90 @@ class ChatMessage(BaseModel):
     session_id: str
 
 async def get_store_context():
-    """Get current store info for chatbot context"""
+    """Get complete store info for chatbot context"""
     try:
-        products = await db.products.find({"is_active": True}, {"_id": 0, "name": 1, "slug": 1, "short_description": 1, "variations": 1}).to_list(50)
-        categories = await db.categories.find({}, {"_id": 0, "name": 1}).to_list(20)
-        faqs = await db.faqs.find({}, {"_id": 0, "question": 1, "answer": 1}).to_list(20)
+        # Products with full details
+        products = await db.products.find({"is_active": True}, {"_id": 0, "name": 1, "slug": 1, "short_description": 1, "description": 1, "variations": 1, "features": 1}).to_list(50)
+        categories = await db.categories.find({}, {"_id": 0, "name": 1, "description": 1}).to_list(20)
+        faqs = await db.faqs.find({}, {"_id": 0, "question": 1, "answer": 1}).to_list(50)
         
+        # Payment methods
+        payment_methods = await db.payment_methods.find({"is_active": True}, {"_id": 0, "name": 1, "instructions": 1}).to_list(20)
+        
+        # Social links
+        social_links = await db.social_links.find({}, {"_id": 0, "platform": 1, "url": 1}).to_list(20)
+        
+        # Site settings
+        settings = await db.site_settings.find_one({"id": "main"}, {"_id": 0})
+        
+        # Pages (About, Terms, etc.)
+        pages = await db.pages.find({}, {"_id": 0, "slug": 1, "title": 1, "content": 1}).to_list(10)
+        
+        # Reviews for social proof
+        reviews = await db.reviews.find({"is_visible": True}, {"_id": 0, "reviewer_name": 1, "rating": 1, "review_text": 1}).sort("created_at", -1).to_list(10)
+        
+        # Credit system settings
+        credit_settings = await db.credit_settings.find_one({"id": "main"}, {"_id": 0})
+        
+        # Referral program
+        referral_settings = await db.referral_settings.find_one({}, {"_id": 0})
+        
+        # Daily rewards
+        daily_rewards = await db.daily_rewards.find({}, {"_id": 0, "day": 1, "reward_amount": 1}).to_list(7)
+        
+        # Format products with full details
         products_info = []
         for p in products:
             variations = p.get("variations", [])
-            prices = [v.get("price", 0) for v in variations if v.get("price")]
-            price_range = f"Rs {min(prices)} - Rs {max(prices)}" if prices else "Contact for price"
-            products_info.append(f"- {p.get('name')}: {p.get('short_description', '')} ({price_range})")
+            var_details = []
+            for v in variations:
+                var_details.append(f"  • {v.get('name', 'Standard')}: Rs {v.get('price', 0)}")
+            
+            products_info.append(f"**{p.get('name')}** (/{p.get('slug')})\n{p.get('short_description', '')}\nPlans:\n" + "\n".join(var_details))
         
-        faq_info = [f"Q: {f.get('question')} A: {f.get('answer')}" for f in faqs]
+        # Format FAQs
+        faq_info = [f"Q: {f.get('question')}\nA: {f.get('answer')}" for f in faqs]
+        
+        # Format payment methods
+        payment_info = [f"- {pm.get('name')}: {pm.get('instructions', 'Follow on-screen instructions')[:100]}" for pm in payment_methods]
+        
+        # Format social links
+        social_info = [f"- {s.get('platform')}: {s.get('url')}" for s in social_links]
+        
+        # Format reviews
+        review_info = [f"- {r.get('reviewer_name')} ({r.get('rating')}★): \"{r.get('review_text', '')[:80]}...\"" for r in reviews[:5]]
+        
+        # Format pages content
+        pages_info = {}
+        for page in pages:
+            pages_info[page.get('slug', '')] = page.get('content', '')[:500]
+        
+        # Format daily rewards
+        rewards_info = [f"Day {d.get('day')}: Rs {d.get('reward_amount', 0)}" for d in daily_rewards]
         
         return {
-            "products": "\n".join(products_info[:20]),
-            "categories": ", ".join([c.get("name", "") for c in categories]),
-            "faqs": "\n".join(faq_info[:10])
+            "products": "\n\n".join(products_info),
+            "categories": ", ".join([f"{c.get('name')} ({c.get('description', '')})" for c in categories]),
+            "faqs": "\n\n".join(faq_info),
+            "payment_methods": "\n".join(payment_info) if payment_info else "eSewa, Khalti, Bank Transfer",
+            "social_links": "\n".join(social_info) if social_info else "Contact us on social media",
+            "about": pages_info.get('about', 'GameShop Nepal - Your trusted digital products store'),
+            "terms": pages_info.get('terms', 'Standard terms and conditions apply'),
+            "reviews": "\n".join(review_info) if review_info else "Excellent reviews from satisfied customers",
+            "credit_system": f"Earn {credit_settings.get('cashback_percentage', 5)}% cashback on purchases" if credit_settings else "Earn cashback on purchases",
+            "referral_program": f"Refer friends and earn Rs {referral_settings.get('referrer_reward', 0)} per referral" if referral_settings else "Refer friends and earn rewards",
+            "daily_rewards": ", ".join(rewards_info) if rewards_info else "Daily login rewards available",
+            "service_charge": settings.get('service_charge', 0) if settings else 0,
+            "tax_info": f"{settings.get('tax_percentage', 0)}% {settings.get('tax_label', 'Tax')}" if settings else "No additional tax"
         }
     except Exception as e:
         logger.error(f"Error getting store context: {e}")
-        return {"products": "", "categories": "", "faqs": ""}
+        return {
+            "products": "", "categories": "", "faqs": "", "payment_methods": "",
+            "social_links": "", "about": "", "terms": "", "reviews": "",
+            "credit_system": "", "referral_program": "", "daily_rewards": "",
+            "service_charge": 0, "tax_info": ""
+        }
 
 @api_router.post("/chat")
 async def chat_endpoint(data: ChatMessage):

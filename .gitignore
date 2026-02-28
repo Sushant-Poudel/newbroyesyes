@@ -95,3 +95,4 @@ google_service_account.json
 # The deployment system reads from these files
 # *.env  -- REMOVED: blocking .env breaks Emergent deployment
 # *.env.* -- REMOVED: blocking .env breaks Emergent deployment
+frontend/node_modules/.cache/default-development/10.pack
