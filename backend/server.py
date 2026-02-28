@@ -4451,7 +4451,7 @@ GUIDELINES:
 7. Never make up prices or products that aren't in the list"""
 
         chat_sessions[session_id] = LlmChat(
-            api_key=OPENAI_API_KEY,
+            api_key=CHAT_API_KEY,
             session_id=session_id,
             system_message=system_message
         ).with_model("openai", "gpt-4o-mini")
