@@ -5,6 +5,7 @@ import { WishlistProvider } from "@/components/Wishlist";
 import { CartProvider } from "@/components/Cart";
 import { LanguageProvider } from "@/components/Language";
 import { CustomerProvider } from "@/components/CustomerAccount";
+import ChatWidget from "@/components/ChatWidget";
 
 // Loading component
 const PageLoader = () => (
