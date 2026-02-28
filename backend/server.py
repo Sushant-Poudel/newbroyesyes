@@ -4366,6 +4366,130 @@ async def get_subscriber_count(current_user: dict = Depends(get_current_user)):
         "recent_buyers": recent_buyers
     }
 
+# ==================== CHATBOT ====================
+
+# Store chat instances for sessions
+chat_sessions = {}
+
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+
+class ChatMessage(BaseModel):
+    message: str
+    session_id: str
+
+async def get_store_context():
+    """Get current store info for chatbot context"""
+    try:
+        products = await db.products.find({"is_active": True}, {"_id": 0, "name": 1, "slug": 1, "short_description": 1, "variations": 1}).to_list(50)
+        categories = await db.categories.find({}, {"_id": 0, "name": 1}).to_list(20)
+        faqs = await db.faqs.find({}, {"_id": 0, "question": 1, "answer": 1}).to_list(20)
+        
+        products_info = []
+        for p in products:
+            variations = p.get("variations", [])
+            prices = [v.get("price", 0) for v in variations if v.get("price")]
+            price_range = f"Rs {min(prices)} - Rs {max(prices)}" if prices else "Contact for price"
+            products_info.append(f"- {p.get('name')}: {p.get('short_description', '')} ({price_range})")
+        
+        faq_info = [f"Q: {f.get('question')} A: {f.get('answer')}" for f in faqs]
+        
+        return {
+            "products": "\n".join(products_info[:20]),
+            "categories": ", ".join([c.get("name", "") for c in categories]),
+            "faqs": "\n".join(faq_info[:10])
+        }
+    except Exception as e:
+        logger.error(f"Error getting store context: {e}")
+        return {"products": "", "categories": "", "faqs": ""}
+
+@api_router.post("/chat")
+async def chat_endpoint(data: ChatMessage):
+    """AI Chatbot endpoint"""
+    if not OPENAI_API_KEY:
+        raise HTTPException(status_code=500, detail="Chatbot not configured")
+    
+    session_id = data.session_id
+    user_message = data.message.strip()
+    
+    if not user_message:
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+    
+    # Get store context for the AI
+    store_context = await get_store_context()
+    
+    # Get or create chat session
+    if session_id not in chat_sessions:
+        system_message = f"""You are a friendly and helpful customer support assistant for GameShop Nepal, an online store selling digital products like Netflix, Spotify, YouTube Premium, gaming subscriptions, and more.
+
+Your personality adapts to how the user talks - if they're casual, be casual; if they're formal, be professional. Use appropriate emojis when the conversation is friendly.
+
+IMPORTANT STORE INFORMATION:
+- Store name: GameShop Nepal
+- Website: gameshopnepal.com
+- We sell digital subscriptions and gaming products
+- All prices are in Nepali Rupees (Rs)
+- Delivery is instant (digital delivery via email)
+- We accept eSewa, Khalti, bank transfer, and other local payment methods
+
+AVAILABLE PRODUCTS:
+{store_context['products']}
+
+CATEGORIES: {store_context['categories']}
+
+FREQUENTLY ASKED QUESTIONS:
+{store_context['faqs']}
+
+GUIDELINES:
+1. Be helpful, friendly, and concise
+2. If asked about products, provide accurate info from the list above
+3. For order issues, ask for order ID and email
+4. If you don't know something, admit it and suggest contacting support
+5. Recommend products based on user preferences when asked
+6. Keep responses brief but informative (2-3 sentences usually)
+7. Never make up prices or products that aren't in the list"""
+
+        chat_sessions[session_id] = LlmChat(
+            api_key=OPENAI_API_KEY,
+            session_id=session_id,
+            system_message=system_message
+        ).with_model("openai", "gpt-4o-mini")
+    
+    chat = chat_sessions[session_id]
+    
+    try:
+        # Store message in database for history
+        await db.chat_messages.insert_one({
+            "session_id": session_id,
+            "role": "user",
+            "content": user_message,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Send message to AI
+        response = await chat.send_message(UserMessage(text=user_message))
+        
+        # Store AI response
+        await db.chat_messages.insert_one({
+            "session_id": session_id,
+            "role": "assistant",
+            "content": response,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return {"response": response, "session_id": session_id}
+    except Exception as e:
+        logger.error(f"Chat error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get response from AI")
+
+@api_router.get("/chat/history/{session_id}")
+async def get_chat_history(session_id: str):
+    """Get chat history for a session"""
+    messages = await db.chat_messages.find(
+        {"session_id": session_id},
+        {"_id": 0, "role": 1, "content": 1, "created_at": 1}
+    ).sort("created_at", 1).to_list(100)
+    return messages
+
 # ==================== ROOT ====================
 
 @api_router.get("/")
