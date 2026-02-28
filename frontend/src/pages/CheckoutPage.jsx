@@ -109,14 +109,36 @@ export default function CheckoutPage() {
   const taxAmount = afterDiscount * (taxPercentage / 100);
   const totalBeforeCredits = afterDiscount + serviceCharge + taxAmount;
   
+  // Calculate max credits user can use
+  const getMaxCreditsUsable = () => {
+    if (!creditValidation.can_use_credits) return 0;
+    
+    let max = Math.min(creditBalance, totalBeforeCredits);
+    
+    // Apply max_credit_per_order limit if set
+    const maxPerOrder = creditSettings.max_credit_per_order || 0;
+    if (maxPerOrder > 0) {
+      max = Math.min(max, maxPerOrder);
+    }
+    
+    // Apply validation max_usable if set
+    if (!creditValidation.unlimited && creditValidation.max_usable > 0) {
+      max = Math.min(max, creditValidation.max_usable);
+    }
+    
+    return max;
+  };
+  
+  const maxCreditsUsable = getMaxCreditsUsable();
+  
   // Calculate credits to use - either custom amount or max if use all
   const getCreditsToUse = () => {
-    if (!useCredits || !customer) return 0;
+    if (!useCredits || !customer || !creditValidation.can_use_credits) return 0;
     if (customCreditAmount !== '') {
       const customAmount = parseFloat(customCreditAmount) || 0;
-      return Math.min(customAmount, creditBalance, totalBeforeCredits);
+      return Math.min(customAmount, maxCreditsUsable);
     }
-    return Math.min(creditBalance, totalBeforeCredits);
+    return maxCreditsUsable;
   };
   const creditsToUse = getCreditsToUse();
   const total = Math.max(0, totalBeforeCredits - creditsToUse);
