@@ -2553,9 +2553,47 @@ async def award_credits_for_order(order_id: str, customer_email: str, order_tota
     if order_total < settings.get("min_order_amount", 0):
         return {"credits_awarded": 0, "message": "Order below minimum amount for credits"}
     
-    # Calculate credits
+    # Get the order to check eligible categories/products
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        return {"credits_awarded": 0, "message": "Order not found"}
+    
+    # Check eligible categories and products
+    eligible_categories = settings.get("eligible_categories", [])
+    eligible_products = settings.get("eligible_products", [])
+    
+    # Calculate eligible amount (only from eligible items)
+    eligible_amount = 0
+    order_items = order.get("items", [])
+    
+    for item in order_items:
+        item_eligible = True
+        product_id = item.get("product_id")
+        
+        # Get product to check category
+        if product_id:
+            product = await db.products.find_one({"id": product_id}, {"category_id": 1})
+            if product:
+                category_id = product.get("category_id")
+                
+                # Check category eligibility (if categories are specified)
+                if eligible_categories and category_id not in eligible_categories:
+                    item_eligible = False
+                
+                # Check product eligibility (if products are specified)
+                if eligible_products and product_id not in eligible_products:
+                    item_eligible = False
+        
+        if item_eligible:
+            item_total = item.get("price", 0) * item.get("quantity", 1)
+            eligible_amount += item_total
+    
+    if eligible_amount <= 0:
+        return {"credits_awarded": 0, "message": "No eligible items for credits"}
+    
+    # Calculate credits based on eligible amount only
     cashback_percentage = settings.get("cashback_percentage", 5.0)
-    credits_to_award = round(order_total * (cashback_percentage / 100), 2)
+    credits_to_award = round(eligible_amount * (cashback_percentage / 100), 2)
     
     # Find or create customer
     customer = await db.customers.find_one({"email": customer_email})
