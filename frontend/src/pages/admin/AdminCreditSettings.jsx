@@ -236,7 +236,9 @@ export default function AdminCreditSettings() {
             <ul className="text-white/60 text-sm space-y-1">
               <li>• Customers earn {settings.cashback_percentage}% cashback as credits when order is completed</li>
               <li>• Credits are awarded after admin marks order as "Completed"</li>
-              <li>• Customers can use credits at checkout (deducted after tax & service charge)</li>
+              <li>• Credits are only earned from products in eligible categories (if specified)</li>
+              <li>• Credits can only be used on products in usable categories (if specified)</li>
+              <li>• {settings.max_credit_per_order > 0 ? `Maximum ${settings.max_credit_per_order} credits can be used per order` : 'No limit on credits per order'}</li>
               <li>• Empty category selection means all categories are eligible</li>
             </ul>
           </CardContent>
