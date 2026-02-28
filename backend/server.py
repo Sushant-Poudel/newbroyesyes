@@ -1811,8 +1811,8 @@ async def create_order(order_data: CreateOrderRequest):
     }
 
 @api_router.get("/orders")
-async def get_local_orders(current_user: dict = Depends(get_current_user)):
-    orders = await db.orders.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+async def get_local_orders(current_user: dict = Depends(get_current_user), limit: int = 100, skip: int = 0):
+    orders = await db.orders.find({}, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     return orders
 
 # ==================== PAYMENT METHODS ====================
