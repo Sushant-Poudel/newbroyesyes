@@ -128,6 +128,7 @@ function App() {
                 </Routes>
               </BrowserRouter>
               <Toaster position="top-right" richColors />
+              <ChatWidget />
             </div>
           </WishlistProvider>
         </CartProvider>
