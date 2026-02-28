@@ -4381,10 +4381,24 @@ class ChatMessage(BaseModel):
 
 async def get_store_context():
     """Get complete store info for chatbot context"""
+    import re
+    
+    def strip_html(text):
+        """Remove HTML tags and clean up text"""
+        if not text:
+            return ""
+        # Remove HTML tags
+        clean = re.sub(r'<[^>]+>', ' ', text)
+        # Remove extra whitespace
+        clean = re.sub(r'\s+', ' ', clean).strip()
+        # Remove HTML entities
+        clean = clean.replace('&nbsp;', ' ').replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>')
+        return clean
+    
     try:
         # Products with full details
-        products = await db.products.find({"is_active": True}, {"_id": 0, "name": 1, "slug": 1, "short_description": 1, "description": 1, "variations": 1, "features": 1}).to_list(50)
-        categories = await db.categories.find({}, {"_id": 0, "name": 1, "description": 1}).to_list(20)
+        products = await db.products.find({"is_active": True}, {"_id": 0, "name": 1, "slug": 1, "short_description": 1, "description": 1, "variations": 1, "features": 1, "category_id": 1}).to_list(50)
+        categories = await db.categories.find({}, {"_id": 0, "id": 1, "name": 1, "description": 1}).to_list(20)
         faqs = await db.faqs.find({}, {"_id": 0, "question": 1, "answer": 1}).to_list(50)
         
         # Payment methods
@@ -4411,21 +4425,55 @@ async def get_store_context():
         # Daily rewards
         daily_rewards = await db.daily_rewards.find({}, {"_id": 0, "day": 1, "reward_amount": 1}).to_list(7)
         
-        # Format products with full details
+        # Create category map
+        category_map = {c.get('id'): c.get('name') for c in categories}
+        
+        # Format products with FULL details including description
         products_info = []
         for p in products:
-            variations = p.get("variations", [])
+            product_name = p.get('name', '')
+            slug = p.get('slug', '')
+            category_name = category_map.get(p.get('category_id'), 'General')
+            
+            # Get clean description
+            raw_desc = p.get('description', '')
+            clean_desc = strip_html(raw_desc)[:800]  # Limit to 800 chars
+            
+            short_desc = p.get('short_description', '')
+            
+            # Get all variations with details
+            variations = p.get('variations', [])
             var_details = []
             for v in variations:
-                var_details.append(f"  • {v.get('name', 'Standard')}: Rs {v.get('price', 0)}")
+                var_name = v.get('name', 'Standard')
+                var_price = v.get('price', 0)
+                var_desc = strip_html(v.get('description', ''))[:100]
+                if var_desc:
+                    var_details.append(f"    • {var_name}: Rs {var_price} - {var_desc}")
+                else:
+                    var_details.append(f"    • {var_name}: Rs {var_price}")
             
-            products_info.append(f"**{p.get('name')}** (/{p.get('slug')})\n{p.get('short_description', '')}\nPlans:\n" + "\n".join(var_details))
+            # Get features
+            features = p.get('features', [])
+            features_text = ", ".join(features) if features else ""
+            
+            product_entry = f"""
+📦 **{product_name}**
+   Category: {category_name}
+   URL: /{slug}
+   {f'Features: {features_text}' if features_text else ''}
+   Description: {clean_desc if clean_desc else short_desc}
+   
+   Available Plans:
+{chr(10).join(var_details)}
+"""
+            products_info.append(product_entry)
         
         # Format FAQs
-        faq_info = [f"Q: {f.get('question')}\nA: {f.get('answer')}" for f in faqs]
+        faq_info = [f"Q: {f.get('question')}\nA: {strip_html(f.get('answer', ''))}" for f in faqs]
         
         # Format payment methods
-        payment_info = [f"- {pm.get('name')}: {pm.get('instructions', 'Follow on-screen instructions')[:100]}" for pm in payment_methods]
+        payment_info = [f"- {pm.get('name')}: {strip_html(pm.get('instructions', 'Follow on-screen instructions'))[:150]}" for pm in payment_methods]
         
         # Format social links
         social_info = [f"- {s.get('platform')}: {s.get('url')}" for s in social_links]
@@ -4436,7 +4484,7 @@ async def get_store_context():
         # Format pages content
         pages_info = {}
         for page in pages:
-            pages_info[page.get('slug', '')] = page.get('content', '')[:500]
+            pages_info[page.get('slug', '')] = strip_html(page.get('content', ''))[:500]
         
         # Format daily rewards
         rewards_info = [f"Day {d.get('day')}: Rs {d.get('reward_amount', 0)}" for d in daily_rewards]
