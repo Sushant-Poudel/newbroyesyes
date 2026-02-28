@@ -81,6 +81,26 @@ export default function CheckoutPage() {
     fetchSettings();
   }, []);
 
+  // Validate credit usage when cart changes
+  useEffect(() => {
+    const validateCredits = async () => {
+      if (!creditSettings.is_enabled || cart.length === 0) {
+        setCreditValidation({ can_use_credits: false, max_usable: 0, unlimited: false });
+        return;
+      }
+      
+      try {
+        const productIds = cart.map(item => item.product_id).filter(Boolean);
+        const res = await creditsAPI.validateUsage({ product_ids: productIds, requested_credits: 0 });
+        setCreditValidation(res.data);
+      } catch (e) {
+        // Default to allowing credits if validation fails
+        setCreditValidation({ can_use_credits: true, max_usable: 0, unlimited: true });
+      }
+    };
+    validateCredits();
+  }, [cart, creditSettings]);
+
   const subtotal = getCartTotal();
   const discountAmount = promoDiscount?.discount_amount || 0;
   const afterDiscount = subtotal - discountAmount;
