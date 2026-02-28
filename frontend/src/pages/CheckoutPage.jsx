@@ -431,7 +431,7 @@ See invoice: ${invoiceUrl}`;
                               Using: Rs {creditsToUse.toFixed(2)} credits
                             </p>
                           </div>
-                        )}}
+                        )}
                         
                         {creditBalance <= 0 && (
                           <p className="text-gray-500 text-xs">No credits available. Earn credits by making purchases!</p>
