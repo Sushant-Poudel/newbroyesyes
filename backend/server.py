@@ -3402,14 +3402,18 @@ async def get_profit_analytics(current_user: dict = Depends(get_current_user)):
     last_month_start = first_of_this_month.replace(month=first_of_this_month.month - 1 if first_of_this_month.month > 1 else 12, 
                                                     year=first_of_this_month.year if first_of_this_month.month > 1 else first_of_this_month.year - 1).isoformat()
     
-    # Get completed orders with projection for better performance
+    # Get completed orders with projection for better performance (limit to last 90 days)
+    ninety_days_ago = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
     completed_orders = await db.orders.find(
-        {"status": {"$regex": "^(completed|delivered)$", "$options": "i"}},
+        {
+            "status": {"$regex": "^(completed|delivered)$", "$options": "i"},
+            "created_at": {"$gte": ninety_days_ago}
+        },
         {"_id": 0, "id": 1, "total_amount": 1, "items": 1, "created_at": 1, "status": 1}
-    ).to_list(10000)
+    ).to_list(5000)
     
     # Get all products to map cost prices
-    products = await db.products.find({}, {"_id": 0, "id": 1, "variations": 1}).to_list(1000)
+    products = await db.products.find({}, {"_id": 0, "id": 1, "variations": 1}).to_list(500)
     
     # Create variation cost price lookup
     cost_lookup = {}
