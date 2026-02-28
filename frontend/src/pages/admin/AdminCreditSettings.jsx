@@ -122,7 +122,7 @@ export default function AdminCreditSettings() {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label className="text-white flex items-center gap-2">
                   <Percent className="h-4 w-4" /> Cashback Percentage
@@ -151,6 +151,19 @@ export default function AdminCreditSettings() {
                   data-testid="min-order-amount-input"
                 />
                 <p className="text-white/40 text-xs">Minimum order value to earn credits</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-white">Max Credit Per Order (Rs)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={settings.max_credit_per_order || 0}
+                  onChange={(e) => setSettings({ ...settings, max_credit_per_order: parseFloat(e.target.value) || 0 })}
+                  className="bg-black border-white/20"
+                  data-testid="max-credit-per-order-input"
+                />
+                <p className="text-white/40 text-xs">Max credits usable per order (0 = unlimited)</p>
               </div>
             </div>
           </CardContent>
