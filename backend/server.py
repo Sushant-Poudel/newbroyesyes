@@ -1927,15 +1927,19 @@ async def upload_payment_screenshot(order_id: str, data: PaymentScreenshotUpload
         all_webhooks = []
         product_names = []
         
-        for item in updated_order.get('items', []):
-            product_id = item.get('product_id')
-            if product_id:
-                # Fetch product to get webhooks
-                product = await db.products.find_one({"id": product_id})
-                if product and product.get('discord_webhooks'):
-                    webhooks = product.get('discord_webhooks', [])
-                    all_webhooks.extend(webhooks)
-                    product_names.append(product.get('name', 'Unknown'))
+        # Batch fetch all products to avoid N+1 queries
+        product_ids = [item.get('product_id') for item in updated_order.get('items', []) if item.get('product_id')]
+        if product_ids:
+            products = await db.products.find({"id": {"$in": product_ids}}, {"_id": 0, "id": 1, "name": 1, "discord_webhooks": 1}).to_list(len(product_ids))
+            product_map = {p['id']: p for p in products}
+            
+            for item in updated_order.get('items', []):
+                product_id = item.get('product_id')
+                if product_id and product_id in product_map:
+                    product = product_map[product_id]
+                    if product.get('discord_webhooks'):
+                        all_webhooks.extend(product.get('discord_webhooks', []))
+                        product_names.append(product.get('name', 'Unknown'))
         
         # Remove duplicates
         unique_webhooks = list(set([w for w in all_webhooks if w and w.strip()]))
