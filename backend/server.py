@@ -2476,8 +2476,12 @@ async def get_credit_settings():
             "eligible_products": [],
             "min_order_amount": 0,
             "usable_categories": [],
-            "usable_products": []
+            "usable_products": [],
+            "max_credit_per_order": 0
         }
+    # Ensure max_credit_per_order exists for backward compatibility
+    if "max_credit_per_order" not in settings:
+        settings["max_credit_per_order"] = 0
     return settings
 
 @api_router.put("/credits/settings")
