@@ -2656,6 +2656,66 @@ async def use_credits(customer_email: str, amount: float, order_id: str):
     
     return {"success": True, "amount_used": amount, "new_balance": new_balance}
 
+class CreditValidationRequest(BaseModel):
+    product_ids: List[str] = []
+    requested_credits: float = 0
+
+@api_router.post("/credits/validate")
+async def validate_credit_usage(data: CreditValidationRequest):
+    """Validate if credits can be used for given products and calculate max usable amount"""
+    settings = await db.credit_settings.find_one({"id": "main"})
+    if not settings or not settings.get("is_enabled", True):
+        return {
+            "can_use_credits": False,
+            "max_usable": 0,
+            "reason": "Credit system is disabled"
+        }
+    
+    usable_categories = settings.get("usable_categories", [])
+    usable_products = settings.get("usable_products", [])
+    max_credit_per_order = settings.get("max_credit_per_order", 0)
+    
+    # If no restrictions, all products are eligible
+    if not usable_categories and not usable_products:
+        max_usable = max_credit_per_order if max_credit_per_order > 0 else float('inf')
+        return {
+            "can_use_credits": True,
+            "max_usable": max_usable if max_usable != float('inf') else 0,
+            "unlimited": max_usable == float('inf'),
+            "reason": "All products eligible"
+        }
+    
+    # Check if any product in cart is eligible for credit usage
+    eligible_for_credits = False
+    
+    for product_id in data.product_ids:
+        # Check if product is directly in usable_products
+        if usable_products and product_id in usable_products:
+            eligible_for_credits = True
+            break
+        
+        # Check if product's category is in usable_categories
+        if usable_categories:
+            product = await db.products.find_one({"id": product_id}, {"category_id": 1})
+            if product and product.get("category_id") in usable_categories:
+                eligible_for_credits = True
+                break
+    
+    if not eligible_for_credits:
+        return {
+            "can_use_credits": False,
+            "max_usable": 0,
+            "reason": "None of the products in cart are eligible for credit usage"
+        }
+    
+    max_usable = max_credit_per_order if max_credit_per_order > 0 else float('inf')
+    return {
+        "can_use_credits": True,
+        "max_usable": max_usable if max_usable != float('inf') else 0,
+        "unlimited": max_usable == float('inf'),
+        "reason": "Products eligible for credit usage"
+    }
+
 
 # ==================== BUNDLE DEALS ====================
 
