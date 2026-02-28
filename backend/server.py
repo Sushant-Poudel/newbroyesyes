@@ -4372,6 +4372,8 @@ async def get_subscriber_count(current_user: dict = Depends(get_current_user)):
 chat_sessions = {}
 
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY', '')
+CHAT_API_KEY = EMERGENT_LLM_KEY or OPENAI_API_KEY  # Prefer Emergent key for reliability
 
 class ChatMessage(BaseModel):
     message: str
