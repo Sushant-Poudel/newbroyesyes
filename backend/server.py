@@ -3031,7 +3031,7 @@ async def get_newsletter_subscribers(current_user: dict = Depends(get_current_us
     subscribers = await db.newsletter.find(
         {"is_active": True},
         {"_id": 0}
-    ).sort("subscribed_at", -1).to_list(10000)
+    ).sort("subscribed_at", -1).to_list(500)
     
     return subscribers
 
