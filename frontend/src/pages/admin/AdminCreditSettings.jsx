@@ -17,7 +17,8 @@ export default function AdminCreditSettings() {
     eligible_products: [],
     min_order_amount: 0,
     usable_categories: [],
-    usable_products: []
+    usable_products: [],
+    max_credit_per_order: 0
   });
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
