@@ -329,6 +329,7 @@ class CreditSettings(BaseModel):
     min_order_amount: float = 0  # Minimum order to earn credits
     usable_categories: List[str] = []  # Categories where credits can be used (empty = all)
     usable_products: List[str] = []  # Products where credits can be used (empty = all)
+    max_credit_per_order: float = 0  # Maximum credits usable per order (0 = unlimited)
 
 class CustomerCreditUpdate(BaseModel):
     customer_id: str
