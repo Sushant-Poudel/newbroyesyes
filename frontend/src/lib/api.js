@@ -128,6 +128,7 @@ export const creditsAPI = {
   getBalance: (email) => api.get(`/credits/balance?email=${encodeURIComponent(email)}`),
   adjustCredits: (data) => api.post('/credits/adjust', data),
   getLogs: (customerId) => api.get(`/credits/logs/${customerId}`),
+  validateUsage: (data) => api.post('/credits/validate', data),
 };
 
 export const contactsAPI = {
