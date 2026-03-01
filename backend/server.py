@@ -3163,6 +3163,158 @@ async def update_order_status(order_id: str, status_data: OrderStatusUpdate, cur
                     logger.info(f"Awarded {credits_awarded} credits to {customer_email} for completed order {order_id}")
             except Exception as e:
                 logger.warning(f"Failed to award credits for order {order_id}: {e}")
+        
+        # Update order with completion timestamp
+        await db.orders.update_one(
+            {"id": order_id},
+            {"$set": {"completed_at": datetime.now(timezone.utc).isoformat(), "credits_awarded": credits_awarded}}
+        )
+        
+        # Send invoice email automatically when marked as completed
+        if customer_email:
+            try:
+                site_url = os.environ.get("SITE_URL", "https://gameshopnepal.com")
+                invoice_url = f"{site_url}/invoice/{order_id}"
+                trustpilot_url = "https://www.trustpilot.com/evaluate/gameshopnepal.com"
+                
+                # Credits message
+                credits_message = ""
+                if credits_awarded > 0:
+                    credits_message = f"""
+                        <div style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); border-radius: 12px; padding: 18px; margin: 25px 0; text-align: center;">
+                            <p style="color: #fff; margin: 0; font-size: 17px; font-weight: 600;">You earned Rs {credits_awarded:.0f} in store credits!</p>
+                            <p style="color: rgba(255,255,255,0.85); margin: 6px 0 0 0; font-size: 13px;">Use it on your next purchase</p>
+                        </div>
+                    """
+                
+                order_number = order.get('takeapp_order_number', order_id[:8].upper())
+                subject = f"Order #{order_number} Complete - Your Invoice | GameShop Nepal"
+                html = f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                </head>
+                <body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #050505;">
+                    <table role="presentation" width="100%" style="background-color: #050505;">
+                        <tr>
+                            <td align="center" style="padding: 30px 15px;">
+                                <table role="presentation" width="600" style="background: linear-gradient(180deg, #0f0f0f 0%, #0a0a0a 100%); border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(245, 166, 35, 0.1);">
+                                    
+                                    <!-- Header -->
+                                    <tr>
+                                        <td style="padding: 28px 40px; background: linear-gradient(135deg, #141414 0%, #0f0f0f 100%); border-bottom: 1px solid rgba(245, 166, 35, 0.15);">
+                                            <table role="presentation" width="100%">
+                                                <tr>
+                                                    <td>
+                                                        <div style="display: inline-block; width: 44px; height: 44px; background: linear-gradient(135deg, #F5A623 0%, #E8930C 100%); border-radius: 12px; text-align: center; line-height: 44px; box-shadow: 0 4px 15px rgba(245, 166, 35, 0.3); vertical-align: middle;">
+                                                            <span style="font-size: 22px; font-weight: 800; color: #000;">G</span>
+                                                        </div>
+                                                        <span style="margin-left: 12px; font-size: 22px; font-weight: 800; color: #ffffff; vertical-align: middle;">GameShop Nepal</span>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Success Hero -->
+                                    <tr>
+                                        <td style="padding: 50px 40px 40px; text-align: center; background: linear-gradient(180deg, rgba(34, 197, 94, 0.08) 0%, transparent 100%);">
+                                            <div style="width: 88px; height: 88px; margin: 0 auto 24px; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); border-radius: 50%; text-align: center; line-height: 88px; box-shadow: 0 15px 40px rgba(34, 197, 94, 0.35);">
+                                                <span style="font-size: 44px; color: #fff; line-height: 88px;">✓</span>
+                                            </div>
+                                            <h1 style="margin: 0 0 10px; font-size: 30px; font-weight: 800; color: #fff;">Order Complete!</h1>
+                                            <p style="margin: 0; font-size: 16px; color: #888;">Thank you for your purchase, <strong style="color: #fff;">{order.get('customer_name', 'Customer')}</strong></p>
+                                        </td>
+                                    </tr>
+                                    
+                                    {credits_message}
+                                    
+                                    <!-- Order Details -->
+                                    <tr>
+                                        <td style="padding: 0 40px 30px;">
+                                            <table role="presentation" width="100%" style="background: linear-gradient(135deg, #141414 0%, #0f0f0f 100%); border-radius: 16px; border: 1px solid rgba(255,255,255,0.06);">
+                                                <tr>
+                                                    <td style="padding: 24px;">
+                                                        <h3 style="margin: 0 0 18px; font-size: 13px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px;">Order Summary</h3>
+                                                        <table role="presentation" width="100%">
+                                                            <tr>
+                                                                <td style="padding: 8px 0;"><span style="color: #666;">Order Number</span></td>
+                                                                <td align="right"><span style="color: #F5A623; font-weight: 700;">#{order_number}</span></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="padding: 8px 0;"><span style="color: #666;">Items</span></td>
+                                                                <td align="right"><span style="color: #fff;">{order.get('items_text', 'N/A')}</span></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td colspan="2" style="padding-top: 15px;">
+                                                                    <div style="height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);"></div>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="padding-top: 15px;"><span style="color: #fff; font-size: 17px; font-weight: 700;">Total</span></td>
+                                                                <td align="right" style="padding-top: 15px;"><span style="color: #F5A623; font-size: 24px; font-weight: 800;">Rs {order.get('total_amount', order.get('total', 0)):,.0f}</span></td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- CTA Buttons -->
+                                    <tr>
+                                        <td style="padding: 0 40px 35px; text-align: center;">
+                                            <a href="{invoice_url}" style="display: inline-block; padding: 16px 36px; background: linear-gradient(135deg, #F5A623 0%, #E8930C 100%); color: #000; text-decoration: none; border-radius: 12px; font-size: 15px; font-weight: 700; box-shadow: 0 8px 25px rgba(245, 166, 35, 0.3);">
+                                                View Invoice
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Review Request -->
+                                    <tr>
+                                        <td style="padding: 0 40px 40px;">
+                                            <table role="presentation" width="100%" style="background: linear-gradient(135deg, rgba(0, 182, 122, 0.08) 0%, rgba(0, 182, 122, 0.03) 100%); border-radius: 16px; border: 1px solid rgba(0, 182, 122, 0.15);">
+                                                <tr>
+                                                    <td style="padding: 25px; text-align: center;">
+                                                        <p style="margin: 0 0 15px; font-size: 15px; color: #bbb;">Enjoyed your experience? We'd love your feedback!</p>
+                                                        <a href="{trustpilot_url}" style="display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #00b67a 0%, #009567 100%); color: #fff; text-decoration: none; border-radius: 10px; font-size: 14px; font-weight: 600;">
+                                                            Leave a Review on Trustpilot
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Footer -->
+                                    <tr>
+                                        <td style="padding: 30px 40px; background: linear-gradient(180deg, #0a0a0a 0%, #050505 100%); border-top: 1px solid rgba(255,255,255,0.05); text-align: center;">
+                                            <p style="margin: 0 0 10px; font-size: 12px; color: #555;">Questions? Chat with us on WhatsApp: +977 9743488871</p>
+                                            <p style="margin: 0; font-size: 11px; color: #444;">© 2025 GameShop Nepal. All rights reserved.</p>
+                                        </td>
+                                    </tr>
+                                    
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </body>
+                </html>
+                """
+                text = f"Order #{order_number} Complete!\n\nYour order has been completed.\n{'You earned Rs ' + str(int(credits_awarded)) + ' in store credits!' if credits_awarded > 0 else ''}\nView Invoice: {invoice_url}\nLeave a Review: {trustpilot_url}"
+                
+                send_email(customer_email, subject, html, text)
+                logger.info(f"Invoice email sent to {customer_email} for completed order {order_id}")
+            except Exception as e:
+                logger.error(f"Failed to send invoice email for completed order {order_id}: {e}")
+        
+        # Return early - don't send the generic status update email for completed orders
+        response = {"message": f"Order status updated to {status_data.status}"}
+        if credits_awarded > 0:
+            response["credits_awarded"] = credits_awarded
+        return response
     
     # Send status update email
     if customer_email:
