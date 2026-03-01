@@ -27,7 +27,6 @@ export default function Navbar({ notificationBarHeight = 0 }) {
     }
   }, []);
 
-  // Dynamic navbar on scroll
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -65,23 +64,20 @@ export default function Navbar({ notificationBarHeight = 0 }) {
     <>
       {/* Dynamic Island Style Navbar */}
       <nav 
-        className={`fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-out ${
-          isScrolled 
-            ? 'top-3 px-2' 
-            : 'top-4 px-4'
+        className={`fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-out w-[calc(100%-24px)] sm:w-auto ${
+          isScrolled ? 'top-2 sm:top-3' : 'top-3 sm:top-4'
         }`}
         style={{ marginTop: notificationBarHeight }}
         data-testid="navbar"
       >
         <div 
-          className={`flex items-center justify-between transition-all duration-500 ease-out rounded-full ${
+          className={`flex items-center justify-between transition-all duration-500 ease-out rounded-full bg-black/85 backdrop-blur-xl border border-white/10 ${
             isScrolled
-              ? 'bg-black/80 backdrop-blur-xl shadow-2xl shadow-black/50 px-6 py-2.5 gap-6'
-              : 'bg-black/80 backdrop-blur-xl px-8 py-3.5 gap-8'
+              ? 'px-3 sm:px-6 py-2 sm:py-2.5 gap-2 sm:gap-6 shadow-2xl shadow-black/50'
+              : 'px-4 sm:px-8 py-2.5 sm:py-3.5 gap-3 sm:gap-8'
           }`}
           style={{ 
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            minWidth: isScrolled ? '580px' : '650px',
+            minWidth: 'auto',
           }}
         >
           {/* Logo */}
@@ -89,7 +85,7 @@ export default function Navbar({ notificationBarHeight = 0 }) {
             <img 
               src={LOGO_URL} 
               alt="GSN" 
-              className={`transition-all duration-300 group-hover:scale-105 ${isScrolled ? 'h-8' : 'h-9'}`} 
+              className={`transition-all duration-300 group-hover:scale-105 ${isScrolled ? 'h-7 sm:h-8' : 'h-8 sm:h-9'}`} 
             />
           </Link>
 
@@ -115,7 +111,7 @@ export default function Navbar({ notificationBarHeight = 0 }) {
           </div>
 
           {/* Desktop Right Actions */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-2">
             {isSearchOpen ? (
               <form onSubmit={handleSearch} className="flex items-center gap-1">
                 <input
@@ -178,8 +174,8 @@ export default function Navbar({ notificationBarHeight = 0 }) {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => setIsSearchOpen(!isSearchOpen)} 
-              className="text-white/60 hover:text-white p-1.5 h-auto rounded-full"
+              onClick={() => { setIsSearchOpen(!isSearchOpen); setIsMenuOpen(false); }} 
+              className="text-white/60 hover:text-white p-1.5 h-auto rounded-full hover:bg-white/10"
             >
               <Search className="h-4 w-4" />
             </Button>
@@ -189,7 +185,7 @@ export default function Navbar({ notificationBarHeight = 0 }) {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => navigate('/account')} 
-                className="text-white/60 hover:text-white p-1.5 h-auto rounded-full"
+                className="text-white/60 hover:text-white p-1.5 h-auto rounded-full hover:bg-white/10"
               >
                 <User className="h-4 w-4" />
               </Button>
@@ -198,15 +194,15 @@ export default function Navbar({ notificationBarHeight = 0 }) {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setShowAuthModal(true)} 
-                className="text-white/60 hover:text-white p-1.5 h-auto rounded-full"
+                className="text-white/60 hover:text-white p-1.5 h-auto rounded-full hover:bg-white/10"
               >
                 <User className="h-4 w-4" />
               </Button>
             )}
             <CustomerAccountSidebar />
             <button 
-              onClick={() => setIsMenuOpen(!isMenuOpen)} 
-              className="p-1.5 text-white/60 hover:text-white rounded-full" 
+              onClick={() => { setIsMenuOpen(!isMenuOpen); setIsSearchOpen(false); }} 
+              className="p-1.5 text-white/60 hover:text-white rounded-full hover:bg-white/10 transition-colors" 
               data-testid="mobile-menu-toggle"
             >
               {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -214,48 +210,53 @@ export default function Navbar({ notificationBarHeight = 0 }) {
           </div>
         </div>
 
-        {/* Mobile Menu Dropdown */}
-        {isMenuOpen && (
+        {/* Mobile Dropdown Menu */}
+        {(isMenuOpen || isSearchOpen) && (
           <div 
-            className="md:hidden mt-2 bg-black/90 backdrop-blur-xl rounded-2xl border border-white/10 p-3 shadow-2xl"
+            className="md:hidden mt-2 bg-black/90 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden shadow-2xl shadow-black/50"
             data-testid="mobile-menu"
           >
             {/* Mobile Search */}
             {isSearchOpen && (
-              <form onSubmit={handleSearch} className="flex items-center gap-2 mb-3 pb-3 border-b border-white/10">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search products..."
-                  className="flex-1 bg-white/10 border border-white/20 rounded-full px-3 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-amber-500/50"
-                  autoFocus
-                />
-                <Button type="submit" size="sm" className="bg-amber-500 hover:bg-amber-600 text-black rounded-full h-auto py-2 px-3">
-                  <Search className="h-4 w-4" />
-                </Button>
-              </form>
+              <div className="p-3 border-b border-white/10">
+                <form onSubmit={handleSearch} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search products..."
+                    className="flex-1 bg-white/10 border border-white/10 rounded-full px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-amber-500/50"
+                    autoFocus
+                  />
+                  <Button type="submit" size="sm" className="bg-amber-500 hover:bg-amber-600 text-black rounded-full h-auto py-2.5 px-4">
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </form>
+              </div>
             )}
             
-            <div className="flex flex-col space-y-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`text-sm font-medium py-2.5 px-3 flex items-center gap-2 rounded-xl transition-colors ${
-                    link.highlight 
-                      ? 'text-amber-400' 
-                      : isActive(link.href) 
-                        ? 'text-white bg-white/10' 
-                        : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  {link.icon && <link.icon className="w-4 h-4" />}
-                  {link.label}
-                </Link>
-              ))}
-            </div>
+            {/* Mobile Nav Links */}
+            {isMenuOpen && (
+              <div className="p-2">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`text-sm font-medium py-3 px-4 flex items-center gap-3 rounded-xl transition-colors ${
+                      link.highlight 
+                        ? 'text-amber-400' 
+                        : isActive(link.href) 
+                          ? 'text-white bg-white/10' 
+                          : 'text-white/70 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {link.icon && <link.icon className="w-4 h-4" />}
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </nav>
