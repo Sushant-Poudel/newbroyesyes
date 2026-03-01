@@ -62,63 +62,89 @@ export default function Navbar({ notificationBarHeight = 0 }) {
   };
 
   return (
-    <nav 
-      className={`fixed left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-[#0a0a0a]/95 backdrop-blur-md border-b border-white/10 shadow-lg' 
-          : 'bg-transparent'
-      }`}
-      style={{ top: notificationBarHeight }} 
-      data-testid="navbar"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo Only */}
-          <Link to="/" className="flex items-center group" data-testid="nav-logo">
-            <img src={LOGO_URL} alt="GSN" className="h-10 w-auto transition-transform duration-300 group-hover:scale-105" />
+    <>
+      {/* Dynamic Island Style Navbar */}
+      <nav 
+        className={`fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-out ${
+          isScrolled 
+            ? 'top-3 px-2' 
+            : 'top-4 px-4'
+        }`}
+        style={{ marginTop: notificationBarHeight }}
+        data-testid="navbar"
+      >
+        <div 
+          className={`flex items-center justify-between transition-all duration-500 ease-out rounded-full ${
+            isScrolled
+              ? 'bg-black/80 backdrop-blur-xl shadow-2xl shadow-black/50 px-4 py-2 gap-4'
+              : 'bg-black/80 backdrop-blur-xl px-6 py-3 gap-6'
+          }`}
+          style={{ 
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          }}
+        >
+          {/* Logo */}
+          <Link to="/" className="flex items-center group flex-shrink-0" data-testid="nav-logo">
+            <img 
+              src={LOGO_URL} 
+              alt="GSN" 
+              className={`transition-all duration-300 group-hover:scale-105 ${isScrolled ? 'h-8' : 'h-9'}`} 
+            />
           </Link>
 
-          {/* Desktop Nav Links - Centered */}
-          <div className="hidden md:flex items-center gap-2">
+          {/* Desktop Nav Links */}
+          <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
                 data-testid={`nav-link-${link.label.toLowerCase().replace(' ', '-')}`}
-                className={`px-4 py-2 text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                className={`px-3 py-1.5 text-sm font-medium transition-all duration-200 flex items-center gap-1.5 rounded-full ${
                   link.highlight 
-                    ? 'text-amber-500 hover:text-amber-400' 
+                    ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10' 
                     : isActive(link.href) 
-                      ? 'text-white' 
-                      : 'text-white/60 hover:text-white'
+                      ? 'text-white bg-white/10' 
+                      : 'text-white/70 hover:text-white hover:bg-white/5'
                 }`}
               >
-                {link.icon && <link.icon className="w-4 h-4" />}
+                {link.icon && <link.icon className="w-3.5 h-3.5" />}
                 {link.label}
               </Link>
             ))}
           </div>
 
           {/* Desktop Right Actions */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-1">
             {isSearchOpen ? (
-              <form onSubmit={handleSearch} className="flex items-center gap-2">
+              <form onSubmit={handleSearch} className="flex items-center gap-1">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search..."
-                  className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-amber-500/50 w-48"
+                  className="bg-white/10 border border-white/20 rounded-full px-3 py-1 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-amber-500/50 w-36"
                   autoFocus
                   data-testid="search-input"
                 />
-                <Button type="button" variant="ghost" size="sm" onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }} className="text-white/40 hover:text-white p-1">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }} 
+                  className="text-white/40 hover:text-white p-1 h-auto"
+                >
                   <X className="h-4 w-4" />
                 </Button>
               </form>
             ) : (
-              <Button variant="ghost" size="sm" onClick={() => setIsSearchOpen(true)} className="text-white/60 hover:text-white hover:bg-white/5 p-2" data-testid="search-btn">
-                <Search className="h-5 w-5" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setIsSearchOpen(true)} 
+                className="text-white/60 hover:text-white hover:bg-white/10 p-2 h-auto rounded-full" 
+                data-testid="search-btn"
+              >
+                <Search className="h-4 w-4" />
               </Button>
             )}
             
@@ -127,16 +153,16 @@ export default function Navbar({ notificationBarHeight = 0 }) {
             {customer ? (
               <Button 
                 onClick={() => navigate('/account')} 
-                className="bg-[#1a1a1a] hover:bg-[#252525] text-white border border-white/10 rounded-full px-5 py-2 text-sm font-medium"
+                className="bg-white/10 hover:bg-white/20 text-white rounded-full px-4 py-1.5 text-sm font-medium h-auto"
                 data-testid="customer-account-btn"
               >
-                <User className="h-4 w-4 mr-2" />
+                <User className="h-3.5 w-3.5 mr-1.5" />
                 Account
               </Button>
             ) : (
               <Button 
                 onClick={() => setShowAuthModal(true)} 
-                className="bg-[#1a1a1a] hover:bg-[#252525] text-white border border-white/10 rounded-full px-5 py-2 text-sm font-medium"
+                className="bg-white/10 hover:bg-white/20 text-white rounded-full px-4 py-1.5 text-sm font-medium h-auto"
                 data-testid="customer-login-btn"
               >
                 Sign In
@@ -147,60 +173,80 @@ export default function Navbar({ notificationBarHeight = 0 }) {
           </div>
 
           {/* Mobile Right Actions */}
-          <div className="md:hidden flex items-center gap-1">
-            <Button variant="ghost" size="sm" onClick={() => setIsSearchOpen(!isSearchOpen)} className="text-white/60 hover:text-white p-2">
-              <Search className="h-5 w-5" />
+          <div className="md:hidden flex items-center gap-0.5">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setIsSearchOpen(!isSearchOpen)} 
+              className="text-white/60 hover:text-white p-1.5 h-auto rounded-full"
+            >
+              <Search className="h-4 w-4" />
             </Button>
             <CartSidebar />
             {customer ? (
-              <Button variant="ghost" size="sm" onClick={() => navigate('/account')} className="text-white/60 hover:text-white p-2">
-                <User className="h-5 w-5" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/account')} 
+                className="text-white/60 hover:text-white p-1.5 h-auto rounded-full"
+              >
+                <User className="h-4 w-4" />
               </Button>
             ) : (
-              <Button variant="ghost" size="sm" onClick={() => setShowAuthModal(true)} className="text-white/60 hover:text-white p-2">
-                <User className="h-5 w-5" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowAuthModal(true)} 
+                className="text-white/60 hover:text-white p-1.5 h-auto rounded-full"
+              >
+                <User className="h-4 w-4" />
               </Button>
             )}
             <CustomerAccountSidebar />
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 text-white/60 hover:text-white" data-testid="mobile-menu-toggle">
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)} 
+              className="p-1.5 text-white/60 hover:text-white rounded-full" 
+              data-testid="mobile-menu-toggle"
+            >
+              {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Search */}
-        {isSearchOpen && (
-          <div className="md:hidden py-3 border-t border-white/10">
-            <form onSubmit={handleSearch} className="flex items-center gap-2">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products..."
-                className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-amber-500/50"
-                autoFocus
-              />
-              <Button type="submit" size="sm" className="bg-amber-500 hover:bg-amber-600 text-black">
-                <Search className="h-4 w-4" />
-              </Button>
-            </form>
-          </div>
-        )}
-
-        {/* Mobile Menu */}
+        {/* Mobile Menu Dropdown */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-white/10 bg-[#0a0a0a]/95 backdrop-blur-md" data-testid="mobile-menu">
+          <div 
+            className="md:hidden mt-2 bg-black/90 backdrop-blur-xl rounded-2xl border border-white/10 p-3 shadow-2xl"
+            data-testid="mobile-menu"
+          >
+            {/* Mobile Search */}
+            {isSearchOpen && (
+              <form onSubmit={handleSearch} className="flex items-center gap-2 mb-3 pb-3 border-b border-white/10">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search products..."
+                  className="flex-1 bg-white/10 border border-white/20 rounded-full px-3 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-amber-500/50"
+                  autoFocus
+                />
+                <Button type="submit" size="sm" className="bg-amber-500 hover:bg-amber-600 text-black rounded-full h-auto py-2 px-3">
+                  <Search className="h-4 w-4" />
+                </Button>
+              </form>
+            )}
+            
             <div className="flex flex-col space-y-1">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   to={link.href}
                   onClick={() => setIsMenuOpen(false)}
-                  className={`text-sm font-medium py-3 px-2 flex items-center gap-2 rounded-lg transition-colors ${
+                  className={`text-sm font-medium py-2.5 px-3 flex items-center gap-2 rounded-xl transition-colors ${
                     link.highlight 
-                      ? 'text-amber-500' 
+                      ? 'text-amber-400' 
                       : isActive(link.href) 
-                        ? 'text-white bg-white/5' 
+                        ? 'text-white bg-white/10' 
                         : 'text-white/70 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -211,13 +257,13 @@ export default function Navbar({ notificationBarHeight = 0 }) {
             </div>
           </div>
         )}
-      </div>
+      </nav>
 
       <CustomerAuthModal 
         isOpen={showAuthModal} 
         onClose={() => setShowAuthModal(false)}
         onSuccess={(customerData) => setCustomer(customerData)}
       />
-    </nav>
+    </>
   );
 }
