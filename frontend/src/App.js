@@ -51,6 +51,7 @@ const AdminOrders = lazy(() => import("@/pages/admin/AdminOrders"));
 const AdminStaff = lazy(() => import("@/pages/admin/AdminStaff"));
 const AdminNewsletter = lazy(() => import("@/pages/admin/AdminNewsletter"));
 const AdminCreditSettings = lazy(() => import("@/pages/admin/AdminCreditSettings"));
+const AdminAuditLogs = lazy(() => import("@/pages/admin/AdminAuditLogs"));
 import AdminDailyReward from "@/pages/admin/AdminDailyReward";
 import AdminReferral from "@/pages/admin/AdminReferral";
 import AdminMultiplier from "@/pages/admin/AdminMultiplier";
