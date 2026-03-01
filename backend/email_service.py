@@ -182,29 +182,29 @@ def get_base_email_template(content: str, preview_text: str = "") -> str:
 def get_order_confirmation_email(order_data: dict) -> tuple:
     """Generate beautiful order confirmation email"""
     order_number = order_data.get('takeapp_order_number', order_data['id'][:8].upper())
-    subject = f"🎉 Order Confirmed - #{order_number}"
+    subject = f"Order Confirmed - #{order_number} | GameShop Nepal"
     
     items_html = ""
     for item in order_data.get("items", []):
         item_name = item.get('name', 'Product')
         item_variation = item.get('variation', item.get('variation_name', ''))
-        variation_text = f" • {item_variation}" if item_variation else ""
+        variation_text = f"<span style='color: #888;'>({item_variation})</span>" if item_variation else ""
         items_html += f"""
         <tr>
-            <td style="padding: 16px 0; border-bottom: 1px solid #222;">
+            <td style="padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <table role="presentation" width="100%">
                     <tr>
-                        <td style="width: 50px; vertical-align: top;">
-                            <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #F5A623 0%, #f59e0b 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                                <span style="font-size: 20px;">📦</span>
+                        <td style="width: 52px; vertical-align: top;">
+                            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #F5A623 0%, #E8930C 100%); border-radius: 12px; text-align: center; line-height: 48px; box-shadow: 0 4px 12px rgba(245, 166, 35, 0.2);">
+                                <span style="font-size: 22px;">📦</span>
                             </div>
                         </td>
-                        <td style="padding-left: 12px; vertical-align: top;">
-                            <p style="margin: 0; font-size: 15px; font-weight: 600; color: #fff;">{item_name}</p>
-                            <p style="margin: 4px 0 0; font-size: 13px; color: #888;">{variation_text} × {item.get('quantity', 1)}</p>
+                        <td style="padding-left: 14px; vertical-align: middle;">
+                            <p style="margin: 0; font-size: 15px; font-weight: 600; color: #fff;">{item_name} {variation_text}</p>
+                            <p style="margin: 4px 0 0; font-size: 13px; color: #666;">Qty: {item.get('quantity', 1)}</p>
                         </td>
-                        <td align="right" style="vertical-align: top;">
-                            <p style="margin: 0; font-size: 15px; font-weight: 600; color: #F5A623;">Rs {item.get('price', 0):,.0f}</p>
+                        <td align="right" style="vertical-align: middle;">
+                            <p style="margin: 0; font-size: 16px; font-weight: 700; color: #F5A623;">Rs {item.get('price', 0):,.0f}</p>
                         </td>
                     </tr>
                 </table>
@@ -213,32 +213,32 @@ def get_order_confirmation_email(order_data: dict) -> tuple:
         """
     
     content = f"""
-        <!-- Hero Section -->
+        <!-- Success Hero Section -->
         <tr>
-            <td style="padding: 50px 40px; text-align: center; background: linear-gradient(180deg, rgba(245, 166, 35, 0.08) 0%, transparent 100%);">
-                <div style="width: 80px; height: 80px; margin: 0 auto 20px; background: linear-gradient(135deg, #F5A623 0%, #f59e0b 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(245, 166, 35, 0.3);">
-                    <span style="font-size: 40px;">✓</span>
+            <td style="padding: 55px 40px 45px; text-align: center; background: linear-gradient(180deg, rgba(245, 166, 35, 0.06) 0%, transparent 100%);" class="mobile-padding">
+                <div style="width: 88px; height: 88px; margin: 0 auto 24px; background: linear-gradient(135deg, #F5A623 0%, #E8930C 100%); border-radius: 50%; text-align: center; line-height: 88px; box-shadow: 0 15px 40px rgba(245, 166, 35, 0.35);">
+                    <span style="font-size: 44px; line-height: 88px;">✓</span>
                 </div>
-                <h2 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #fff;">Order Confirmed!</h2>
-                <p style="margin: 0; font-size: 16px; color: #888;">Thank you for shopping with us, {order_data.get('customer_name', 'Customer')}!</p>
+                <h2 style="margin: 0 0 8px; font-size: 30px; font-weight: 800; color: #fff; letter-spacing: -0.5px;">Order Confirmed!</h2>
+                <p style="margin: 0; font-size: 15px; color: #888; max-width: 340px; display: inline-block;">Thank you for your purchase, <strong style="color: #fff;">{order_data.get('customer_name', 'Customer')}</strong></p>
             </td>
         </tr>
         
         <!-- Order Info Card -->
         <tr>
-            <td style="padding: 0 40px;">
-                <table role="presentation" width="100%" style="background-color: #1a1a1a; border-radius: 12px; overflow: hidden; border: 1px solid #2a2a2a;">
+            <td style="padding: 0 40px 25px;" class="mobile-padding">
+                <table role="presentation" width="100%" style="background: linear-gradient(135deg, #141414 0%, #0f0f0f 100%); border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06);">
                     <tr>
-                        <td style="padding: 20px;">
+                        <td style="padding: 22px 24px;">
                             <table role="presentation" width="100%">
                                 <tr>
                                     <td style="width: 50%;">
-                                        <p style="margin: 0; font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Order Number</p>
-                                        <p style="margin: 5px 0 0; font-size: 18px; font-weight: 700; color: #F5A623;">#{order_number}</p>
+                                        <p style="margin: 0; font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Order Number</p>
+                                        <p style="margin: 6px 0 0; font-size: 20px; font-weight: 800; color: #F5A623;">#{order_number}</p>
                                     </td>
                                     <td style="width: 50%;" align="right">
-                                        <p style="margin: 0; font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Date</p>
-                                        <p style="margin: 5px 0 0; font-size: 16px; font-weight: 500; color: #fff;">{order_data.get('created_at', '')[:10]}</p>
+                                        <p style="margin: 0; font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Date</p>
+                                        <p style="margin: 6px 0 0; font-size: 15px; font-weight: 600; color: #fff;">{order_data.get('created_at', '')[:10]}</p>
                                     </td>
                                 </tr>
                             </table>
@@ -250,8 +250,8 @@ def get_order_confirmation_email(order_data: dict) -> tuple:
         
         <!-- Items Section -->
         <tr>
-            <td style="padding: 30px 40px 20px;">
-                <h3 style="margin: 0 0 20px; font-size: 16px; font-weight: 600; color: #fff; text-transform: uppercase; letter-spacing: 0.5px;">Order Items</h3>
+            <td style="padding: 0 40px 20px;" class="mobile-padding">
+                <h3 style="margin: 0 0 18px; font-size: 13px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px;">Your Items</h3>
                 <table role="presentation" width="100%">
                     {items_html}
                 </table>
@@ -260,28 +260,27 @@ def get_order_confirmation_email(order_data: dict) -> tuple:
         
         <!-- Total Section -->
         <tr>
-            <td style="padding: 0 40px 30px;">
-                <table role="presentation" width="100%" style="background: linear-gradient(135deg, #1a1a1a 0%, #151515 100%); border-radius: 12px; border: 1px solid #2a2a2a;">
+            <td style="padding: 0 40px 35px;" class="mobile-padding">
+                <table role="presentation" width="100%" style="background: linear-gradient(135deg, #0f0f0f 0%, #0a0a0a 100%); border-radius: 16px; border: 1px solid rgba(245, 166, 35, 0.12);">
                     <tr>
-                        <td style="padding: 20px;">
+                        <td style="padding: 22px 24px;">
                             <table role="presentation" width="100%">
                                 <tr>
-                                    <td><p style="margin: 0; font-size: 14px; color: #888;">Subtotal</p></td>
-                                    <td align="right"><p style="margin: 0; font-size: 14px; color: #fff;">Rs {order_data.get('subtotal', order_data.get('total_amount', 0)):,.0f}</p></td>
+                                    <td><p style="margin: 0; font-size: 14px; color: #777;">Subtotal</p></td>
+                                    <td align="right"><p style="margin: 0; font-size: 14px; color: #ccc; font-weight: 500;">Rs {order_data.get('subtotal', order_data.get('total_amount', 0)):,.0f}</p></td>
                                 </tr>
                                 {f'''<tr>
-                                    <td><p style="margin: 8px 0 0; font-size: 14px; color: #888;">Discount</p></td>
-                                    <td align="right"><p style="margin: 8px 0 0; font-size: 14px; color: #22c55e;">-Rs {order_data.get('discount', 0):,.0f}</p></td>
+                                    <td><p style="margin: 10px 0 0; font-size: 14px; color: #777;">Discount</p></td>
+                                    <td align="right"><p style="margin: 10px 0 0; font-size: 14px; color: #22c55e; font-weight: 600;">-Rs {order_data.get('discount', 0):,.0f}</p></td>
                                 </tr>''' if order_data.get('discount') else ''}
                                 <tr>
-                                    <td colspan="2" style="padding-top: 15px; border-top: 1px solid #2a2a2a; margin-top: 15px;">
-                                        <table role="presentation" width="100%">
-                                            <tr>
-                                                <td><p style="margin: 0; font-size: 18px; font-weight: 700; color: #fff;">Total</p></td>
-                                                <td align="right"><p style="margin: 0; font-size: 24px; font-weight: 700; color: #F5A623;">Rs {order_data.get('total_amount', 0):,.0f}</p></td>
-                                            </tr>
-                                        </table>
+                                    <td colspan="2" style="padding-top: 18px;">
+                                        <div style="height: 1px; background: linear-gradient(90deg, transparent, rgba(245, 166, 35, 0.2), transparent);"></div>
                                     </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-top: 18px;"><p style="margin: 0; font-size: 17px; font-weight: 700; color: #fff;">Total Amount</p></td>
+                                    <td align="right" style="padding-top: 18px;"><p style="margin: 0; font-size: 26px; font-weight: 800; color: #F5A623;">Rs {order_data.get('total_amount', 0):,.0f}</p></td>
                                 </tr>
                             </table>
                         </td>
@@ -292,23 +291,23 @@ def get_order_confirmation_email(order_data: dict) -> tuple:
         
         <!-- What's Next Section -->
         <tr>
-            <td style="padding: 0 40px 40px;">
-                <table role="presentation" width="100%" style="background-color: rgba(245, 166, 35, 0.05); border-radius: 12px; border: 1px solid rgba(245, 166, 35, 0.15);">
+            <td style="padding: 0 40px 45px;" class="mobile-padding">
+                <table role="presentation" width="100%" style="background: linear-gradient(135deg, rgba(245, 166, 35, 0.06) 0%, rgba(245, 166, 35, 0.02) 100%); border-radius: 16px; border: 1px solid rgba(245, 166, 35, 0.12);">
                     <tr>
-                        <td style="padding: 25px;">
-                            <h4 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #F5A623; text-transform: uppercase; letter-spacing: 0.5px;">⚡ What happens next?</h4>
+                        <td style="padding: 26px 28px;">
+                            <h4 style="margin: 0 0 18px; font-size: 13px; font-weight: 700; color: #F5A623; text-transform: uppercase; letter-spacing: 1px;">What Happens Next?</h4>
                             <table role="presentation" width="100%">
                                 <tr>
-                                    <td style="width: 30px; vertical-align: top;"><span style="font-size: 16px;">1️⃣</span></td>
-                                    <td style="padding-bottom: 10px;"><p style="margin: 0; font-size: 14px; color: #ccc;">We'll verify your payment</p></td>
+                                    <td style="width: 32px; vertical-align: top;"><div style="width: 26px; height: 26px; background: rgba(245, 166, 35, 0.15); border-radius: 50%; text-align: center; line-height: 26px; font-size: 13px; color: #F5A623; font-weight: 700;">1</div></td>
+                                    <td style="padding: 3px 0 12px 10px;"><p style="margin: 0; font-size: 14px; color: #bbb;">We'll verify your payment</p></td>
                                 </tr>
                                 <tr>
-                                    <td style="width: 30px; vertical-align: top;"><span style="font-size: 16px;">2️⃣</span></td>
-                                    <td style="padding-bottom: 10px;"><p style="margin: 0; font-size: 14px; color: #ccc;">Your digital product will be delivered instantly</p></td>
+                                    <td style="width: 32px; vertical-align: top;"><div style="width: 26px; height: 26px; background: rgba(245, 166, 35, 0.15); border-radius: 50%; text-align: center; line-height: 26px; font-size: 13px; color: #F5A623; font-weight: 700;">2</div></td>
+                                    <td style="padding: 3px 0 12px 10px;"><p style="margin: 0; font-size: 14px; color: #bbb;">Your digital product will be prepared</p></td>
                                 </tr>
                                 <tr>
-                                    <td style="width: 30px; vertical-align: top;"><span style="font-size: 16px;">3️⃣</span></td>
-                                    <td><p style="margin: 0; font-size: 14px; color: #ccc;">Check your email for product details</p></td>
+                                    <td style="width: 32px; vertical-align: top;"><div style="width: 26px; height: 26px; background: rgba(245, 166, 35, 0.15); border-radius: 50%; text-align: center; line-height: 26px; font-size: 13px; color: #F5A623; font-weight: 700;">3</div></td>
+                                    <td style="padding: 3px 0 0 10px;"><p style="margin: 0; font-size: 14px; color: #bbb;">Check your email for delivery details</p></td>
                                 </tr>
                             </table>
                         </td>
@@ -321,7 +320,7 @@ def get_order_confirmation_email(order_data: dict) -> tuple:
     html = get_base_email_template(content, f"Your order #{order_number} has been confirmed!")
     
     text = f"""
-ORDER CONFIRMED! 🎉
+ORDER CONFIRMED!
 
 Thank you for your order at GameShop Nepal!
 
@@ -333,8 +332,8 @@ Total: Rs {order_data.get('total_amount'):,.0f}
 
 What's next?
 1. We'll verify your payment
-2. Your digital product will be delivered instantly
-3. Check your email for product details
+2. Your digital product will be prepared
+3. Check your email for delivery details
 
 Need help? WhatsApp us: +977 9743488871
 
