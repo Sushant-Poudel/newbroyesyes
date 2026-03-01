@@ -3870,6 +3870,117 @@ async def get_profit_analytics(current_user: dict = Depends(get_current_user)):
         "all_time": calculate_profit(completed_orders)
     }
 
+
+# ==================== AUDIT LOGS ====================
+
+@api_router.get("/audit-logs")
+async def get_audit_logs(
+    current_user: dict = Depends(get_current_user),
+    page: int = 1,
+    limit: int = 50,
+    action: str = None,
+    actor_id: str = None,
+    resource_type: str = None,
+    date_from: str = None,
+    date_to: str = None
+):
+    """Get audit logs with filtering and pagination"""
+    # Build query
+    query = {}
+    
+    if action:
+        query["action"] = action
+    if actor_id:
+        query["actor.id"] = actor_id
+    if resource_type:
+        query["resource_type"] = resource_type
+    if date_from:
+        query["timestamp"] = {"$gte": date_from}
+    if date_to:
+        if "timestamp" in query:
+            query["timestamp"]["$lte"] = date_to
+        else:
+            query["timestamp"] = {"$lte": date_to}
+    
+    # Get total count
+    total = await db.audit_logs.count_documents(query)
+    
+    # Get logs with pagination
+    skip = (page - 1) * limit
+    logs = await db.audit_logs.find(query, {"_id": 0}).sort("timestamp", -1).skip(skip).limit(limit).to_list(limit)
+    
+    return {
+        "logs": logs,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "pages": (total + limit - 1) // limit
+    }
+
+
+@api_router.get("/audit-logs/actions")
+async def get_audit_log_actions(current_user: dict = Depends(get_current_user)):
+    """Get list of all action types in audit logs"""
+    actions = await db.audit_logs.distinct("action")
+    return {"actions": sorted(actions)}
+
+
+@api_router.get("/audit-logs/actors")
+async def get_audit_log_actors(current_user: dict = Depends(get_current_user)):
+    """Get list of all actors (admins/staff) in audit logs"""
+    pipeline = [
+        {"$group": {
+            "_id": "$actor.id",
+            "name": {"$first": "$actor.name"},
+            "role": {"$first": "$actor.role"}
+        }},
+        {"$sort": {"name": 1}}
+    ]
+    actors = await db.audit_logs.aggregate(pipeline).to_list(100)
+    return {"actors": [{"id": a["_id"], "name": a["name"], "role": a["role"]} for a in actors]}
+
+
+@api_router.get("/audit-logs/stats")
+async def get_audit_log_stats(current_user: dict = Depends(get_current_user)):
+    """Get audit log statistics"""
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    week_ago = (now - timedelta(days=7)).isoformat()
+    
+    # Today's activity
+    today_count = await db.audit_logs.count_documents({"timestamp": {"$gte": today_start}})
+    
+    # This week's activity
+    week_count = await db.audit_logs.count_documents({"timestamp": {"$gte": week_ago}})
+    
+    # Total logs
+    total_count = await db.audit_logs.count_documents({})
+    
+    # Actions breakdown
+    actions_pipeline = [
+        {"$group": {"_id": "$action", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 10}
+    ]
+    top_actions = await db.audit_logs.aggregate(actions_pipeline).to_list(10)
+    
+    # Most active users
+    actors_pipeline = [
+        {"$group": {"_id": "$actor.name", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 5}
+    ]
+    top_actors = await db.audit_logs.aggregate(actors_pipeline).to_list(5)
+    
+    return {
+        "today": today_count,
+        "week": week_count,
+        "total": total_count,
+        "top_actions": [{"action": a["_id"], "count": a["count"]} for a in top_actions],
+        "top_actors": [{"name": a["_id"], "count": a["count"]} for a in top_actors]
+    }
+
+
 # ==================== GOOGLE SHEETS ====================
 
 @api_router.get("/google-sheets/test")
