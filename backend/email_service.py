@@ -57,7 +57,7 @@ def send_email(to_email: str, subject: str, html_body: str, text_body: Optional[
 
 
 def get_base_email_template(content: str, preview_text: str = "") -> str:
-    """Base email template with modern design"""
+    """Base email template with premium modern design"""
     return f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -67,7 +67,7 @@ def get_base_email_template(content: str, preview_text: str = "") -> str:
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <title>GameShop Nepal</title>
         <!--[if !mso]><!-->
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
         <!--<![endif]-->
         <style>
             body {{ margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }}
@@ -75,30 +75,43 @@ def get_base_email_template(content: str, preview_text: str = "") -> str:
             @media screen and (max-width: 600px) {{
                 .email-container {{ width: 100% !important; }}
                 .stack-column {{ display: block !important; width: 100% !important; }}
+                .mobile-padding {{ padding-left: 20px !important; padding-right: 20px !important; }}
+                .mobile-center {{ text-align: center !important; }}
             }}
         </style>
     </head>
-    <body style="margin: 0; padding: 0; background-color: #0a0a0a; -webkit-font-smoothing: antialiased;">
+    <body style="margin: 0; padding: 0; background-color: #050505; -webkit-font-smoothing: antialiased;">
         <!-- Preview text -->
-        <div style="display: none; max-height: 0; overflow: hidden;">{preview_text}</div>
+        <div style="display: none; max-height: 0; overflow: hidden; mso-hide: all;">{preview_text}</div>
         
         <!-- Email Container -->
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #0a0a0a;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #050505;">
             <tr>
-                <td align="center" style="padding: 20px 10px;">
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" class="email-container" style="background-color: #111111; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                <td align="center" style="padding: 30px 15px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" class="email-container" style="background: linear-gradient(180deg, #0f0f0f 0%, #0a0a0a 100%); border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(245, 166, 35, 0.1);">
                         
-                        <!-- Header -->
+                        <!-- Header with Logo -->
                         <tr>
-                            <td style="padding: 30px 40px; background: linear-gradient(135deg, #1a1a1a 0%, #111111 100%); border-bottom: 1px solid rgba(245, 166, 35, 0.2);">
+                            <td style="padding: 28px 40px; background: linear-gradient(135deg, #141414 0%, #0f0f0f 100%); border-bottom: 1px solid rgba(245, 166, 35, 0.15);" class="mobile-padding">
                                 <table role="presentation" width="100%">
                                     <tr>
-                                        <td>
-                                            <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #F5A623; letter-spacing: -0.5px;">GSN</h1>
-                                            <p style="margin: 5px 0 0; font-size: 12px; color: #666; letter-spacing: 1px; text-transform: uppercase;">GameShop Nepal</p>
+                                        <td style="vertical-align: middle;">
+                                            <table role="presentation" cellspacing="0" cellpadding="0">
+                                                <tr>
+                                                    <td style="vertical-align: middle; padding-right: 12px;">
+                                                        <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #F5A623 0%, #E8930C 100%); border-radius: 12px; text-align: center; line-height: 44px; box-shadow: 0 4px 15px rgba(245, 166, 35, 0.3);">
+                                                            <span style="font-size: 22px; font-weight: 800; color: #000;">G</span>
+                                                        </div>
+                                                    </td>
+                                                    <td style="vertical-align: middle;">
+                                                        <h1 style="margin: 0; font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">GameShop Nepal</h1>
+                                                        <p style="margin: 2px 0 0; font-size: 11px; color: #F5A623; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 500;">Premium Digital Store</p>
+                                                    </td>
+                                                </tr>
+                                            </table>
                                         </td>
-                                        <td align="right">
-                                            <a href="{SITE_URL}" style="display: inline-block; padding: 10px 20px; background-color: rgba(245, 166, 35, 0.1); color: #F5A623; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 500; border: 1px solid rgba(245, 166, 35, 0.2);">Visit Store</a>
+                                        <td align="right" style="vertical-align: middle;" class="mobile-center">
+                                            <a href="{SITE_URL}" style="display: inline-block; padding: 10px 18px; background: linear-gradient(135deg, rgba(245, 166, 35, 0.15) 0%, rgba(245, 166, 35, 0.05) 100%); color: #F5A623; text-decoration: none; border-radius: 10px; font-size: 12px; font-weight: 600; border: 1px solid rgba(245, 166, 35, 0.25); letter-spacing: 0.3px;">Visit Store</a>
                                         </td>
                                     </tr>
                                 </table>
@@ -110,25 +123,35 @@ def get_base_email_template(content: str, preview_text: str = "") -> str:
                         
                         <!-- Footer -->
                         <tr>
-                            <td style="padding: 30px 40px; background-color: #0d0d0d; border-top: 1px solid #222;">
+                            <td style="padding: 35px 40px; background: linear-gradient(180deg, #0a0a0a 0%, #050505 100%); border-top: 1px solid rgba(255,255,255,0.05);" class="mobile-padding">
                                 <table role="presentation" width="100%">
+                                    <!-- Support Section -->
                                     <tr>
-                                        <td align="center" style="padding-bottom: 20px;">
-                                            <p style="margin: 0 0 10px; font-size: 14px; color: #888;">Need help? We're here for you!</p>
-                                            <a href="https://wa.me/9779743488871" style="display: inline-block; padding: 12px 24px; background-color: #25D366; color: #fff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600;">
-                                                💬 Chat on WhatsApp
+                                        <td align="center" style="padding-bottom: 25px;">
+                                            <p style="margin: 0 0 12px; font-size: 13px; color: #666; font-weight: 500;">Questions? We're here 24/7</p>
+                                            <a href="https://wa.me/9779743488871" style="display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: #fff; text-decoration: none; border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.25);">
+                                                Chat on WhatsApp
                                             </a>
                                         </td>
                                     </tr>
+                                    <!-- Divider -->
+                                    <tr>
+                                        <td style="padding: 0 50px 20px;">
+                                            <div style="height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);"></div>
+                                        </td>
+                                    </tr>
+                                    <!-- Links & Copyright -->
                                     <tr>
                                         <td align="center">
-                                            <p style="margin: 0; font-size: 12px; color: #555;">
-                                                © 2024 GameShop Nepal. All rights reserved.
+                                            <p style="margin: 0 0 8px; font-size: 12px; color: #444;">
+                                                <a href="{SITE_URL}" style="color: #888; text-decoration: none; font-weight: 500;">Home</a>
+                                                <span style="color: #333; margin: 0 10px;">|</span>
+                                                <a href="{SITE_URL}/faq" style="color: #888; text-decoration: none; font-weight: 500;">FAQs</a>
+                                                <span style="color: #333; margin: 0 10px;">|</span>
+                                                <a href="{SITE_URL}/about" style="color: #888; text-decoration: none; font-weight: 500;">About</a>
                                             </p>
-                                            <p style="margin: 10px 0 0; font-size: 11px; color: #444;">
-                                                <a href="{SITE_URL}" style="color: #666; text-decoration: none;">Website</a> &nbsp;•&nbsp;
-                                                <a href="{SITE_URL}/faq" style="color: #666; text-decoration: none;">FAQs</a> &nbsp;•&nbsp;
-                                                <a href="{SITE_URL}/about" style="color: #666; text-decoration: none;">About Us</a>
+                                            <p style="margin: 0; font-size: 11px; color: #444;">
+                                                © 2025 GameShop Nepal. All rights reserved.
                                             </p>
                                         </td>
                                     </tr>
@@ -136,6 +159,17 @@ def get_base_email_template(content: str, preview_text: str = "") -> str:
                             </td>
                         </tr>
                         
+                    </table>
+                    
+                    <!-- Bottom Branding -->
+                    <table role="presentation" width="600" class="email-container" style="margin-top: 20px;">
+                        <tr>
+                            <td align="center">
+                                <p style="margin: 0; font-size: 10px; color: #333;">
+                                    Sent with care from Kathmandu, Nepal
+                                </p>
+                            </td>
+                        </tr>
                     </table>
                 </td>
             </tr>
