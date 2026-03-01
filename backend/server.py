@@ -1511,9 +1511,27 @@ async def update_product(product_id: str, product_data: ProductCreate, current_u
 
 @api_router.delete("/products/{product_id}")
 async def delete_product(product_id: str, current_user: dict = Depends(get_current_user)):
+    # Get product info before deletion for audit log
+    product = await db.products.find_one({"id": product_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
     result = await db.products.delete_one({"id": product_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Product not found")
+    
+    # Create audit log
+    await create_audit_log(
+        action="DELETE_PRODUCT",
+        actor_id=current_user.get("id"),
+        actor_name=current_user.get("name", current_user.get("email")),
+        actor_role=current_user.get("role", "admin"),
+        resource_type="product",
+        resource_id=product_id,
+        resource_name=product.get("name"),
+        details={"category": product.get("category")}
+    )
+    
     return {"message": "Product deleted"}
 
 # ==================== REVIEW ROUTES ====================
