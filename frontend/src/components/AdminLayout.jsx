@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Package, FolderOpen, Star, FileText, Share2, LogOut, Home, Menu, X, 
   HelpCircle, Bell, BookOpen, CreditCard, Ticket, Settings, BarChart3, Users, ShoppingCart, 
   Shield, Mail, Coins, Gift, UserPlus, Zap, ChevronDown, ChevronRight,
-  Store, Megaphone, Palette, Wrench
+  Store, Megaphone, Palette, Wrench, ClipboardList
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { authAPI } from '@/lib/api';
