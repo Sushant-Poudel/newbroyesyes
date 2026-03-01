@@ -3527,6 +3527,7 @@ async def track_visit(request: Request):
         
         now = datetime.now(timezone.utc)
         today = now.strftime("%Y-%m-%d")
+        current_hour = now.strftime("%H")
         
         # Only count unique visits per day per visitor
         existing = await db.visits.find_one({
@@ -3538,6 +3539,7 @@ async def track_visit(request: Request):
             await db.visits.insert_one({
                 "visitor_id": visitor_id,
                 "date": today,
+                "hour": current_hour,
                 "user_agent": user_agent,
                 "created_at": now.isoformat()
             })
