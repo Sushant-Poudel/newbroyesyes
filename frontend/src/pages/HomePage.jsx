@@ -91,7 +91,7 @@ export default function HomePage() {
       <Navbar notificationBarHeight={hasNotification ? 36 : 0} />
 
       {/* Trustpilot & Reviews Section */}
-      <section className={`${hasNotification ? 'pt-28 lg:pt-32' : 'pt-24 lg:pt-28'}`} data-testid="reviews-section">
+      <section className={`${hasNotification ? 'pt-20 lg:pt-24' : 'pt-20 lg:pt-24'}`} data-testid="reviews-section">
         <div className="trustpilot-section py-3 lg:py-4 border-b border-white/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 lg:gap-4">
