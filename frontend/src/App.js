@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { WishlistProvider } from "@/components/Wishlist";
@@ -6,6 +6,7 @@ import { CartProvider } from "@/components/Cart";
 import { LanguageProvider } from "@/components/Language";
 import { CustomerProvider } from "@/components/CustomerAccount";
 import ChatWidget from "@/components/ChatWidget";
+import AuthCallback from "@/components/AuthCallback";
 
 // Loading component
 const PageLoader = () => (
