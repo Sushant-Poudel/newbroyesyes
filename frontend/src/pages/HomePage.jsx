@@ -159,74 +159,114 @@ export default function HomePage() {
       </section>
 
       {hotDeals.length > 0 && (
-        <section className="py-8 lg:py-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-heading text-xl sm:text-2xl font-bold text-white uppercase tracking-tight flex items-center gap-2">Hot Deals</h2>
-              <Link to="/" className="text-gold-500 text-sm hover:underline flex items-center gap-1">View All <ChevronRight className="h-4 w-4" /></Link>
+        <section className="py-16">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="font-heading text-2xl md:text-3xl font-bold text-white tracking-tight">Hot Deals</h2>
+              <Link to="/" className="text-[#2997FF] text-sm hover:underline flex items-center gap-1">View All <ChevronRight className="h-4 w-4" /></Link>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">{hotDeals.map((product) => <ProductCard key={product.id} product={product} />)}</div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">{hotDeals.map((product) => <ProductCard key={product.id} product={product} />)}</div>
           </div>
         </section>
       )}
 
       {bestSellers.length > 0 && (
-        <section className="py-8 lg:py-10 bg-card/30">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-heading text-xl sm:text-2xl font-bold text-white uppercase tracking-tight flex items-center gap-2">Best Sellers</h2>
-              <Link to="/" className="text-gold-500 text-sm hover:underline flex items-center gap-1">View All <ChevronRight className="h-4 w-4" /></Link>
+        <section className="py-16 border-y border-white/5">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="font-heading text-2xl md:text-3xl font-bold text-white tracking-tight">Best Sellers</h2>
+              <Link to="/" className="text-[#2997FF] text-sm hover:underline flex items-center gap-1">View All <ChevronRight className="h-4 w-4" /></Link>
             </div>
-            <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
-              {bestSellers.map((product) => <div key={product.id} className="flex-shrink-0 w-[160px] sm:w-[180px] lg:w-[200px] snap-start"><ProductCard product={product} /></div>)}
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
+              {bestSellers.map((product) => <div key={product.id} className="flex-shrink-0 w-[180px] sm:w-[200px] lg:w-[220px] snap-start"><ProductCard product={product} /></div>)}
             </div>
           </div>
         </section>
       )}
 
       {newArrivals.length > 0 && (
-        <section className="py-8 lg:py-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-heading text-xl sm:text-2xl font-bold text-white uppercase tracking-tight flex items-center gap-2">New Arrivals</h2>
-              <Link to="/" className="text-gold-500 text-sm hover:underline flex items-center gap-1">View All <ChevronRight className="h-4 w-4" /></Link>
+        <section className="py-16">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="font-heading text-2xl md:text-3xl font-bold text-white tracking-tight">New Arrivals</h2>
+              <Link to="/" className="text-[#2997FF] text-sm hover:underline flex items-center gap-1">View All <ChevronRight className="h-4 w-4" /></Link>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">{newArrivals.map((product) => <ProductCard key={product.id} product={product} />)}</div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">{newArrivals.map((product) => <ProductCard key={product.id} product={product} />)}</div>
           </div>
         </section>
       )}
 
-      <section ref={productsSectionRef} className="py-8 lg:py-12" data-testid="products-section">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-6 lg:mb-8">
-            <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-white uppercase tracking-tight mb-2 lg:mb-3 animate-fade-in">All <span className="text-gold-500">Products</span></h2>
-            <p className="text-white/60 max-w-2xl mx-auto text-sm lg:text-base">Browse our collection of premium digital products.</p>
+      {/* All Products Section */}
+      <section ref={productsSectionRef} className="py-20 relative" data-testid="products-section">
+        {/* Section Glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#bf5af2]/5 rounded-full blur-[150px] pointer-events-none" />
+        
+        <div className="relative max-w-7xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="font-heading text-4xl md:text-5xl font-bold text-white tracking-tight mb-4">
+              All <span className="text-gradient-purple">Products</span>
+            </h2>
+            <p className="text-white/50 max-w-xl mx-auto">Browse our complete collection of premium digital subscriptions and products.</p>
           </div>
 
           {searchQuery && (
-            <div className="flex items-center justify-center gap-2 mb-4 lg:mb-6 animate-scale-in">
-              <div className="flex items-center gap-2 bg-gold-500/10 border border-gold-500/30 rounded-full px-4 py-2">
-                <Search className="h-4 w-4 text-gold-500" />
-                <span className="text-white text-sm">Results for "<span className="text-gold-500">{searchQuery}</span>"</span>
-                <button onClick={clearSearch} className="ml-1 p-1 hover:bg-white/10 rounded-full transition-colors"><X className="h-4 w-4 text-white/60 hover:text-white" /></button>
+            <div className="flex items-center justify-center gap-2 mb-8 animate-scale-in">
+              <div className="flex items-center gap-2 glass rounded-full px-5 py-2.5">
+                <Search className="h-4 w-4 text-[#2997FF]" />
+                <span className="text-white text-sm">Results for "<span className="text-[#2997FF]">{searchQuery}</span>"</span>
+                <button onClick={clearSearch} className="ml-2 p-1 hover:bg-white/10 rounded-full transition-colors">
+                  <X className="h-4 w-4 text-white/60 hover:text-white" />
+                </button>
               </div>
             </div>
           )}
 
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-6 lg:mb-8">
-            <button onClick={() => setSelectedCategory(null)} className={`category-pill px-3 lg:px-4 py-1.5 rounded-full border text-xs lg:text-sm font-heading uppercase tracking-wider transition-all duration-300 hover:scale-105 ${selectedCategory === null ? 'bg-gold-500/20 border-gold-500 text-gold-500' : 'border-white/20 text-white/60 hover:border-gold-500/50 hover:text-gold-500'}`}>All</button>
+          {/* Category Filters */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
+            <button 
+              onClick={() => setSelectedCategory(null)} 
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                selectedCategory === null 
+                  ? 'bg-white text-black' 
+                  : 'glass text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              All
+            </button>
             {categories.map((cat) => (
-              <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} className={`category-pill px-3 lg:px-4 py-1.5 rounded-full border text-xs lg:text-sm font-heading uppercase tracking-wider transition-all duration-300 hover:scale-105 ${selectedCategory === cat.id ? 'bg-gold-500/20 border-gold-500 text-gold-500' : 'border-white/20 text-white/60 hover:border-gold-500/50 hover:text-gold-500'}`}>{cat.name}</button>
+              <button 
+                key={cat.id} 
+                onClick={() => setSelectedCategory(cat.id)} 
+                className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                  selectedCategory === cat.id 
+                    ? 'bg-white text-black' 
+                    : 'glass text-white/70 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                {cat.name}
+              </button>
             ))}
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-5">{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => <div key={i} className="aspect-square skeleton rounded-lg"></div>)}</div>
-          ) : filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-5">
-              {filteredProducts.map((product, index) => <div key={product.id} className="animate-fade-in" style={{ animationDelay: `${index * 30}ms` }}><ProductCard product={product} /></div>)}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-6">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+                <div key={i} className="aspect-square glass-card rounded-3xl animate-pulse"></div>
+              ))}
             </div>
-          ) : <div className="text-center py-10"><p className="text-white/40 text-lg">No products found.</p></div>}
+          ) : filteredProducts.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-6">
+              {filteredProducts.map((product, index) => (
+                <div key={product.id} className="animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <p className="text-white/40 text-lg">No products found.</p>
+            </div>
+          )}
         </div>
       </section>
 
