@@ -541,22 +541,6 @@ export default function AdminOrders() {
                       </div>
                     )}
 
-                    {/* Complete Order Button */}
-                    {order.status === 'Confirmed' && (
-                      <div className="mt-4">
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCompleteOrder(order);
-                          }}
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                        >
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          Mark as Completed & Send Invoice Email
-                        </Button>
-                      </div>
-                    )}
-
                     {/* Status History */}
                     {order.status_history && order.status_history.length > 0 && (
                       <div className="mt-6">
