@@ -3288,6 +3288,24 @@ async def update_order_status(order_id: str, status_data: OrderStatusUpdate, cur
     }
     await db.order_status_history.insert_one(history_entry)
     
+    # Create audit log for order status change
+    order_number = order.get('takeapp_order_number', order_id[:8].upper())
+    await create_audit_log(
+        action="UPDATE_ORDER_STATUS",
+        actor_id=current_user.get("id"),
+        actor_name=current_user.get("name", current_user.get("email")),
+        actor_role=current_user.get("role", "admin"),
+        resource_type="order",
+        resource_id=order_id,
+        resource_name=f"Order #{order_number}",
+        details={
+            "old_status": old_status,
+            "new_status": status_data.status,
+            "note": status_data.note,
+            "customer_email": order.get("customer_email")
+        }
+    )
+    
     credits_deducted = 0
     credits_awarded = 0
     customer_email = order.get("customer_email")
