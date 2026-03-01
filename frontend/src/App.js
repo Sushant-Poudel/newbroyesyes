@@ -102,6 +102,7 @@ function App() {
                   <Route path="/daily-reward" element={<DailyRewardPage />} />
                   <Route path="/account" element={<CustomerAccountPage />} />
                   <Route path="/track-order" element={<OrderTrackingPage />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
 
                   <Route path="/panelgsnadminbackend/login" element={<AdminLogin />} />
                   <Route path="/panelgsnadminbackend" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
