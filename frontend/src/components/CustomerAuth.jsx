@@ -118,7 +118,7 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[400px] p-0 bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden" data-testid="customer-auth-modal">
+      <DialogContent className="w-[calc(100%-32px)] sm:max-w-[400px] p-0 bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden" data-testid="customer-auth-modal">
         {/* Close Button */}
         <button 
           onClick={onClose}
@@ -127,7 +127,7 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
           <X className="h-5 w-5" />
         </button>
 
-        <div className="p-8">
+        <div className="p-6 sm:p-8">
           {/* Logo */}
           <div className="flex justify-center mb-6">
             <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10">
