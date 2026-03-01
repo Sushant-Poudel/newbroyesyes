@@ -177,22 +177,22 @@ export default function ChatWidget() {
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[80%] px-4 py-2 rounded-2xl ${
+                    className={`max-w-[85%] px-4 py-3 rounded-2xl ${
                       msg.role === 'user'
-                        ? 'bg-amber-500 text-black rounded-br-sm'
-                        : 'bg-zinc-800 text-white rounded-bl-sm'
+                        ? 'bg-[#2997FF] text-white rounded-br-md'
+                        : 'glass text-white rounded-bl-md'
                     }`}
                   >
-                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                   </div>
                 </div>
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-zinc-800 text-white px-4 py-2 rounded-2xl rounded-bl-sm">
+                  <div className="glass text-white px-4 py-3 rounded-2xl rounded-bl-md">
                     <div className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span className="text-sm text-zinc-400">Typing...</span>
+                      <Loader2 className="w-4 h-4 animate-spin text-[#2997FF]" />
+                      <span className="text-sm text-white/50">Typing...</span>
                     </div>
                   </div>
                 </div>
@@ -202,21 +202,21 @@ export default function ChatWidget() {
           </ScrollArea>
 
           {/* Input */}
-          <form onSubmit={sendMessage} className="p-4 border-t border-zinc-800">
+          <form onSubmit={sendMessage} className="p-4 border-t border-white/10">
             <div className="flex gap-2">
               <Input
                 ref={inputRef}
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 placeholder="Type a message..."
-                className="flex-1 bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 rounded-full"
+                className="flex-1 glass-input text-white placeholder:text-white/30 rounded-full px-5"
                 disabled={isLoading}
                 data-testid="chat-input"
               />
               <Button
                 type="submit"
                 size="icon"
-                className="bg-amber-500 hover:bg-amber-600 text-black rounded-full h-10 w-10"
+                className="bg-white hover:bg-white/90 text-black rounded-full h-10 w-10 transition-transform hover:scale-105"
                 disabled={isLoading || !inputMessage.trim()}
                 data-testid="chat-send-btn"
               >
@@ -226,7 +226,7 @@ export default function ChatWidget() {
             <button
               type="button"
               onClick={startNewChat}
-              className="text-xs text-zinc-500 hover:text-zinc-300 mt-2 transition-colors"
+              className="text-xs text-white/30 hover:text-white/60 mt-3 transition-colors"
             >
               Start new conversation
             </button>
