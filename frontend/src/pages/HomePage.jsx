@@ -91,15 +91,23 @@ export default function HomePage() {
       <Navbar notificationBarHeight={hasNotification ? 36 : 0} />
 
       {/* Trustpilot & Reviews Section */}
-      <section className={`${hasNotification ? 'pt-24 lg:pt-28' : 'pt-16 lg:pt-20'}`} data-testid="reviews-section">
-        <div className="trustpilot-section py-2 lg:py-3 border-b border-white/10">
+      <section className={`${hasNotification ? 'pt-28 lg:pt-32' : 'pt-24 lg:pt-28'}`} data-testid="reviews-section">
+        <div className="trustpilot-section py-3 lg:py-4 border-b border-white/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 lg:gap-3">
-              <div className="flex items-center gap-2 lg:gap-3">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 lg:gap-4">
+              <div className="flex items-center gap-3 lg:gap-4">
                 <div className="flex items-center gap-0.5">
-                  {[1, 2, 3, 4, 5].map((star) => <Star key={star} className="h-4 w-4 lg:h-5 lg:w-5 text-amber-500 fill-amber-500" />)}
+                  {[1, 2, 3, 4, 5].map((star, idx) => (
+                    <Star 
+                      key={star} 
+                      className={`h-4 w-4 lg:h-5 lg:w-5 ${idx < 4 ? 'text-amber-500 fill-amber-500' : 'text-amber-500 fill-amber-500/50'}`} 
+                    />
+                  ))}
                 </div>
-                <span className="text-white font-heading font-semibold uppercase tracking-wider text-sm lg:text-base">Excellent on Trustpilot</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-amber-500 font-bold text-sm lg:text-base">4.5/5</span>
+                  <span className="text-white font-heading font-semibold uppercase tracking-wider text-sm lg:text-base">Excellent on Trustpilot</span>
+                </div>
               </div>
               <a href={TRUSTPILOT_URL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
                 <Button variant="outline" className="border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black font-heading uppercase tracking-wider text-xs lg:text-sm w-full sm:w-auto transition-all duration-300 hover:scale-105">
