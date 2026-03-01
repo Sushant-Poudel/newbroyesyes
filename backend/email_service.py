@@ -345,48 +345,48 @@ GameShop Nepal
 
 
 def get_order_status_update_email(order_data: dict, new_status: str) -> tuple:
-    """Generate order status update email"""
+    """Generate order status update email with premium design"""
     order_number = order_data.get('takeapp_order_number', order_data['id'][:8].upper())
     
     status_config = {
-        "pending": {"emoji": "⏳", "color": "#eab308", "message": "Your order is waiting for payment confirmation"},
-        "confirmed": {"emoji": "✅", "color": "#3b82f6", "message": "Payment received! We're preparing your order"},
-        "processing": {"emoji": "⚙️", "color": "#8b5cf6", "message": "Your order is being processed"},
-        "completed": {"emoji": "🎉", "color": "#22c55e", "message": "Your order is complete! Check your email for details"},
-        "delivered": {"emoji": "📦", "color": "#22c55e", "message": "Your digital product has been delivered!"},
-        "cancelled": {"emoji": "❌", "color": "#ef4444", "message": "Your order has been cancelled"}
+        "pending": {"emoji": "⏳", "color": "#eab308", "bg": "rgba(234, 179, 8, 0.1)", "message": "Your order is waiting for payment confirmation"},
+        "confirmed": {"emoji": "✓", "color": "#3b82f6", "bg": "rgba(59, 130, 246, 0.1)", "message": "Payment received! We're preparing your order"},
+        "processing": {"emoji": "⚙", "color": "#8b5cf6", "bg": "rgba(139, 92, 246, 0.1)", "message": "Your order is being processed"},
+        "completed": {"emoji": "✓", "color": "#22c55e", "bg": "rgba(34, 197, 94, 0.1)", "message": "Your order is complete! Check your email for details"},
+        "delivered": {"emoji": "📦", "color": "#22c55e", "bg": "rgba(34, 197, 94, 0.1)", "message": "Your digital product has been delivered!"},
+        "cancelled": {"emoji": "✕", "color": "#ef4444", "bg": "rgba(239, 68, 68, 0.1)", "message": "Your order has been cancelled"}
     }
     
     config = status_config.get(new_status.lower(), status_config["pending"])
-    subject = f"{config['emoji']} Order #{order_number} - {new_status.title()}"
+    subject = f"Order #{order_number} - {new_status.title()} | GameShop Nepal"
     
     content = f"""
-        <!-- Status Update -->
+        <!-- Status Update Hero -->
         <tr>
-            <td style="padding: 50px 40px; text-align: center;">
-                <div style="width: 80px; height: 80px; margin: 0 auto 20px; background-color: {config['color']}20; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid {config['color']};">
-                    <span style="font-size: 40px;">{config['emoji']}</span>
+            <td style="padding: 55px 40px 45px; text-align: center;" class="mobile-padding">
+                <div style="width: 88px; height: 88px; margin: 0 auto 24px; background: {config['bg']}; border-radius: 50%; text-align: center; line-height: 88px; border: 2px solid {config['color']};">
+                    <span style="font-size: 40px; color: {config['color']}; line-height: 84px;">{config['emoji']}</span>
                 </div>
-                <h2 style="margin: 0 0 10px; font-size: 24px; font-weight: 700; color: #fff;">Order Status Updated</h2>
-                <p style="margin: 0; font-size: 16px; color: #888;">{config['message']}</p>
+                <h2 style="margin: 0 0 12px; font-size: 26px; font-weight: 800; color: #fff; letter-spacing: -0.5px;">Order Status Updated</h2>
+                <p style="margin: 0; font-size: 15px; color: #888; max-width: 380px; display: inline-block;">{config['message']}</p>
             </td>
         </tr>
         
         <!-- Order Details Card -->
         <tr>
-            <td style="padding: 0 40px 40px;">
-                <table role="presentation" width="100%" style="background-color: #1a1a1a; border-radius: 12px; border: 1px solid #2a2a2a;">
+            <td style="padding: 0 40px 35px;" class="mobile-padding">
+                <table role="presentation" width="100%" style="background: linear-gradient(135deg, #141414 0%, #0f0f0f 100%); border-radius: 16px; border: 1px solid rgba(255,255,255,0.06);">
                     <tr>
-                        <td style="padding: 25px;">
+                        <td style="padding: 26px 28px;">
                             <table role="presentation" width="100%">
                                 <tr>
                                     <td>
-                                        <p style="margin: 0; font-size: 12px; color: #666; text-transform: uppercase;">Order Number</p>
-                                        <p style="margin: 5px 0 0; font-size: 18px; font-weight: 700; color: #F5A623;">#{order_number}</p>
+                                        <p style="margin: 0; font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Order Number</p>
+                                        <p style="margin: 6px 0 0; font-size: 20px; font-weight: 800; color: #F5A623;">#{order_number}</p>
                                     </td>
                                     <td align="right">
-                                        <p style="margin: 0; font-size: 12px; color: #666; text-transform: uppercase;">Status</p>
-                                        <p style="margin: 5px 0 0; font-size: 16px; font-weight: 600; color: {config['color']};">{new_status.upper()}</p>
+                                        <p style="margin: 0; font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">New Status</p>
+                                        <p style="margin: 6px 0 0; font-size: 17px; font-weight: 700; color: {config['color']}; text-transform: uppercase;">{new_status}</p>
                                     </td>
                                 </tr>
                             </table>
@@ -398,8 +398,8 @@ def get_order_status_update_email(order_data: dict, new_status: str) -> tuple:
         
         <!-- CTA Button -->
         <tr>
-            <td style="padding: 0 40px 40px; text-align: center;">
-                <a href="{SITE_URL}/account" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #F5A623 0%, #f59e0b 100%); color: #000; text-decoration: none; border-radius: 10px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 15px rgba(245, 166, 35, 0.3);">
+            <td style="padding: 0 40px 50px; text-align: center;" class="mobile-padding">
+                <a href="{SITE_URL}/account" style="display: inline-block; padding: 16px 36px; background: linear-gradient(135deg, #F5A623 0%, #E8930C 100%); color: #000; text-decoration: none; border-radius: 12px; font-size: 15px; font-weight: 700; box-shadow: 0 8px 25px rgba(245, 166, 35, 0.3);">
                     View Order Details
                 </a>
             </td>
