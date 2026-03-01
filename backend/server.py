@@ -1470,6 +1470,19 @@ async def create_product(product_data: ProductCreate, current_user: dict = Depen
     
     product = Product(**product_dict)
     await db.products.insert_one(product.model_dump())
+    
+    # Create audit log
+    await create_audit_log(
+        action="CREATE_PRODUCT",
+        actor_id=current_user.get("id"),
+        actor_name=current_user.get("name", current_user.get("email")),
+        actor_role=current_user.get("role", "admin"),
+        resource_type="product",
+        resource_id=product.id,
+        resource_name=product.name,
+        details={"category": product_data.category, "price": str(product_data.price)}
+    )
+    
     return product
 
 @api_router.put("/products/{product_id}", response_model=Product)
