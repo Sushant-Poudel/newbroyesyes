@@ -69,7 +69,7 @@ export default function Navbar({ notificationBarHeight = 0 }) {
                 data-testid={`nav-link-${link.label.toLowerCase().replace(' ', '-')}`}
                 className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 flex items-center gap-2 ${
                   link.highlight 
-                    ? 'text-[#2997FF] hover:bg-[#2997FF]/10' 
+                    ? 'text-amber-500 hover:bg-amber-500/10' 
                     : isActive(link.href) 
                       ? 'text-white bg-white/10' 
                       : 'text-white/60 hover:text-white hover:bg-white/5'
