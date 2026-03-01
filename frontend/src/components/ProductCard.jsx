@@ -25,7 +25,7 @@ export default function ProductCard({ product }) {
     >
       {/* Glow effect on hover */}
       <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none ${
-        isFlashSale ? 'bg-red-500/5' : 'bg-[#2997FF]/5'
+        isFlashSale ? 'bg-red-500/5' : 'bg-amber-500/5'
       }`} />
       
       <div className="aspect-square relative overflow-hidden bg-black/30 rounded-t-3xl">
