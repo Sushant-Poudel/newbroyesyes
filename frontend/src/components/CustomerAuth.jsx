@@ -28,9 +28,11 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
   const handleGoogleLogin = () => {
-    // Google OAuth would be implemented here
-    toast.info('Google login coming soon!');
+    // Use window.location.origin to get the current domain dynamically
+    const redirectUrl = window.location.origin + '/auth/callback';
+    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
   };
 
   const handleSendOTP = async (e) => {
@@ -82,7 +84,7 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
       localStorage.setItem('customer_token', response.data.token);
       localStorage.setItem('customer_info', JSON.stringify(response.data.customer));
       
-      toast.success('Login successful! Welcome back 🎉');
+      toast.success('Login successful! Welcome back');
       onSuccess && onSuccess(response.data.customer);
       onClose();
       
@@ -116,11 +118,11 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[420px] p-0 bg-white border-0 rounded-2xl overflow-hidden" data-testid="customer-auth-modal">
+      <DialogContent className="sm:max-w-[400px] p-0 bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden" data-testid="customer-auth-modal">
         {/* Close Button */}
         <button 
           onClick={onClose}
-          className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 transition-colors z-10"
+          className="absolute right-4 top-4 text-white/40 hover:text-white/70 transition-colors z-10"
         >
           <X className="h-5 w-5" />
         </button>
@@ -128,17 +130,17 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
         <div className="p-8">
           {/* Logo */}
           <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 bg-[#0a0a0a] rounded-2xl flex items-center justify-center shadow-lg">
-              <img src={LOGO_URL} alt="GSN" className="h-12 w-auto" />
+            <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10">
+              <img src={LOGO_URL} alt="GSN" className="h-10 w-auto" />
             </div>
           </div>
 
           {/* Title */}
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-white">
               {step === 'email' ? 'Welcome Back' : 'Enter OTP'}
             </h2>
-            <p className="text-gray-500 mt-1 text-sm">
+            <p className="text-white/50 mt-1 text-sm">
               {step === 'email' 
                 ? 'Sign in to your account'
                 : `We've sent a 6-digit code to ${email}`
@@ -152,35 +154,35 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
               <Button
                 type="button"
                 onClick={handleGoogleLogin}
-                className="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl py-6 font-medium mb-6 flex items-center justify-center gap-3"
+                className="w-full bg-white hover:bg-gray-100 text-gray-800 rounded-xl py-5 font-medium mb-5 flex items-center justify-center gap-3"
               >
                 <GoogleIcon />
                 Continue with Google
               </Button>
 
               {/* Divider */}
-              <div className="relative mb-6">
+              <div className="relative mb-5">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200"></div>
+                  <div className="w-full border-t border-white/10"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-400">or</span>
+                  <span className="px-4 bg-[#0a0a0a] text-white/40">or</span>
                 </div>
               </div>
 
               {/* Form */}
               <form onSubmit={handleSendOTP} className="space-y-4">
                 <div>
-                  <Label htmlFor="email" className="text-gray-700 font-medium">Email</Label>
-                  <div className="relative mt-1">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Label htmlFor="email" className="text-white/70 font-medium text-sm">Email</Label>
+                  <div className="relative mt-1.5">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
                     <Input
                       id="email"
                       type="email"
                       placeholder="Enter your email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="bg-gray-50 border-gray-200 text-gray-900 pl-10 h-12 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="bg-white/5 border-white/10 text-white pl-10 h-11 rounded-xl focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 placeholder:text-white/30"
                       required
                       data-testid="customer-email-input"
                     />
@@ -188,16 +190,16 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
                 </div>
 
                 <div>
-                  <Label htmlFor="whatsapp" className="text-gray-700 font-medium">WhatsApp Number</Label>
-                  <div className="relative mt-1">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Label htmlFor="whatsapp" className="text-white/70 font-medium text-sm">WhatsApp Number</Label>
+                  <div className="relative mt-1.5">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
                     <Input
                       id="whatsapp"
                       type="tel"
                       placeholder="Enter your WhatsApp number"
                       value={whatsappNumber}
                       onChange={(e) => setWhatsappNumber(e.target.value)}
-                      className="bg-gray-50 border-gray-200 text-gray-900 pl-10 h-12 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="bg-white/5 border-white/10 text-white pl-10 h-11 rounded-xl focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 placeholder:text-white/30"
                       required
                       data-testid="customer-whatsapp-input"
                     />
@@ -206,7 +208,7 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
 
                 <Button
                   type="submit"
-                  className="w-full bg-[#1a1a1a] hover:bg-[#252525] text-white font-semibold h-12 rounded-xl mt-2"
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-black font-semibold h-11 rounded-xl mt-2"
                   disabled={loading}
                   data-testid="send-otp-button"
                 >
@@ -216,42 +218,42 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
                       Sending OTP...
                     </>
                   ) : (
-                    'Sign In'
+                    'Sign In with OTP'
                   )}
                 </Button>
               </form>
 
-              <p className="text-center text-gray-400 text-xs mt-6">
+              <p className="text-center text-white/30 text-xs mt-5">
                 We'll send a one-time code to your email
               </p>
             </>
           ) : (
             <form onSubmit={handleVerifyOTP} className="space-y-4">
               <div>
-                <Label htmlFor="otp" className="text-gray-700 font-medium">Enter OTP</Label>
-                <div className="relative mt-1">
-                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Label htmlFor="otp" className="text-white/70 font-medium text-sm">Enter OTP</Label>
+                <div className="relative mt-1.5">
+                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
                   <Input
                     id="otp"
                     type="text"
                     placeholder="Enter 6-digit code"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    className="bg-gray-50 border-gray-200 text-gray-900 pl-10 h-12 rounded-xl text-center text-xl font-mono tracking-widest focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    className="bg-white/5 border-white/10 text-white pl-10 h-11 rounded-xl text-center text-lg font-mono tracking-widest focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 placeholder:text-white/30"
                     maxLength={6}
                     required
                     data-testid="otp-input"
                     autoFocus
                   />
                 </div>
-                <p className="text-xs text-gray-400 mt-2 text-center">
+                <p className="text-xs text-white/30 mt-2 text-center">
                   Code expires in 10 minutes
                 </p>
               </div>
 
               <Button
                 type="submit"
-                className="w-full bg-[#1a1a1a] hover:bg-[#252525] text-white font-semibold h-12 rounded-xl"
+                className="w-full bg-amber-500 hover:bg-amber-600 text-black font-semibold h-11 rounded-xl"
                 disabled={loading || otp.length !== 6}
                 data-testid="verify-otp-button"
               >
@@ -272,7 +274,7 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
                     setStep('email');
                     setOtp('');
                   }}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-white/50 hover:text-white/70"
                 >
                   ← Change Email
                 </button>
@@ -280,7 +282,7 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
                   type="button"
                   onClick={handleResendOTP}
                   disabled={loading}
-                  className="text-amber-600 hover:text-amber-700 font-medium disabled:opacity-50"
+                  className="text-amber-500 hover:text-amber-400 font-medium disabled:opacity-50"
                 >
                   Resend OTP
                 </button>
