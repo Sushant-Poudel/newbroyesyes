@@ -216,7 +216,7 @@ export default function ChatWidget() {
               <Button
                 type="submit"
                 size="icon"
-                className="bg-white hover:bg-white/90 text-black rounded-full h-10 w-10 transition-transform hover:scale-105"
+                className="bg-amber-500 hover:bg-amber-400 text-black rounded-full h-10 w-10 transition-transform hover:scale-105"
                 disabled={isLoading || !inputMessage.trim()}
                 data-testid="chat-send-btn"
               >
