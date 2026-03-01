@@ -150,26 +150,6 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
 
           {step === 'email' ? (
             <>
-              {/* Google Button */}
-              <Button
-                type="button"
-                onClick={handleGoogleLogin}
-                className="w-full bg-white hover:bg-gray-100 text-gray-800 rounded-xl py-5 font-medium mb-5 flex items-center justify-center gap-3"
-              >
-                <GoogleIcon />
-                Continue with Google
-              </Button>
-
-              {/* Divider */}
-              <div className="relative mb-5">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-white/10"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-[#0a0a0a] text-white/40">or</span>
-                </div>
-              </div>
-
               {/* Form */}
               <form onSubmit={handleSendOTP} className="space-y-4">
                 <div>
