@@ -191,7 +191,7 @@ export default function ChatWidget() {
                 <div className="flex justify-start">
                   <div className="glass text-white px-4 py-3 rounded-2xl rounded-bl-md">
                     <div className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-[#2997FF]" />
+                      <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
                       <span className="text-sm text-white/50">Typing...</span>
                     </div>
                   </div>
