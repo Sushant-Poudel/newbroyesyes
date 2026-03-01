@@ -76,11 +76,12 @@ export default function Navbar({ notificationBarHeight = 0 }) {
         <div 
           className={`flex items-center justify-between transition-all duration-500 ease-out rounded-full ${
             isScrolled
-              ? 'bg-black/80 backdrop-blur-xl shadow-2xl shadow-black/50 px-4 py-2 gap-4'
-              : 'bg-black/80 backdrop-blur-xl px-6 py-3 gap-6'
+              ? 'bg-black/80 backdrop-blur-xl shadow-2xl shadow-black/50 px-6 py-2.5 gap-6'
+              : 'bg-black/80 backdrop-blur-xl px-8 py-3.5 gap-8'
           }`}
           style={{ 
             border: '1px solid rgba(255, 255, 255, 0.1)',
+            minWidth: isScrolled ? '580px' : '650px',
           }}
         >
           {/* Logo */}
@@ -93,13 +94,13 @@ export default function Navbar({ notificationBarHeight = 0 }) {
           </Link>
 
           {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
                 data-testid={`nav-link-${link.label.toLowerCase().replace(' ', '-')}`}
-                className={`px-3 py-1.5 text-sm font-medium transition-all duration-200 flex items-center gap-1.5 rounded-full ${
+                className={`px-4 py-2 text-sm font-medium transition-all duration-200 flex items-center gap-2 rounded-full ${
                   link.highlight 
                     ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10' 
                     : isActive(link.href) 
@@ -107,7 +108,7 @@ export default function Navbar({ notificationBarHeight = 0 }) {
                       : 'text-white/70 hover:text-white hover:bg-white/5'
                 }`}
               >
-                {link.icon && <link.icon className="w-3.5 h-3.5" />}
+                {link.icon && <link.icon className="w-4 h-4" />}
                 {link.label}
               </Link>
             ))}
