@@ -81,15 +81,15 @@
     
     /* Apple-style Primary Button */
     .btn-primary {
-        @apply bg-white text-black font-semibold rounded-full hover:scale-105 active:scale-95 shadow-[0_0_0_0_rgba(255,255,255,0)] hover:shadow-[0_0_30px_-5px_rgba(255,255,255,0.4)] transition-all duration-200;
+        @apply bg-amber-500 text-black font-semibold rounded-full hover:bg-amber-400 hover:scale-105 active:scale-95 shadow-[0_0_0_0_rgba(245,158,11,0)] hover:shadow-[0_0_30px_-5px_rgba(245,158,11,0.4)] transition-all duration-200;
     }
     
     /* Glow Effects */
     .glow-blue {
-        box-shadow: 0 0 60px -10px rgba(41, 151, 255, 0.4);
+        box-shadow: 0 0 60px -10px rgba(245, 158, 11, 0.4);
     }
     .glow-purple {
-        box-shadow: 0 0 60px -10px rgba(191, 90, 242, 0.4);
+        box-shadow: 0 0 60px -10px rgba(245, 158, 11, 0.4);
     }
     .glow-white {
         box-shadow: 0 0 40px -10px rgba(255, 255, 255, 0.3);
@@ -100,38 +100,38 @@
         @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-white/90 to-white/70;
     }
     .text-gradient-blue {
-        @apply bg-clip-text text-transparent bg-gradient-to-r from-[#2997FF] to-[#5ac8fa];
+        @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-amber-500;
     }
     .text-gradient-purple {
-        @apply bg-clip-text text-transparent bg-gradient-to-r from-[#bf5af2] to-[#5ac8fa];
+        @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-amber-600;
     }
     
     /* Background Gradients */
     .bg-hero-glow {
-        background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(41, 151, 255, 0.15), transparent);
+        background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245, 158, 11, 0.1), transparent);
     }
     .bg-mesh {
         background: 
-            radial-gradient(ellipse at 20% 0%, rgba(41, 151, 255, 0.08) 0%, transparent 50%),
-            radial-gradient(ellipse at 80% 100%, rgba(191, 90, 242, 0.08) 0%, transparent 50%),
+            radial-gradient(ellipse at 20% 0%, rgba(245, 158, 11, 0.05) 0%, transparent 50%),
+            radial-gradient(ellipse at 80% 100%, rgba(245, 158, 11, 0.05) 0%, transparent 50%),
             black;
     }
     
-    /* Legacy Support */
+    /* Legacy Support - Orange/Amber theme */
     .text-gold {
-        @apply text-[#2997FF];
+        @apply text-amber-500;
     }
     .bg-gold {
-        @apply bg-[#2997FF];
+        @apply bg-amber-500;
     }
     .border-gold {
-        @apply border-[#2997FF];
+        @apply border-amber-500;
     }
     .glow-gold {
-        box-shadow: 0 0 30px -5px rgba(41, 151, 255, 0.3);
+        box-shadow: 0 0 30px -5px rgba(245, 158, 11, 0.3);
     }
     .glow-gold-hover:hover {
-        box-shadow: 0 0 40px -5px rgba(41, 151, 255, 0.5);
+        box-shadow: 0 0 40px -5px rgba(245, 158, 11, 0.5);
     }
 }
 
