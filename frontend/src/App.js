@@ -128,6 +128,7 @@ function App() {
                   <Route path="/panelgsnadminbackend/daily-reward" element={<ProtectedRoute requiredPermission="view_settings"><AdminDailyReward /></ProtectedRoute>} />
                   <Route path="/panelgsnadminbackend/referral" element={<ProtectedRoute requiredPermission="view_settings"><AdminReferral /></ProtectedRoute>} />
                   <Route path="/panelgsnadminbackend/multiplier" element={<ProtectedRoute requiredPermission="view_settings"><AdminMultiplier /></ProtectedRoute>} />
+                  <Route path="/panelgsnadminbackend/audit-logs" element={<ProtectedRoute requiredPermission="view_analytics"><AdminAuditLogs /></ProtectedRoute>} />
                 </Routes>
               </BrowserRouter>
               <Toaster position="top-right" richColors />
