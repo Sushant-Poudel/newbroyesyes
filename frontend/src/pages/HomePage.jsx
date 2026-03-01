@@ -81,50 +81,81 @@ export default function HomePage() {
   const hasNotification = notificationBar && notificationBar.is_active && notificationBar.text;
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-black bg-mesh">
       {hasNotification && (
-        <div className="fixed top-0 left-0 right-0 z-[60] py-2 px-4 text-center text-sm font-medium" style={{ backgroundColor: notificationBar.bg_color, color: notificationBar.text_color }}>
+        <div className="fixed top-0 left-0 right-0 z-[60] py-2.5 px-4 text-center text-sm font-medium backdrop-blur-xl" style={{ backgroundColor: notificationBar.bg_color + 'dd', color: notificationBar.text_color }}>
           {notificationBar.link ? <a href={notificationBar.link} className="hover:underline">{notificationBar.text}</a> : notificationBar.text}
         </div>
       )}
 
-      <Navbar notificationBarHeight={hasNotification ? 36 : 0} />
+      <Navbar notificationBarHeight={hasNotification ? 40 : 0} />
 
-      <section className={`${hasNotification ? 'pt-24 lg:pt-28' : 'pt-16 lg:pt-20'}`} data-testid="reviews-section">
-        <div className="trustpilot-section py-2 lg:py-3 border-b border-white/10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 lg:gap-3">
-              <div className="flex items-center gap-2 lg:gap-3">
-                <div className="flex items-center gap-0.5">
-                  {[1, 2, 3, 4, 5].map((star) => <Star key={star} className="h-4 w-4 lg:h-5 lg:w-5 text-gold-500 fill-gold-500" />)}
+      {/* Hero Section - Apple Style */}
+      <section className={`relative ${hasNotification ? 'pt-32' : 'pt-28'} pb-16`}>
+        {/* Background Glow */}
+        <div className="absolute inset-0 bg-hero-glow pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[#2997FF]/10 rounded-full blur-[120px] pointer-events-none" />
+        
+        <div className="relative max-w-5xl mx-auto px-6 text-center">
+          <p className="text-[#2997FF] text-sm font-medium tracking-widest uppercase mb-4 animate-fade-in">Premium Digital Products</p>
+          <h1 className="font-heading text-5xl md:text-7xl lg:text-8xl font-extrabold text-white tracking-tight leading-[0.95] mb-6 animate-slide-up">
+            Your Digital<br />
+            <span className="text-gradient-blue">Lifestyle.</span>
+          </h1>
+          <p className="text-white/60 text-lg md:text-xl max-w-2xl mx-auto mb-10 animate-slide-up stagger-2">
+            Netflix, Spotify, YouTube Premium and more. Instant delivery, unbeatable prices.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up stagger-3">
+            <Button 
+              onClick={() => productsSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}
+              className="btn-primary px-8 py-6 text-base"
+            >
+              Explore Products
+            </Button>
+            <a href={TRUSTPILOT_URL} target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" className="text-white/70 hover:text-white gap-2">
+                <div className="flex">{[1,2,3,4,5].map((i) => <Star key={i} className="w-4 h-4 text-[#00b67a] fill-[#00b67a]" />)}</div>
+                Excellent on Trustpilot
+              </Button>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Features */}
+      <section className="py-12 border-y border-white/5">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {TRUST_FEATURES.map((feature, i) => (
+              <div key={feature.title} className={`text-center animate-fade-in stagger-${i+1}`}>
+                <div className="w-12 h-12 mx-auto mb-3 rounded-2xl glass flex items-center justify-center">
+                  <feature.icon className="w-5 h-5 text-[#2997FF]" />
                 </div>
-                <span className="text-white font-heading font-semibold uppercase tracking-wider text-sm lg:text-base">Excellent on Trustpilot</span>
+                <h3 className="text-white font-medium text-sm mb-1">{feature.title}</h3>
+                <p className="text-white/40 text-xs">{feature.desc}</p>
               </div>
-              <a href={TRUSTPILOT_URL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
-                <Button variant="outline" className="border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-black font-heading uppercase tracking-wider text-xs lg:text-sm w-full sm:w-auto transition-all duration-300 hover:scale-105">
-                  Check All Reviews<ExternalLink className="ml-2 h-3 w-3 lg:h-4 lg:w-4" />
-                </Button>
-              </a>
-            </div>
+            ))}
           </div>
         </div>
+      </section>
 
-        <div className="py-6 lg:py-8 bg-gradient-to-b from-black to-transparent overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold text-white uppercase tracking-tight mb-4 lg:mb-6 text-center animate-fade-in">What Our Customers Say</h2>
-          </div>
-
-          {isLoading ? (
-            <div className="flex gap-4 lg:gap-6 px-4">{[1, 2, 3, 4].map((i) => <div key={i} className="h-32 lg:h-40 w-72 lg:w-80 skeleton rounded-lg flex-shrink-0"></div>)}</div>
-          ) : reviews.length > 0 ? (
-            <div className="reviews-marquee-container">
-              <div className="reviews-marquee">
-                {reviews.map((review) => <div key={review.id} className="review-slide"><ReviewCard review={review} /></div>)}
-                {reviews.map((review) => <div key={`dup-${review.id}`} className="review-slide"><ReviewCard review={review} /></div>)}
-              </div>
-            </div>
-          ) : <div className="text-center py-6 text-white/40">No reviews yet</div>}
+      {/* Reviews Marquee */}
+      <section className="py-16" data-testid="reviews-section">
+        <div className="max-w-7xl mx-auto px-6 mb-8">
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-white tracking-tight text-center mb-2">What Our Customers Say</h2>
+          <p className="text-white/40 text-center">Trusted by thousands of happy customers</p>
         </div>
+
+        {isLoading ? (
+          <div className="flex gap-6 px-6">{[1, 2, 3, 4].map((i) => <div key={i} className="h-40 w-80 glass-card rounded-3xl flex-shrink-0 animate-pulse"></div>)}</div>
+        ) : reviews.length > 0 ? (
+          <div className="reviews-marquee-container">
+            <div className="reviews-marquee">
+              {reviews.map((review) => <div key={review.id} className="review-slide"><ReviewCard review={review} /></div>)}
+              {reviews.map((review) => <div key={`dup-${review.id}`} className="review-slide"><ReviewCard review={review} /></div>)}
+            </div>
+          </div>
+        ) : <div className="text-center py-6 text-white/40">No reviews yet</div>}
       </section>
 
       {hotDeals.length > 0 && (
