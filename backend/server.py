@@ -114,6 +114,52 @@ async def security_headers_middleware(request: Request, call_next):
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 
+
+# ==================== AUDIT LOG HELPER ====================
+async def create_audit_log(
+    action: str,
+    actor_id: str,
+    actor_name: str,
+    actor_role: str = "admin",
+    resource_type: str = None,
+    resource_id: str = None,
+    resource_name: str = None,
+    details: dict = None,
+    ip_address: str = None
+):
+    """
+    Create an audit log entry for admin actions
+    
+    Actions include:
+    - LOGIN, LOGOUT
+    - CREATE_PRODUCT, UPDATE_PRODUCT, DELETE_PRODUCT
+    - UPDATE_ORDER_STATUS, DELETE_ORDER
+    - CREATE_CATEGORY, UPDATE_CATEGORY, DELETE_CATEGORY
+    - CREATE_STAFF, UPDATE_STAFF, DELETE_STAFF
+    - UPDATE_SETTINGS
+    - etc.
+    """
+    try:
+        log_entry = {
+            "id": str(uuid.uuid4()),
+            "action": action,
+            "actor": {
+                "id": actor_id,
+                "name": actor_name,
+                "role": actor_role
+            },
+            "resource_type": resource_type,
+            "resource_id": resource_id,
+            "resource_name": resource_name,
+            "details": details or {},
+            "ip_address": ip_address,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        await db.audit_logs.insert_one(log_entry)
+        logger.info(f"Audit log: {action} by {actor_name} on {resource_type or 'system'}")
+    except Exception as e:
+        logger.error(f"Failed to create audit log: {e}")
+
 # ==================== MODELS ====================
 
 class UserCreate(BaseModel):
