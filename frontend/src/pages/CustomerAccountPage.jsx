@@ -62,6 +62,14 @@ export default function CustomerAccountPage() {
     }
   }, [navigate]);
 
+  const handleAuthError = () => {
+    // Clear stored credentials and redirect to login
+    localStorage.removeItem('customer_token');
+    localStorage.removeItem('customer_info');
+    toast.error('Your session has expired. Please login again.');
+    navigate('/');
+  };
+
   const fetchData = async (token) => {
     setLoading(true);
     try {
@@ -88,6 +96,11 @@ export default function CustomerAccountPage() {
       }
     } catch (error) {
       console.error('Error fetching data:', error);
+      // Check if it's an authentication error (401 Unauthorized)
+      if (error.response?.status === 401) {
+        handleAuthError();
+        return;
+      }
       toast.error('Failed to load some account data. Please refresh.');
     } finally {
       setLoading(false);
@@ -97,7 +110,10 @@ export default function CustomerAccountPage() {
 
   const refreshOrders = async () => {
     const token = localStorage.getItem('customer_token');
-    if (!token) return;
+    if (!token) {
+      handleAuthError();
+      return;
+    }
     
     setOrdersLoading(true);
     try {
@@ -106,6 +122,11 @@ export default function CustomerAccountPage() {
       setOrders(ordersRes.data || []);
       toast.success('Orders refreshed');
     } catch (error) {
+      // Check if it's an authentication error (401 Unauthorized)
+      if (error.response?.status === 401) {
+        handleAuthError();
+        return;
+      }
       toast.error('Failed to refresh orders');
     } finally {
       setOrdersLoading(false);
@@ -134,6 +155,10 @@ export default function CustomerAccountPage() {
     setSaving(true);
     try {
       const token = localStorage.getItem('customer_token');
+      if (!token) {
+        handleAuthError();
+        return;
+      }
       const response = await axios.put(
         `${API_URL}/auth/customer/profile`,
         null,
@@ -151,6 +176,11 @@ export default function CustomerAccountPage() {
       setIsEditing(false);
       toast.success('Profile updated successfully!');
     } catch (error) {
+      // Check if it's an authentication error (401 Unauthorized)
+      if (error.response?.status === 401) {
+        handleAuthError();
+        return;
+      }
       toast.error('Failed to update profile');
     } finally {
       setSaving(false);
