@@ -3627,6 +3627,82 @@ async def get_revenue_chart(current_user: dict = Depends(get_current_user), days
     
     return result
 
+
+@api_router.get("/analytics/today-hourly")
+async def get_today_hourly_stats(current_user: dict = Depends(get_current_user)):
+    """Get hourly stats for today"""
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_str = today_start.strftime("%Y-%m-%d")
+    
+    # Get orders by hour for today
+    orders_pipeline = [
+        {"$match": {
+            "created_at": {"$gte": today_start.isoformat()},
+            "status": {"$ne": "cancelled"}
+        }},
+        {"$addFields": {
+            "hour": {"$substr": ["$created_at", 11, 2]}
+        }},
+        {"$group": {
+            "_id": "$hour",
+            "orders": {"$sum": 1},
+            "revenue": {"$sum": "$total_amount"}
+        }},
+        {"$sort": {"_id": 1}}
+    ]
+    
+    hourly_orders = await db.orders.aggregate(orders_pipeline).to_list(24)
+    orders_map = {d["_id"]: d for d in hourly_orders}
+    
+    # Get visits by hour for today
+    visits_pipeline = [
+        {"$match": {"date": today_str}},
+        {"$addFields": {
+            "hour": {"$cond": {
+                "if": {"$ifNull": ["$hour", False]},
+                "then": "$hour",
+                "else": "00"
+            }}
+        }},
+        {"$group": {
+            "_id": "$hour",
+            "visits": {"$sum": 1}
+        }},
+        {"$sort": {"_id": 1}}
+    ]
+    
+    hourly_visits = await db.visits.aggregate(visits_pipeline).to_list(24)
+    visits_map = {v["_id"]: v["visits"] for v in hourly_visits}
+    
+    # Build hourly data (0-23 hours)
+    result = []
+    for hour in range(24):
+        hour_str = f"{hour:02d}"
+        order_data = orders_map.get(hour_str, {"orders": 0, "revenue": 0})
+        result.append({
+            "hour": hour_str,
+            "label": f"{hour:02d}:00",
+            "orders": order_data.get("orders", 0),
+            "revenue": order_data.get("revenue", 0),
+            "visits": visits_map.get(hour_str, 0)
+        })
+    
+    # Calculate totals for today
+    total_orders = sum(d["orders"] for d in result)
+    total_revenue = sum(d["revenue"] for d in result)
+    total_visits = sum(d["visits"] for d in result)
+    
+    return {
+        "hourly": result,
+        "totals": {
+            "orders": total_orders,
+            "revenue": total_revenue,
+            "visits": total_visits,
+            "avgOrderValue": round(total_revenue / total_orders) if total_orders > 0 else 0
+        }
+    }
+
 @api_router.get("/analytics/order-status")
 async def get_order_status_breakdown(current_user: dict = Depends(get_current_user)):
     """Get order status breakdown"""
