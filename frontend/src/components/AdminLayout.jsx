@@ -20,6 +20,7 @@ const navGroups = [
       { path: '/panelgsnadminbackend', label: 'Dashboard', icon: LayoutDashboard, permission: null },
       { path: '/panelgsnadminbackend/analytics', label: 'Analytics', icon: BarChart3, permission: 'view_analytics' },
       { path: '/panelgsnadminbackend/orders', label: 'Orders', icon: ShoppingCart, permission: 'view_orders' },
+      { path: '/panelgsnadminbackend/audit-logs', label: 'Audit Logs', icon: ClipboardList, permission: 'view_analytics' },
     ]
   },
   {
