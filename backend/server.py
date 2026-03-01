@@ -456,7 +456,7 @@ async def register(user_data: UserCreate):
     raise HTTPException(status_code=403, detail="Registration disabled. Use admin credentials.")
 
 @api_router.post("/auth/login")
-async def login(credentials: UserLogin):
+async def login(credentials: UserLogin, request: Request):
     # Try new admin system first
     admin = await db.admins.find_one({"username": credentials.email})
     if admin:
@@ -466,6 +466,17 @@ async def login(credentials: UserLogin):
             await db.admins.update_one(
                 {"id": admin["id"]},
                 {"$set": {"last_login": datetime.now(timezone.utc).isoformat()}}
+            )
+            
+            # Create audit log for login
+            client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown")
+            await create_audit_log(
+                action="LOGIN",
+                actor_id=admin["id"],
+                actor_name=admin.get("name", admin.get("username")),
+                actor_role=admin.get("role", "admin"),
+                details={"method": "password", "username": admin.get("username")},
+                ip_address=client_ip
             )
             
             token = create_token(admin["id"])
@@ -511,6 +522,17 @@ async def login(credentials: UserLogin):
                 {"id": main_admin_id},
                 {"$set": {"last_login": datetime.now(timezone.utc).isoformat()}}
             )
+        
+        # Create audit log for main admin login
+        client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown")
+        await create_audit_log(
+            action="LOGIN",
+            actor_id=main_admin_id,
+            actor_name="Main Admin",
+            actor_role="main_admin",
+            details={"method": "password", "username": ADMIN_USERNAME},
+            ip_address=client_ip
+        )
         
         token = create_token(main_admin_id)
         return {
