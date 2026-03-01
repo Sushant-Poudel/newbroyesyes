@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { 
   Calendar,
-  Package
+  Package,
+  Clock,
+  TrendingUp,
+  ShoppingCart,
+  Users,
+  DollarSign
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,10 +30,14 @@ import {
   Bar
 } from 'recharts';
 
+const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
 export default function AdminAnalytics() {
   const [revenueChart, setRevenueChart] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isToday, setIsToday] = useState(false);
+  const [todayStats, setTodayStats] = useState(null);
   
   // Date range state
   const [dateRange, setDateRange] = useState({
@@ -42,27 +51,43 @@ export default function AdminAnalytics() {
   const fetchAnalytics = useCallback(async () => {
     setLoading(true);
     try {
-      const [chartRes, topRes] = await Promise.all([
-        analyticsAPI.getRevenueChart(chartDays),
-        analyticsAPI.getTopProducts(10),
-      ]);
-      
-      // Process chart data to include all metrics
-      const chartData = chartRes.data.map(item => ({
-        ...item,
-        orders: item.orders || 0,
-        visits: item.visits || 0,
-        avgOrderValue: item.orders > 0 ? Math.round(item.revenue / item.orders) : 0
-      }));
-      
-      setRevenueChart(chartData);
-      setTopProducts(topRes.data);
+      const token = localStorage.getItem('admin_token');
+      const headers = { Authorization: `Bearer ${token}` };
+
+      if (isToday) {
+        // Fetch today's hourly data
+        const [todayRes, topRes] = await Promise.all([
+          axios.get(`${API_URL}/analytics/today-hourly`, { headers }),
+          analyticsAPI.getTopProducts(10),
+        ]);
+        
+        setTodayStats(todayRes.data);
+        setRevenueChart(todayRes.data.hourly);
+        setTopProducts(topRes.data);
+      } else {
+        // Fetch daily data for date range
+        const [chartRes, topRes] = await Promise.all([
+          analyticsAPI.getRevenueChart(chartDays),
+          analyticsAPI.getTopProducts(10),
+        ]);
+        
+        const chartData = chartRes.data.map(item => ({
+          ...item,
+          orders: item.orders || 0,
+          visits: item.visits || 0,
+          avgOrderValue: item.orders > 0 ? Math.round(item.revenue / item.orders) : 0
+        }));
+        
+        setRevenueChart(chartData);
+        setTopProducts(topRes.data);
+        setTodayStats(null);
+      }
     } catch (error) {
       console.error('Error fetching analytics:', error);
     } finally {
       setLoading(false);
     }
-  }, [chartDays]);
+  }, [chartDays, isToday]);
 
   useEffect(() => {
     fetchAnalytics();
@@ -81,6 +106,7 @@ export default function AdminAnalytics() {
         from: range.from,
         to: range.to || range.from
       });
+      setIsToday(false);
     }
   };
 
@@ -89,6 +115,12 @@ export default function AdminAnalytics() {
       from: subDays(new Date(), days),
       to: new Date()
     });
+    setIsToday(false);
+    setIsCalendarOpen(false);
+  };
+
+  const handleTodaySelect = () => {
+    setIsToday(true);
     setIsCalendarOpen(false);
   };
 
@@ -102,6 +134,14 @@ export default function AdminAnalytics() {
     );
   }
 
+  const xAxisKey = isToday ? "label" : "date";
+  const xAxisFormatter = isToday 
+    ? (val) => val 
+    : (val) => format(new Date(val), 'MMM d');
+  const tooltipLabelFormatter = isToday
+    ? (val) => `Today at ${val}`
+    : (val) => format(new Date(val), 'EEE, MMM d, yyyy');
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -109,7 +149,9 @@ export default function AdminAnalytics() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white">Analytics Dashboard</h1>
-            <p className="text-gray-400 text-sm mt-1">Track your store performance</p>
+            <p className="text-gray-400 text-sm mt-1">
+              {isToday ? "Today's hourly breakdown" : "Track your store performance"}
+            </p>
           </div>
           
           {/* Date Range Picker */}
@@ -117,20 +159,29 @@ export default function AdminAnalytics() {
             <PopoverTrigger asChild>
               <Button 
                 variant="outline" 
-                className="bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 hover:text-white min-w-[240px] justify-start"
+                className={`bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 hover:text-white min-w-[240px] justify-start ${isToday ? 'border-amber-500' : ''}`}
                 data-testid="date-picker-trigger"
               >
-                <Calendar className="mr-2 h-4 w-4 text-amber-500" />
-                {dateRange.from ? (
-                  dateRange.to && dateRange.from !== dateRange.to ? (
-                    <>
-                      {format(dateRange.from, "MMM d, yyyy")} - {format(dateRange.to, "MMM d, yyyy")}
-                    </>
-                  ) : (
-                    format(dateRange.from, "MMM d, yyyy")
-                  )
+                {isToday ? (
+                  <>
+                    <Clock className="mr-2 h-4 w-4 text-amber-500" />
+                    Today (Hourly)
+                  </>
                 ) : (
-                  "Select date range"
+                  <>
+                    <Calendar className="mr-2 h-4 w-4 text-amber-500" />
+                    {dateRange.from ? (
+                      dateRange.to && dateRange.from !== dateRange.to ? (
+                        <>
+                          {format(dateRange.from, "MMM d, yyyy")} - {format(dateRange.to, "MMM d, yyyy")}
+                        </>
+                      ) : (
+                        format(dateRange.from, "MMM d, yyyy")
+                      )
+                    ) : (
+                      "Select date range"
+                    )}
+                  </>
                 )}
               </Button>
             </PopoverTrigger>
@@ -138,6 +189,15 @@ export default function AdminAnalytics() {
               <div className="p-3 border-b border-zinc-700">
                 <p className="text-sm font-medium text-white mb-2">Quick Select</p>
                 <div className="flex flex-wrap gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className={`border-zinc-600 text-white hover:bg-amber-500 hover:text-black ${isToday ? 'bg-amber-500 text-black' : 'bg-zinc-800'}`}
+                    onClick={handleTodaySelect}
+                  >
+                    <Clock className="w-3 h-3 mr-1" />
+                    Today
+                  </Button>
                   <Button size="sm" variant="outline" className="bg-zinc-800 border-zinc-600 text-white hover:bg-amber-500 hover:text-black" onClick={() => handleQuickSelect(7)}>Last 7 days</Button>
                   <Button size="sm" variant="outline" className="bg-zinc-800 border-zinc-600 text-white hover:bg-amber-500 hover:text-black" onClick={() => handleQuickSelect(30)}>Last 30 days</Button>
                   <Button size="sm" variant="outline" className="bg-zinc-800 border-zinc-600 text-white hover:bg-amber-500 hover:text-black" onClick={() => handleQuickSelect(90)}>Last 90 days</Button>
@@ -165,13 +225,73 @@ export default function AdminAnalytics() {
           </Popover>
         </div>
 
+        {/* Today's Summary Cards */}
+        {isToday && todayStats && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="bg-zinc-900 border-zinc-800">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-amber-500/10 rounded-lg">
+                    <DollarSign className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Today's Revenue</p>
+                    <p className="text-xl font-bold text-white">{formatCurrency(todayStats.totals.revenue)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-zinc-900 border-zinc-800">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-500/10 rounded-lg">
+                    <ShoppingCart className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Today's Orders</p>
+                    <p className="text-xl font-bold text-white">{todayStats.totals.orders}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-zinc-900 border-zinc-800">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-500/10 rounded-lg">
+                    <Users className="w-5 h-5 text-purple-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Today's Visitors</p>
+                    <p className="text-xl font-bold text-white">{todayStats.totals.visits}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-zinc-900 border-zinc-800">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-500/10 rounded-lg">
+                    <TrendingUp className="w-5 h-5 text-green-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Avg Order Value</p>
+                    <p className="text-xl font-bold text-white">{formatCurrency(todayStats.totals.avgOrderValue)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Charts Grid - 2x2 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           {/* Revenue Chart */}
           <Card className="bg-zinc-900 border-zinc-800">
             <CardHeader className="pb-2">
-              <CardTitle className="text-white text-lg">Revenue</CardTitle>
+              <CardTitle className="text-white text-lg">
+                {isToday ? 'Hourly Revenue' : 'Revenue'}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[280px]">
@@ -185,12 +305,13 @@ export default function AdminAnalytics() {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
                     <XAxis 
-                      dataKey="date" 
+                      dataKey={xAxisKey}
                       stroke="#666"
                       fontSize={11}
                       tickLine={false}
                       axisLine={false}
-                      tickFormatter={(val) => format(new Date(val), 'MMM d')}
+                      tickFormatter={xAxisFormatter}
+                      interval={isToday ? 2 : 'preserveStartEnd'}
                     />
                     <YAxis 
                       stroke="#666" 
@@ -203,7 +324,7 @@ export default function AdminAnalytics() {
                       contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px' }}
                       labelStyle={{ color: '#fff', fontWeight: 'bold' }}
                       formatter={(value) => [`Rs ${Math.round(value).toLocaleString()}`, 'Revenue']}
-                      labelFormatter={(val) => format(new Date(val), 'EEE, MMM d, yyyy')}
+                      labelFormatter={tooltipLabelFormatter}
                     />
                     <Area 
                       type="monotone" 
@@ -222,7 +343,9 @@ export default function AdminAnalytics() {
           {/* Website Visits Chart */}
           <Card className="bg-zinc-900 border-zinc-800">
             <CardHeader className="pb-2">
-              <CardTitle className="text-white text-lg">Website Visits</CardTitle>
+              <CardTitle className="text-white text-lg">
+                {isToday ? 'Hourly Visits' : 'Website Visits'}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[280px]">
@@ -236,12 +359,13 @@ export default function AdminAnalytics() {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
                     <XAxis 
-                      dataKey="date" 
+                      dataKey={xAxisKey}
                       stroke="#666"
                       fontSize={11}
                       tickLine={false}
                       axisLine={false}
-                      tickFormatter={(val) => format(new Date(val), 'MMM d')}
+                      tickFormatter={xAxisFormatter}
+                      interval={isToday ? 2 : 'preserveStartEnd'}
                     />
                     <YAxis 
                       stroke="#666" 
@@ -253,7 +377,7 @@ export default function AdminAnalytics() {
                       contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px' }}
                       labelStyle={{ color: '#fff', fontWeight: 'bold' }}
                       formatter={(value) => [value, 'Visitors']}
-                      labelFormatter={(val) => format(new Date(val), 'EEE, MMM d, yyyy')}
+                      labelFormatter={tooltipLabelFormatter}
                     />
                     <Area 
                       type="monotone" 
@@ -272,7 +396,9 @@ export default function AdminAnalytics() {
           {/* Orders Chart */}
           <Card className="bg-zinc-900 border-zinc-800">
             <CardHeader className="pb-2">
-              <CardTitle className="text-white text-lg">Orders</CardTitle>
+              <CardTitle className="text-white text-lg">
+                {isToday ? 'Hourly Orders' : 'Orders'}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[280px]">
@@ -280,12 +406,13 @@ export default function AdminAnalytics() {
                   <BarChart data={revenueChart}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
                     <XAxis 
-                      dataKey="date" 
+                      dataKey={xAxisKey}
                       stroke="#666"
                       fontSize={11}
                       tickLine={false}
                       axisLine={false}
-                      tickFormatter={(val) => format(new Date(val), 'MMM d')}
+                      tickFormatter={xAxisFormatter}
+                      interval={isToday ? 2 : 'preserveStartEnd'}
                     />
                     <YAxis 
                       stroke="#666" 
@@ -298,7 +425,7 @@ export default function AdminAnalytics() {
                       contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px' }}
                       labelStyle={{ color: '#fff', fontWeight: 'bold' }}
                       formatter={(value) => [value, 'Orders']}
-                      labelFormatter={(val) => format(new Date(val), 'EEE, MMM d, yyyy')}
+                      labelFormatter={tooltipLabelFormatter}
                     />
                     <Bar 
                       dataKey="orders" 
@@ -322,12 +449,13 @@ export default function AdminAnalytics() {
                   <LineChart data={revenueChart}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
                     <XAxis 
-                      dataKey="date" 
+                      dataKey={xAxisKey}
                       stroke="#666"
                       fontSize={11}
                       tickLine={false}
                       axisLine={false}
-                      tickFormatter={(val) => format(new Date(val), 'MMM d')}
+                      tickFormatter={xAxisFormatter}
+                      interval={isToday ? 2 : 'preserveStartEnd'}
                     />
                     <YAxis 
                       stroke="#666" 
@@ -340,11 +468,11 @@ export default function AdminAnalytics() {
                       contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px' }}
                       labelStyle={{ color: '#fff', fontWeight: 'bold' }}
                       formatter={(value) => [`Rs ${Math.round(value).toLocaleString()}`, 'Avg Order Value']}
-                      labelFormatter={(val) => format(new Date(val), 'EEE, MMM d, yyyy')}
+                      labelFormatter={tooltipLabelFormatter}
                     />
                     <Line 
                       type="monotone" 
-                      dataKey="avgOrderValue" 
+                      dataKey={isToday ? "revenue" : "avgOrderValue"}
                       stroke="#10B981" 
                       strokeWidth={2}
                       dot={{ fill: '#10B981', strokeWidth: 0, r: 3 }}
