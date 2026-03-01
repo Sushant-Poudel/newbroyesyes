@@ -113,42 +113,42 @@ export default function ChatWidget() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110 group"
+        className="fixed bottom-6 right-6 z-50 bg-white text-black p-4 rounded-full shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] transition-all duration-300 hover:scale-110 hover:shadow-[0_0_50px_-10px_rgba(255,255,255,0.5)] group"
         data-testid="chat-widget-toggle"
         aria-label="Open chat"
       >
         <MessageCircle className="w-6 h-6" />
-        <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+        <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#30d158] rounded-full animate-pulse" />
       </button>
     );
   }
 
   return (
     <div 
-      className={`fixed bottom-6 right-6 z-50 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl transition-all duration-300 ${
-        isMinimized ? 'w-72 h-14' : 'w-96 h-[500px]'
+      className={`fixed bottom-6 right-6 z-50 glass rounded-3xl shadow-2xl transition-all duration-500 ${
+        isMinimized ? 'w-72 h-16' : 'w-[380px] h-[520px]'
       }`}
       data-testid="chat-widget"
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900 rounded-t-2xl">
+      <div className="flex items-center justify-between p-4 border-b border-white/10">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
               <MessageCircle className="w-5 h-5 text-black" />
             </div>
-            <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-zinc-900" />
+            <span className="absolute bottom-0 right-0 w-3 h-3 bg-[#30d158] rounded-full border-2 border-black" />
           </div>
           <div>
             <h3 className="text-white font-semibold text-sm">GSN Support</h3>
-            <p className="text-green-400 text-xs">Online</p>
+            <p className="text-[#30d158] text-xs">Online</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-zinc-400 hover:text-white hover:bg-zinc-800"
+            className="h-8 w-8 text-white/40 hover:text-white hover:bg-white/10 rounded-full"
             onClick={() => setIsMinimized(!isMinimized)}
             aria-label={isMinimized ? "Expand chat" : "Minimize chat"}
           >
@@ -157,7 +157,7 @@ export default function ChatWidget() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-zinc-400 hover:text-white hover:bg-zinc-800"
+            className="h-8 w-8 text-white/40 hover:text-white hover:bg-white/10 rounded-full"
             onClick={() => setIsOpen(false)}
             aria-label="Close chat"
           >
