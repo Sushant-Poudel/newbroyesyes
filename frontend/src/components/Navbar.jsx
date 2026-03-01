@@ -52,27 +52,27 @@ export default function Navbar({ notificationBarHeight = 0 }) {
   };
 
   return (
-    <nav className="fixed left-0 right-0 z-50 bg-black/95 backdrop-blur-md border-b border-white/10" style={{ top: notificationBarHeight }} data-testid="navbar">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="fixed left-4 right-4 md:left-8 md:right-8 z-50 mt-4 rounded-2xl glass-nav" style={{ top: notificationBarHeight }} data-testid="navbar">
+      <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center" data-testid="nav-logo">
-            <img src={LOGO_URL} alt="GSN" className="h-9 w-auto" />
+          <Link to="/" className="flex items-center group" data-testid="nav-logo">
+            <img src={LOGO_URL} alt="GSN" className="h-9 w-auto transition-transform duration-300 group-hover:scale-105" />
           </Link>
 
           {/* Desktop Nav Links - Centered */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
                 data-testid={`nav-link-${link.label.toLowerCase().replace(' ', '-')}`}
-                className={`text-sm font-medium transition-colors flex items-center gap-2 ${
+                className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 flex items-center gap-2 ${
                   link.highlight 
-                    ? 'text-gold-500 hover:text-gold-400' 
+                    ? 'text-[#2997FF] hover:bg-[#2997FF]/10' 
                     : isActive(link.href) 
-                      ? 'text-gold-500' 
-                      : 'text-white/70 hover:text-white'
+                      ? 'text-white bg-white/10' 
+                      : 'text-white/60 hover:text-white hover:bg-white/5'
                 }`}
               >
                 {link.icon && <link.icon className="w-4 h-4" />}
