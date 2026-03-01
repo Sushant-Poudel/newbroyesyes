@@ -5,7 +5,6 @@ import { WishlistProvider } from "@/components/Wishlist";
 import { CartProvider } from "@/components/Cart";
 import { LanguageProvider } from "@/components/Language";
 import { CustomerProvider } from "@/components/CustomerAccount";
-import ChatWidget from "@/components/ChatWidget";
 import AuthCallback from "@/components/AuthCallback";
 
 // Loading component
