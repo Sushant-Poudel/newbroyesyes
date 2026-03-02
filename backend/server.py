@@ -23,7 +23,7 @@ import httpx
 from email_service import send_email, get_order_confirmation_email, get_order_status_update_email, get_welcome_email
 from imgbb_service import upload_to_imgbb
 import google_sheets_service
-from discord_service import send_discord_order_notification, send_discord_order_status_update
+from discord_service import send_discord_order_notification, send_discord_order_status_update, send_discord_test_notification
 from order_cleanup import run_cleanup_task
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
