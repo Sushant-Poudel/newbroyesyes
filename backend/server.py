@@ -1534,6 +1534,18 @@ async def delete_product(product_id: str, current_user: dict = Depends(get_curre
     
     return {"message": "Product deleted"}
 
+
+# ==================== DISCORD WEBHOOK TEST ====================
+
+class WebhookTestRequest(BaseModel):
+    webhook_url: str
+
+@api_router.post("/discord/test-webhook")
+async def test_discord_webhook(request: WebhookTestRequest, current_user: dict = Depends(get_current_user)):
+    """Test a Discord webhook to verify it's working"""
+    result = await send_discord_test_notification(request.webhook_url)
+    return result
+
 # ==================== REVIEW ROUTES ====================
 
 @api_router.get("/reviews", response_model=List[Review])
