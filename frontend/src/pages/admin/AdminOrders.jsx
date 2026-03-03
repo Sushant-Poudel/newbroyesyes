@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { RefreshCw, Search, Package, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Mail, Phone, User, Calendar, FileText, Image, ExternalLink, Trash2, Square, CheckSquare } from 'lucide-react';
+import { RefreshCw, Search, Package, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Mail, Phone, User, Calendar, FileText, Image, ExternalLink, Trash2, Square, CheckSquare, Filter } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,12 +20,22 @@ const STATUS_OPTIONS = [
   { value: 'cancelled', label: 'Cancelled', icon: XCircle, color: 'bg-red-500/20 text-red-400 border-red-500/30' },
 ];
 
+const DATE_RANGE_OPTIONS = [
+  { value: '7', label: 'Last 7 days' },
+  { value: '30', label: 'Last 30 days' },
+  { value: '60', label: 'Last 60 days' },
+  { value: '90', label: 'Last 90 days' },
+  { value: '365', label: 'Last year' },
+];
+
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [dateRange, setDateRange] = useState('30');
+  const [totalOrders, setTotalOrders] = useState(0);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
   
   // Multi-select state
@@ -39,16 +49,21 @@ export default function AdminOrders() {
   const [statusNote, setStatusNote] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (days = dateRange) => {
     setIsLoading(true);
     try {
-      const response = await ordersAPI.getAll();
+      const response = await ordersAPI.getAll(parseInt(days));
+      // Handle new response format with orders array and total
+      const ordersData = response.data.orders || response.data;
+      const total = response.data.total || ordersData.length;
+      
       // Sort by date descending
-      const sortedOrders = response.data.sort((a, b) => 
+      const sortedOrders = ordersData.sort((a, b) => 
         new Date(b.created_at) - new Date(a.created_at)
       );
       setOrders(sortedOrders);
       setFilteredOrders(sortedOrders);
+      setTotalOrders(total);
     } catch (error) {
       toast.error('Failed to load orders');
       console.error(error);
@@ -59,7 +74,7 @@ export default function AdminOrders() {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [dateRange]);
 
   // Filter orders based on search and status
   useEffect(() => {
@@ -250,6 +265,7 @@ export default function AdminOrders() {
           <div className="bg-card border border-white/10 rounded-lg p-4">
             <p className="text-white/60 text-sm">Total Orders</p>
             <p className="text-2xl font-bold text-white">{stats.total}</p>
+            <p className="text-xs text-white/40 mt-1">Last {dateRange} days ({totalOrders} total)</p>
           </div>
           <div className="bg-card border border-yellow-500/20 rounded-lg p-4">
             <p className="text-yellow-400 text-sm">Pending</p>
@@ -292,8 +308,19 @@ export default function AdminOrders() {
               ))}
             </SelectContent>
           </Select>
+          <Select value={dateRange} onValueChange={setDateRange}>
+            <SelectTrigger className="w-full sm:w-40 bg-black border-white/20 text-white" data-testid="order-date-filter">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Date range" />
+            </SelectTrigger>
+            <SelectContent className="bg-card border-white/10">
+              {DATE_RANGE_OPTIONS.map(opt => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button 
-            onClick={fetchOrders} 
+            onClick={() => fetchOrders()} 
             variant="outline" 
             className="border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-black"
             data-testid="refresh-orders-btn"

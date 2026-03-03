@@ -2204,9 +2204,26 @@ async def create_order(order_data: CreateOrderRequest):
     }
 
 @api_router.get("/orders")
-async def get_local_orders(current_user: dict = Depends(get_current_user), limit: int = 100, skip: int = 0):
-    orders = await db.orders.find({}, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
-    return orders
+async def get_local_orders(
+    current_user: dict = Depends(get_current_user), 
+    limit: int = 1000, 
+    skip: int = 0,
+    days: Optional[int] = None
+):
+    """Get orders with optional date filter. Use days=30 for last 30 days."""
+    query = {}
+    
+    # Filter by date if days parameter is provided
+    if days:
+        from_date = datetime.now(timezone.utc) - timedelta(days=days)
+        query["created_at"] = {"$gte": from_date.isoformat()}
+    
+    orders = await db.orders.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Also return total count for pagination info
+    total_count = await db.orders.count_documents(query)
+    
+    return {"orders": orders, "total": total_count, "limit": limit, "skip": skip}
 
 # ==================== PAYMENT METHODS ====================
 

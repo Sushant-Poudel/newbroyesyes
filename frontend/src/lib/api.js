@@ -101,7 +101,7 @@ export const seedAPI = {
 
 export const ordersAPI = {
   create: (data) => api.post('/orders/create', data),
-  getAll: () => api.get('/orders'),
+  getAll: (days = 30) => api.get(`/orders?days=${days}&limit=5000`),
   getOne: (orderId) => api.get(`/orders/${orderId}`),
   uploadPaymentScreenshot: (orderId, screenshotUrl, paymentMethod) =>
     api.post(`/orders/${orderId}/payment-screenshot`, { screenshot_url: screenshotUrl, payment_method: paymentMethod }),
