@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Package, FolderOpen, Star, FileText, Share2, LogOut, Home, Menu, X, 
   HelpCircle, Bell, BookOpen, CreditCard, Ticket, Settings, BarChart3, Users, ShoppingCart, 
   Shield, Mail, Coins, Gift, UserPlus, Zap, ChevronDown, ChevronRight,
-  Store, Megaphone, Palette, Wrench, ClipboardList
+  Store, Megaphone, Palette, Wrench, ClipboardList, Image
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { authAPI } from '@/lib/api';
@@ -71,6 +71,7 @@ const navGroups = [
       { path: '/panelgsnadminbackend/blog', label: 'Blog / Guides', icon: BookOpen, permission: 'view_blog' },
       { path: '/panelgsnadminbackend/pages', label: 'Pages', icon: FileText, permission: 'view_pages' },
       { path: '/panelgsnadminbackend/faqs', label: 'FAQs', icon: HelpCircle, permission: 'view_faqs' },
+      { path: '/panelgsnadminbackend/ads', label: 'Advertisements', icon: Image, permission: 'view_settings' },
     ]
   },
   {

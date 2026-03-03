@@ -51,6 +51,7 @@ const AdminStaff = lazy(() => import("@/pages/admin/AdminStaff"));
 const AdminNewsletter = lazy(() => import("@/pages/admin/AdminNewsletter"));
 const AdminCreditSettings = lazy(() => import("@/pages/admin/AdminCreditSettings"));
 const AdminAuditLogs = lazy(() => import("@/pages/admin/AdminAuditLogs"));
+const AdminAds = lazy(() => import("@/pages/admin/AdminAds"));
 import AdminDailyReward from "@/pages/admin/AdminDailyReward";
 import AdminReferral from "@/pages/admin/AdminReferral";
 import AdminMultiplier from "@/pages/admin/AdminMultiplier";
@@ -128,6 +129,7 @@ function App() {
                   <Route path="/panelgsnadminbackend/referral" element={<ProtectedRoute requiredPermission="view_settings"><AdminReferral /></ProtectedRoute>} />
                   <Route path="/panelgsnadminbackend/multiplier" element={<ProtectedRoute requiredPermission="view_settings"><AdminMultiplier /></ProtectedRoute>} />
                   <Route path="/panelgsnadminbackend/audit-logs" element={<ProtectedRoute requiredPermission="view_analytics"><AdminAuditLogs /></ProtectedRoute>} />
+                  <Route path="/panelgsnadminbackend/ads" element={<ProtectedRoute requiredPermission="view_settings"><AdminAds /></ProtectedRoute>} />
                 </Routes>
               </BrowserRouter>
               <Toaster position="top-right" richColors />

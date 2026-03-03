@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import ReviewCard from '@/components/ReviewCard';
+import { AdBanner, AdPopup } from '@/components/AdBanner';
 import { Button } from '@/components/ui/button';
 import { productsAPI, categoriesAPI, reviewsAPI, notificationBarAPI, blogAPI, paymentMethodsAPI } from '@/lib/api';
 
@@ -133,6 +134,13 @@ export default function HomePage() {
               </div>
             </div>
           ) : <div className="text-center py-6 text-white/40">No reviews yet</div>}
+        </div>
+      </section>
+
+      {/* Homepage Banner Ad */}
+      <section className="py-4 lg:py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <AdBanner position="home_banner" className="aspect-[4/1] sm:aspect-[5/1] lg:aspect-[6/1]" closeable />
         </div>
       </section>
 
@@ -298,6 +306,9 @@ export default function HomePage() {
       )}
 
       <Footer />
+      
+      {/* Popup Ad - Shows after 5 seconds, once per session */}
+      <AdPopup delay={5000} showOnce />
     </div>
   );
 }
