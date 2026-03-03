@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import SEO from '@/components/SEO';
+import { AdBanner } from '@/components/AdBanner';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -374,7 +375,7 @@ See invoice: ${invoiceUrl}`;
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 lg:pb-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-10">
-            <div className="lg:sticky lg:top-24 lg:self-start" data-testid="product-image-container">
+            <div className="lg:sticky lg:top-24 lg:self-start space-y-4" data-testid="product-image-container">
               <div className="aspect-square bg-card rounded-lg overflow-hidden border border-white/10 animate-fade-in relative">
                 <img src={product.image_url} alt={product.name} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
                 
@@ -388,6 +389,9 @@ See invoice: ${invoiceUrl}`;
                   <Heart className={`w-5 h-5 ${inWishlist ? 'fill-current' : ''}`} />
                 </button>
               </div>
+              
+              {/* Sidebar Ad */}
+              <AdBanner position="product_sidebar" className="hidden lg:block rounded-lg" />
             </div>
 
             <div className="space-y-4 lg:space-y-6 animate-slide-up" data-testid="product-details">

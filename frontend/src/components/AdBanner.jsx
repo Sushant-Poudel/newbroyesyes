@@ -41,11 +41,11 @@ export function AdBanner({ position, className = '', closeable = false }) {
     }
   }, [ad, loaded]);
 
-  const handleClick = async () => {
-    if (ad) {
-      // Track click
-      await axios.post(`${API_URL}/ads/${ad.id}/click`).catch(() => {});
-      // Open target URL
+  const handleClick = () => {
+    if (ad && ad.target_url) {
+      // Track click (fire and forget - don't block navigation)
+      axios.post(`${API_URL}/ads/${ad.id}/click`).catch(() => {});
+      // Open target URL immediately
       window.open(ad.target_url, '_blank', 'noopener,noreferrer');
     }
   };
@@ -136,9 +136,11 @@ export function AdPopup({ delay = 5000, showOnce = true }) {
     }
   }, [ad, visible]);
 
-  const handleClick = async () => {
-    if (ad) {
-      await axios.post(`${API_URL}/ads/${ad.id}/click`).catch(() => {});
+  const handleClick = () => {
+    if (ad && ad.target_url) {
+      // Track click (fire and forget - don't block navigation)
+      axios.post(`${API_URL}/ads/${ad.id}/click`).catch(() => {});
+      // Open target URL immediately
       window.open(ad.target_url, '_blank', 'noopener,noreferrer');
     }
     setVisible(false);
@@ -213,9 +215,11 @@ export function InlineAd({ position = 'product_inline', className = '' }) {
     }
   }, [ad]);
 
-  const handleClick = async () => {
-    if (ad) {
-      await axios.post(`${API_URL}/ads/${ad.id}/click`).catch(() => {});
+  const handleClick = () => {
+    if (ad && ad.target_url) {
+      // Track click (fire and forget - don't block navigation)
+      axios.post(`${API_URL}/ads/${ad.id}/click`).catch(() => {});
+      // Open target URL immediately
       window.open(ad.target_url, '_blank', 'noopener,noreferrer');
     }
   };
