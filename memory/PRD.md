@@ -65,19 +65,29 @@ All backend endpoints use `/api` prefix
 - ✅ Fixed customer account page 401 error handling (session expiry now properly redirects to login)
 - ✅ Redesigned email templates with premium modern design
 
+## Completed in Current Fork (Mar 3, 2026)
+- ✅ Verified Self-Hosted Ad Management System - fully functional with:
+  - Recommended image sizes displayed for all ad positions (Homepage Banner, Sidebar, Product Inline, Footer, Popup)
+  - Preview button with Desktop/Mobile toggle and website context simulation
+  - Stats dashboard (Total Ads, Active, Impressions, Clicks, CTR)
+  - Position-based aspect ratio guidance
+- ✅ Moved "Advertisements" menu from Content to Marketing section for better discoverability
+- ✅ Ad positions available: home_banner (1200x200), home_sidebar (300x250), product_inline (728x90), product_page_sidebar (300x600), footer (970x90), popup (500x500)
+
 ## Pending/Future Tasks
 ### P1 - High Priority
-- Re-implement Checkout & Invoicing Flow (WhatsApp redirect, screenshot upload, invoice generation)
-- Re-implement Product Variation Editing in Admin Panel
+- Re-implement Product Variation Editing in Admin Panel (edit/reorder variations)
 - Enhance FAQ Page with categories and search
 
 ### P2 - Medium Priority
 - Live purchase ticker
 - Bundle deals section
 - Loyalty/Rewards program enhancements
+- Add sidebar ad component to homepage (home_sidebar ads not currently displayed)
 
 ### P3 - Backlog
 - Order tracking page improvements
 - Sales analytics dashboard
 - Trustpilot / Take.app integrations
 - Public referral program
+- Clean up unused Google OAuth code (AuthCallback.jsx and backend endpoint)

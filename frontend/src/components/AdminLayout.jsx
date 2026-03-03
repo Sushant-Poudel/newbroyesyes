@@ -47,6 +47,7 @@ const navGroups = [
     label: 'Marketing',
     icon: Megaphone,
     items: [
+      { path: '/panelgsnadminbackend/ads', label: 'Advertisements', icon: Image, permission: 'view_settings' },
       { path: '/panelgsnadminbackend/promo-codes', label: 'Promo Codes', icon: Ticket, permission: 'view_settings' },
       { path: '/panelgsnadminbackend/newsletter', label: 'Newsletter', icon: Mail, permission: 'view_settings' },
       { path: '/panelgsnadminbackend/notification-bar', label: 'Notification Bar', icon: Bell, permission: 'view_settings' },
@@ -71,7 +72,6 @@ const navGroups = [
       { path: '/panelgsnadminbackend/blog', label: 'Blog / Guides', icon: BookOpen, permission: 'view_blog' },
       { path: '/panelgsnadminbackend/pages', label: 'Pages', icon: FileText, permission: 'view_pages' },
       { path: '/panelgsnadminbackend/faqs', label: 'FAQs', icon: HelpCircle, permission: 'view_faqs' },
-      { path: '/panelgsnadminbackend/ads', label: 'Advertisements', icon: Image, permission: 'view_settings' },
     ]
   },
   {
