@@ -6,6 +6,7 @@ import { CartProvider } from "@/components/Cart";
 import { LanguageProvider } from "@/components/Language";
 import { CustomerProvider } from "@/components/CustomerAccount";
 import AuthCallback from "@/components/AuthCallback";
+import InstallPWA from "@/components/InstallPWA";
 
 // Loading component
 const PageLoader = () => (
@@ -79,9 +80,25 @@ const trackVisit = () => {
   }).catch(() => {}); // Silent fail
 };
 
+// Register Service Worker for PWA
+const registerServiceWorker = () => {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then((registration) => {
+          console.log('GSN: Service Worker registered successfully');
+        })
+        .catch((error) => {
+          console.log('GSN: Service Worker registration failed:', error);
+        });
+    });
+  }
+};
+
 function App() {
   useEffect(() => {
     trackVisit();
+    registerServiceWorker();
   }, []);
 
   return (
@@ -135,6 +152,7 @@ function App() {
                   <Route path="/panelgsnadminbackend/ads" element={<ProtectedRoute requiredPermission="view_settings"><AdminAds /></ProtectedRoute>} />
                   <Route path="/panelgsnadminbackend/reseller-plans" element={<ProtectedRoute requiredPermission="view_settings"><AdminResellerPlans /></ProtectedRoute>} />
                 </Routes>
+                <InstallPWA />
               </BrowserRouter>
               <Toaster position="top-right" richColors />
             </div>
