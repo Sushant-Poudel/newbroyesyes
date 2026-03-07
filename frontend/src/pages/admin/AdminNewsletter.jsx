@@ -16,7 +16,6 @@ import {
   Calendar,
   Package,
   Sparkles,
-  Gift,
   User
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -38,7 +37,7 @@ const TEMPLATE_ICONS = {
   weekly_update: Calendar,
   restock_alert: Package,
   custom: Sparkles,
-  gift_card: Gift
+  gift_card: Send
 };
 
 export default function AdminNewsletter() {
@@ -220,7 +219,11 @@ export default function AdminNewsletter() {
       gift_amount: 'Gift Amount (Rs)',
       gift_code: 'Gift Code',
       message: 'Personal Message',
-      sender_name: 'Sender Name'
+      sender_name: 'Sender Name',
+      customer_name: 'Customer Name',
+      redeem_code: 'Credentials / Redeem Code',
+      instructions: 'How to Use Instructions',
+      order_id: 'Order ID'
     };
     return labels[variable] || variable.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };

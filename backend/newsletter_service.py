@@ -280,10 +280,10 @@ NEWSLETTER_TEMPLATES = {
     },
     
     "gift_card": {
-        "name": "Gift Card",
-        "subject": "🎁 You've Received a Gift Card from GameShop Nepal!",
-        "description": "Send a gift card to a customer",
-        "variables": ["recipient_name", "gift_amount", "gift_code", "message", "sender_name"],
+        "name": "Product Delivery",
+        "subject": "🎉 Your Order is Ready - {product_name}",
+        "description": "Send product credentials/redeem codes to customer after purchase",
+        "variables": ["customer_name", "product_name", "redeem_code", "instructions", "order_id"],
         "html": """
 <!DOCTYPE html>
 <html>
@@ -299,57 +299,51 @@ NEWSLETTER_TEMPLATES = {
             <p style="margin: 10px 0 0; color: #888;">GameShop Nepal</p>
         </div>
         
-        <!-- Gift Card Banner -->
-        <div style="text-align: center; padding: 40px 20px; background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); margin: 20px 0; border-radius: 16px; border: 2px solid #F5A623; position: relative;">
-            <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #F5A623; color: #000; padding: 6px 20px; border-radius: 20px; font-size: 12px; font-weight: bold;">🎁 GIFT CARD</div>
+        <!-- Order Ready Banner -->
+        <div style="text-align: center; padding: 40px 20px; background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); margin: 20px 0; border-radius: 16px; border: 2px solid #10B981; position: relative;">
+            <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #10B981; color: #fff; padding: 6px 20px; border-radius: 20px; font-size: 12px; font-weight: bold;">✓ ORDER DELIVERED</div>
             
-            <h2 style="color: #ffffff; font-size: 24px; margin: 20px 0 10px;">Hey {recipient_name}!</h2>
-            <p style="color: #888; font-size: 14px; margin: 0 0 25px;">You've received a special gift!</p>
+            <h2 style="color: #ffffff; font-size: 24px; margin: 20px 0 10px;">Hey {customer_name}!</h2>
+            <p style="color: #888; font-size: 14px; margin: 0 0 10px;">Your order is ready. Here are your credentials:</p>
             
-            <!-- Gift Amount -->
-            <div style="background: linear-gradient(135deg, #F5A623 0%, #E8930C 100%); padding: 25px 40px; border-radius: 12px; display: inline-block; margin: 10px 0;">
-                <p style="margin: 0; font-size: 14px; color: rgba(0,0,0,0.7);">Gift Card Value</p>
-                <p style="margin: 5px 0 0; font-size: 42px; font-weight: bold; color: #000;">Rs {gift_amount}</p>
+            <!-- Product Name -->
+            <div style="background: linear-gradient(135deg, #F5A623 0%, #E8930C 100%); padding: 15px 30px; border-radius: 12px; display: inline-block; margin: 15px 0;">
+                <p style="margin: 0; font-size: 20px; font-weight: bold; color: #000;">{product_name}</p>
             </div>
             
-            <!-- Gift Code -->
-            <div style="margin: 30px 0 20px;">
-                <p style="color: #888; font-size: 12px; margin: 0 0 10px;">YOUR GIFT CODE</p>
-                <div style="background: #0a0a0a; border: 2px dashed #F5A623; padding: 15px 30px; border-radius: 8px; display: inline-block;">
-                    <code style="font-size: 24px; font-weight: bold; color: #F5A623; letter-spacing: 3px;">{gift_code}</code>
+            <!-- Redeem Code / Credentials -->
+            <div style="margin: 25px 0 20px;">
+                <p style="color: #888; font-size: 12px; margin: 0 0 10px;">YOUR CREDENTIALS / REDEEM CODE</p>
+                <div style="background: #0a0a0a; border: 2px solid #F5A623; padding: 20px; border-radius: 8px; text-align: left;">
+                    <pre style="font-size: 16px; color: #F5A623; margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', monospace;">{redeem_code}</pre>
                 </div>
             </div>
         </div>
         
-        <!-- Personal Message -->
+        <!-- Instructions -->
         <div style="background: #111; padding: 25px; border-radius: 12px; border-left: 4px solid #F5A623; margin: 20px 0;">
-            <p style="color: #F5A623; font-size: 12px; margin: 0 0 10px; font-weight: bold;">MESSAGE FROM {sender_name}</p>
-            <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin: 0; font-style: italic;">"{message}"</p>
+            <p style="color: #F5A623; font-size: 12px; margin: 0 0 10px; font-weight: bold;">HOW TO USE</p>
+            <div style="color: #ccc; font-size: 14px; line-height: 1.8; margin: 0; white-space: pre-wrap;">{instructions}</div>
         </div>
         
-        <!-- How to Use -->
-        <div style="padding: 20px; text-align: center;">
-            <h3 style="color: #fff; margin: 0 0 15px;">How to Redeem</h3>
-            <p style="color: #888; font-size: 14px; line-height: 1.6; margin: 0;">
-                1. Visit GameShop Nepal<br>
-                2. Add products to cart<br>
-                3. Enter your gift code at checkout<br>
-                4. Enjoy your purchase! 🎉
-            </p>
+        <!-- Order Reference -->
+        <div style="text-align: center; padding: 15px; background: #0a0a0a; border-radius: 8px; margin: 20px 0;">
+            <p style="color: #666; font-size: 12px; margin: 0;">Order ID: <span style="color: #F5A623;">{order_id}</span></p>
         </div>
         
-        <!-- CTA -->
+        <!-- Support -->
         <div style="text-align: center; padding: 20px 0;">
-            <a href="{website_link}" style="display: inline-block; background: #F5A623; color: #000; padding: 15px 50px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
-                Start Shopping →
+            <p style="color: #888; font-size: 14px; margin: 0 0 15px;">Having issues? We're here to help!</p>
+            <a href="https://wa.me/9779743488871" style="display: inline-block; background: #25D366; color: #fff; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">
+                WhatsApp Support
             </a>
         </div>
         
         <!-- Footer -->
         <div style="text-align: center; padding: 30px 0; border-top: 1px solid #2a2a2a; margin-top: 20px;">
-            <p style="color: #666; margin: 5px 0; font-size: 12px;">GameShop Nepal - Your Trusted Digital Store</p>
+            <p style="color: #666; margin: 5px 0; font-size: 12px;">Thank you for shopping with GameShop Nepal!</p>
             <p style="color: #666; margin: 5px 0; font-size: 11px;">
-                <a href="{website_link}" style="color: #666;">Visit Website</a> | Need help? <a href="https://wa.me/9779743488871" style="color: #666;">WhatsApp Us</a>
+                <a href="{website_link}" style="color: #666;">Visit Website</a>
             </p>
         </div>
     </div>
