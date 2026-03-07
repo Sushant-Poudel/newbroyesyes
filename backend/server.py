@@ -24,7 +24,7 @@ import httpx
 from email_service import send_email, get_order_confirmation_email, get_order_status_update_email, get_welcome_email
 from imgbb_service import upload_to_imgbb
 import google_sheets_service
-from discord_service import send_discord_order_notification, send_discord_order_status_update, send_discord_test_notification
+from discord_service import send_discord_order_notification, send_discord_order_status_update, send_discord_test_notification, send_confirmed_order_notification
 from order_cleanup import run_cleanup_task
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
@@ -49,6 +49,9 @@ JWT_EXPIRATION_HOURS = 24
 # Google OAuth Config
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+
+# Discord Global Order Webhook (for confirmed orders)
+DISCORD_ORDER_WEBHOOK = os.environ.get('DISCORD_ORDER_WEBHOOK', '')
 
 # Take.app Config
 TAKEAPP_API_KEY = os.environ.get('TAKEAPP_API_KEY', '')
@@ -2389,6 +2392,11 @@ async def upload_payment_screenshot(order_id: str, data: PaymentScreenshotUpload
                 order_data=updated_order,
                 product_data={"name": ", ".join(set(product_names))} if product_names else None
             )
+        
+        # Also send to global confirmed order webhook
+        if DISCORD_ORDER_WEBHOOK:
+            await send_confirmed_order_notification(DISCORD_ORDER_WEBHOOK, updated_order)
+            logger.info(f"Sent global Discord notification for confirmed order {order_id}")
     except Exception as e:
         logger.error(f"Failed to send Discord webhook: {e}")
     
@@ -2680,6 +2688,37 @@ async def update_site_settings(settings: dict, current_user: dict = Depends(get_
     settings["id"] = "main"
     await db.site_settings.update_one({"id": "main"}, {"$set": settings}, upsert=True)
     return settings
+
+# ==================== WEBHOOK SETTINGS ====================
+
+@api_router.get("/webhooks/settings")
+async def get_webhook_settings(current_user: dict = Depends(get_current_user)):
+    """Get webhook settings"""
+    # Get global order webhook from env
+    settings = {
+        "discord_order_webhook": DISCORD_ORDER_WEBHOOK or "",
+        "discord_order_webhook_active": bool(DISCORD_ORDER_WEBHOOK)
+    }
+    return settings
+
+@api_router.get("/webhooks/products")
+async def get_products_with_webhooks(current_user: dict = Depends(get_current_user)):
+    """Get all products that have Discord webhooks configured"""
+    products = await db.products.find(
+        {"discord_webhooks": {"$exists": True, "$ne": []}},
+        {"_id": 0, "id": 1, "name": 1, "discord_webhooks": 1}
+    ).to_list(100)
+    return products
+
+@api_router.post("/webhooks/test")
+async def test_webhook(data: dict, current_user: dict = Depends(get_current_user)):
+    """Test a webhook by sending a test message"""
+    webhook_url = data.get("webhook_url", "")
+    if not webhook_url or "discord.com/api/webhooks" not in webhook_url:
+        raise HTTPException(status_code=400, detail="Invalid Discord webhook URL")
+    
+    result = await send_discord_test_notification(webhook_url)
+    return result
 
 # ==================== PROMO CODES ====================
 
@@ -3607,6 +3646,16 @@ async def update_order_status(order_id: str, status_data: OrderStatusUpdate, cur
                 logger.info(f"Deducted {credits_used} credits from {customer_email} for confirmed order {order_id}")
             except Exception as e:
                 logger.warning(f"Failed to deduct credits for order {order_id}: {e}")
+        
+        # Send Discord notification for confirmed order (global webhook)
+        if DISCORD_ORDER_WEBHOOK:
+            try:
+                # Get full order data for notification
+                updated_order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+                await send_confirmed_order_notification(DISCORD_ORDER_WEBHOOK, updated_order)
+                logger.info(f"Sent Discord notification for confirmed order {order_id}")
+            except Exception as e:
+                logger.warning(f"Failed to send Discord notification for order {order_id}: {e}")
     
     # Award credits when order is COMPLETED
     if new_status == "completed" and old_status.lower() != "completed":

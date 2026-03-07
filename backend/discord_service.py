@@ -329,3 +329,90 @@ async def send_discord_test_notification(webhook_url: str) -> dict:
         return {"success": False, "message": "Request timed out. Check webhook URL."}
     except Exception as e:
         return {"success": False, "message": f"Error: {str(e)}"}
+
+
+async def send_confirmed_order_notification(webhook_url: str, order_data: dict):
+    """
+    Send confirmed order notification to the global Discord webhook
+    NO @here ping, clean embed format
+    
+    Args:
+        webhook_url: Discord webhook URL
+        order_data: Order information
+    """
+    if not webhook_url or not webhook_url.strip().startswith('https://discord'):
+        logger.warning("Invalid webhook URL for confirmed order notification")
+        return
+    
+    order_id = order_data.get('id', 'N/A')
+    order_number = order_data.get('takeapp_order_number', order_id[:8].upper())
+    customer_name = order_data.get('customer_name', 'N/A')
+    customer_phone = order_data.get('customer_phone', 'N/A')
+    customer_email = order_data.get('customer_email', 'N/A')
+    total_amount = order_data.get('total_amount', 0)
+    items = order_data.get('items', [])
+    
+    # Build items description with product/variant and price
+    items_description = ""
+    for item in items:
+        quantity = item.get('quantity', 1)
+        name = item.get('name', 'Unknown')
+        variation = item.get('variation', item.get('variation_name', ''))
+        price = item.get('price', 0)
+        
+        variation_text = f" ({variation})" if variation else ""
+        items_description += f"• **{quantity}x** {name}{variation_text} - Rs {price:,.0f}\n"
+    
+    if not items_description:
+        items_description = "No items listed"
+    
+    # Build embed
+    embed = {
+        "title": f"✅ Order Confirmed - #{order_number}",
+        "color": 0x2ECC71,  # Green
+        "fields": [
+            {
+                "name": "👤 Customer Name",
+                "value": f"**{customer_name}**",
+                "inline": True
+            },
+            {
+                "name": "📱 Phone Number",
+                "value": f"{customer_phone}",
+                "inline": True
+            },
+            {
+                "name": "📧 Email",
+                "value": f"{customer_email if customer_email and customer_email != 'N/A' else 'Not provided'}",
+                "inline": True
+            },
+            {
+                "name": "📦 Products",
+                "value": items_description[:1024],
+                "inline": False
+            },
+            {
+                "name": "💰 Total Amount",
+                "value": f"**Rs {total_amount:,.0f}**",
+                "inline": True
+            }
+        ],
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "footer": {
+            "text": f"Order ID: {order_id} | GameShop Nepal"
+        }
+    }
+    
+    payload = {
+        "embeds": [embed]
+    }
+    
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(WEBHOOK_TIMEOUT)) as client:
+            result = await send_webhook_with_retry(client, webhook_url.strip(), payload)
+            if result:
+                logger.info(f"✅ Confirmed order notification sent for #{order_number}")
+            else:
+                logger.error(f"❌ Failed to send confirmed order notification for #{order_number}")
+    except Exception as e:
+        logger.error(f"❌ Error sending confirmed order notification: {str(e)}")
