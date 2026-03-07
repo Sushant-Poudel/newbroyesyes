@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Mail, KeyRound, Loader2, Phone, X } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -27,12 +28,32 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-  const handleGoogleLogin = () => {
-    // Use window.location.origin to get the current domain dynamically
-    const redirectUrl = window.location.origin + '/auth/callback';
-    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setGoogleLoading(true);
+    try {
+      const response = await axios.post(`${API_URL}/customers/google-auth`, {
+        credential: credentialResponse.credential
+      });
+      
+      localStorage.setItem('customer_token', response.data.token);
+      localStorage.setItem('customer_info', JSON.stringify(response.data.customer));
+      
+      toast.success(`Welcome${response.data.customer.name ? ', ' + response.data.customer.name : ''}!`);
+      onSuccess && onSuccess(response.data.customer);
+      onClose();
+    } catch (error) {
+      console.error('Google auth error:', error);
+      toast.error(error.response?.data?.detail || 'Google login failed. Please try again.');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    toast.error('Google login failed. Please try again.');
   };
 
   const handleSendOTP = async (e) => {
@@ -203,8 +224,35 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
                 </Button>
               </form>
 
+              {/* Divider */}
+              <div className="flex items-center gap-3 my-5">
+                <div className="flex-1 h-px bg-white/10"></div>
+                <span className="text-white/30 text-xs">OR</span>
+                <div className="flex-1 h-px bg-white/10"></div>
+              </div>
+
+              {/* Google Sign In */}
+              <div className="flex justify-center" data-testid="google-login-container">
+                {googleLoading ? (
+                  <div className="w-full h-11 rounded-xl bg-white/5 flex items-center justify-center">
+                    <Loader2 className="h-5 w-5 animate-spin text-white/50" />
+                  </div>
+                ) : (
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    useOneTap={false}
+                    theme="filled_black"
+                    size="large"
+                    width="100%"
+                    text="continue_with"
+                    shape="pill"
+                  />
+                )}
+              </div>
+
               <p className="text-center text-white/30 text-xs mt-5">
-                We'll send a one-time code to your email
+                Sign in with your email or Google account
               </p>
             </>
           ) : (

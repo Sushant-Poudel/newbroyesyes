@@ -46,6 +46,10 @@ JWT_SECRET = os.environ.get('JWT_SECRET', secrets.token_hex(32))
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
 
+# Google OAuth Config
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+
 # Take.app Config
 TAKEAPP_API_KEY = os.environ.get('TAKEAPP_API_KEY', '')
 TAKEAPP_BASE_URL = "https://api.take.app/v1"
@@ -4490,6 +4494,100 @@ async def customer_login(data: CustomerLogin):
                 "email": customer.get("email")
             }
         }
+
+# REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+class GoogleAuthRequest(BaseModel):
+    credential: str  # The ID token from Google
+
+@api_router.post("/customers/google-auth")
+async def customer_google_auth(data: GoogleAuthRequest):
+    """Authenticate customer via Google Sign-In"""
+    try:
+        # Verify the Google ID token
+        async with httpx.AsyncClient() as client:
+            # Verify token with Google
+            response = await client.get(
+                f"https://oauth2.googleapis.com/tokeninfo?id_token={data.credential}"
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=400, detail="Invalid Google token")
+            
+            google_data = response.json()
+            
+            # Verify the token is for our app
+            if google_data.get("aud") != GOOGLE_CLIENT_ID:
+                raise HTTPException(status_code=400, detail="Token not issued for this app")
+            
+            email = google_data.get("email")
+            name = google_data.get("name")
+            google_id = google_data.get("sub")
+            picture = google_data.get("picture")
+            
+            if not email:
+                raise HTTPException(status_code=400, detail="Email not provided by Google")
+            
+            # Find existing customer by email or google_id
+            customer = await db.customers.find_one({
+                "$or": [
+                    {"email": email},
+                    {"google_id": google_id}
+                ]
+            })
+            
+            if customer:
+                # Update existing customer with Google info
+                await db.customers.update_one(
+                    {"id": customer["id"]},
+                    {"$set": {
+                        "google_id": google_id,
+                        "name": customer.get("name") or name,
+                        "email": email,
+                        "picture": picture,
+                        "last_login": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+            else:
+                # Create new customer
+                customer = {
+                    "id": str(uuid.uuid4()),
+                    "google_id": google_id,
+                    "email": email,
+                    "name": name,
+                    "phone": None,
+                    "picture": picture,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "last_login": datetime.now(timezone.utc).isoformat(),
+                    "total_orders": 0,
+                    "total_spent": 0,
+                    "store_credits": 0
+                }
+                await db.customers.insert_one(customer)
+            
+            # Generate JWT token
+            token = jwt.encode(
+                {
+                    "customer_id": customer["id"],
+                    "email": email,
+                    "exp": datetime.now(timezone.utc) + timedelta(days=30)
+                },
+                JWT_SECRET,
+                algorithm="HS256"
+            )
+            
+            return {
+                "token": token,
+                "customer": {
+                    "id": customer["id"],
+                    "email": email,
+                    "name": customer.get("name") or name,
+                    "phone": customer.get("phone"),
+                    "picture": picture
+                }
+            }
+            
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=500, detail=f"Failed to verify Google token: {str(e)}")
 
 @api_router.post("/customers/sync-from-takeapp")
 async def sync_customers_from_takeapp(current_user: dict = Depends(get_current_user)):

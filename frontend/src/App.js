@@ -7,6 +7,10 @@ import { LanguageProvider } from "@/components/Language";
 import { CustomerProvider } from "@/components/CustomerAccount";
 import AuthCallback from "@/components/AuthCallback";
 import InstallPWA from "@/components/InstallPWA";
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
+// REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+const GOOGLE_CLIENT_ID = "971769292372-5unqcvlcamf9ggfltgkhhq051mtihra1.apps.googleusercontent.com";
 
 // Loading component
 const PageLoader = () => (
@@ -102,12 +106,13 @@ function App() {
   }, []);
 
   return (
-    <LanguageProvider>
-      <CustomerProvider>
-        <CartProvider>
-          <WishlistProvider>
-            <div className="App min-h-screen bg-black">
-              <BrowserRouter>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <LanguageProvider>
+        <CustomerProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <div className="App min-h-screen bg-black">
+                <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/product/:productSlug" element={<ProductPage />} />
@@ -156,10 +161,11 @@ function App() {
               </BrowserRouter>
               <Toaster position="top-right" richColors />
             </div>
-          </WishlistProvider>
-        </CartProvider>
-      </CustomerProvider>
-    </LanguageProvider>
+            </WishlistProvider>
+          </CartProvider>
+        </CustomerProvider>
+      </LanguageProvider>
+    </GoogleOAuthProvider>
   );
 }
 
