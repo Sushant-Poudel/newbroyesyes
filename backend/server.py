@@ -342,6 +342,30 @@ class SocialLink(BaseModel):
     url: str
     icon: Optional[str] = None
 
+# Reseller Plan Models
+class ResellerPlanCreate(BaseModel):
+    name: str
+    price: float
+    duration: str  # e.g., "1 Month", "3 Months", "1 Year"
+    discount_percent: float  # Discount on products
+    features: List[str]  # List of benefits
+    is_popular: bool = False
+    is_active: bool = True
+    sort_order: int = 0
+
+class ResellerPlan(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    price: float
+    duration: str
+    discount_percent: float
+    features: List[str]
+    is_popular: bool = False
+    is_active: bool = True
+    sort_order: int = 0
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
 class CategoryCreate(BaseModel):
     name: str
 
@@ -5185,6 +5209,46 @@ async def get_subscriber_count(current_user: dict = Depends(get_current_user)):
         "subscribed": subscribed,
         "recent_buyers": recent_buyers
     }
+
+# ==================== RESELLER PLANS ====================
+
+@api_router.get("/reseller-plans")
+async def get_reseller_plans():
+    """Get all active reseller plans (public endpoint)"""
+    plans = await db.reseller_plans.find({"is_active": True}, {"_id": 0}).sort("sort_order", 1).to_list(100)
+    return plans
+
+@api_router.get("/reseller-plans/all")
+async def get_all_reseller_plans(current_user: dict = Depends(get_current_user)):
+    """Get all reseller plans including inactive (admin only)"""
+    plans = await db.reseller_plans.find({}, {"_id": 0}).sort("sort_order", 1).to_list(100)
+    return plans
+
+@api_router.post("/reseller-plans")
+async def create_reseller_plan(plan: ResellerPlanCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new reseller plan"""
+    plan_dict = ResellerPlan(**plan.model_dump()).model_dump()
+    await db.reseller_plans.insert_one(plan_dict)
+    return {k: v for k, v in plan_dict.items() if k != "_id"}
+
+@api_router.put("/reseller-plans/{plan_id}")
+async def update_reseller_plan(plan_id: str, plan: ResellerPlanCreate, current_user: dict = Depends(get_current_user)):
+    """Update an existing reseller plan"""
+    result = await db.reseller_plans.update_one(
+        {"id": plan_id},
+        {"$set": plan.model_dump()}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    return {"message": "Plan updated successfully"}
+
+@api_router.delete("/reseller-plans/{plan_id}")
+async def delete_reseller_plan(plan_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a reseller plan"""
+    result = await db.reseller_plans.delete_one({"id": plan_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    return {"message": "Plan deleted successfully"}
 
 # ==================== CHATBOT ====================
 

@@ -52,6 +52,8 @@ const AdminNewsletter = lazy(() => import("@/pages/admin/AdminNewsletter"));
 const AdminCreditSettings = lazy(() => import("@/pages/admin/AdminCreditSettings"));
 const AdminAuditLogs = lazy(() => import("@/pages/admin/AdminAuditLogs"));
 const AdminAds = lazy(() => import("@/pages/admin/AdminAds"));
+const AdminResellerPlans = lazy(() => import("@/pages/admin/AdminResellerPlans"));
+const ResellerPlansPage = lazy(() => import("@/pages/ResellerPlansPage"));
 import AdminDailyReward from "@/pages/admin/AdminDailyReward";
 import AdminReferral from "@/pages/admin/AdminReferral";
 import AdminMultiplier from "@/pages/admin/AdminMultiplier";
@@ -103,6 +105,7 @@ function App() {
                   <Route path="/daily-reward" element={<DailyRewardPage />} />
                   <Route path="/account" element={<CustomerAccountPage />} />
                   <Route path="/track-order" element={<OrderTrackingPage />} />
+                  <Route path="/reseller-plans" element={<ResellerPlansPage />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
 
                   <Route path="/panelgsnadminbackend/login" element={<AdminLogin />} />
@@ -130,6 +133,7 @@ function App() {
                   <Route path="/panelgsnadminbackend/multiplier" element={<ProtectedRoute requiredPermission="view_settings"><AdminMultiplier /></ProtectedRoute>} />
                   <Route path="/panelgsnadminbackend/audit-logs" element={<ProtectedRoute requiredPermission="view_analytics"><AdminAuditLogs /></ProtectedRoute>} />
                   <Route path="/panelgsnadminbackend/ads" element={<ProtectedRoute requiredPermission="view_settings"><AdminAds /></ProtectedRoute>} />
+                  <Route path="/panelgsnadminbackend/reseller-plans" element={<ProtectedRoute requiredPermission="view_settings"><AdminResellerPlans /></ProtectedRoute>} />
                 </Routes>
               </BrowserRouter>
               <Toaster position="top-right" richColors />
