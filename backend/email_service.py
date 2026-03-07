@@ -99,9 +99,7 @@ def get_base_email_template(content: str, preview_text: str = "") -> str:
                                             <table role="presentation" cellspacing="0" cellpadding="0">
                                                 <tr>
                                                     <td style="vertical-align: middle; padding-right: 12px;">
-                                                        <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #F5A623 0%, #E8930C 100%); border-radius: 12px; text-align: center; line-height: 44px; box-shadow: 0 4px 15px rgba(245, 166, 35, 0.3);">
-                                                            <span style="font-size: 22px; font-weight: 800; color: #000;">G</span>
-                                                        </div>
+                                                        <img src="https://customer-assets.emergentagent.com/job_f826d6c3-4354-45f7-8eac-b606d3ae45c3/artifacts/vhexbuqj_gsn.png" alt="GSN" style="width: 50px; height: 50px; border-radius: 10px;" />
                                                     </td>
                                                     <td style="vertical-align: middle;">
                                                         <h1 style="margin: 0; font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">GameShop Nepal</h1>

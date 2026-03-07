@@ -43,7 +43,7 @@ NEWSLETTER_TEMPLATES = {
     <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
         <!-- Header -->
         <div style="text-align: center; padding: 30px 0; border-bottom: 2px solid #F5A623;">
-            <h1 style="margin: 0; color: #F5A623; font-size: 28px; font-weight: bold;">GSN</h1>
+            <img src="https://customer-assets.emergentagent.com/job_f826d6c3-4354-45f7-8eac-b606d3ae45c3/artifacts/vhexbuqj_gsn.png" alt="GSN" style="width: 60px; height: 60px; border-radius: 10px;" />
             <p style="margin: 10px 0 0; color: #888;">GameShop Nepal</p>
         </div>
         
@@ -94,7 +94,7 @@ NEWSLETTER_TEMPLATES = {
     <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
         <!-- Header -->
         <div style="text-align: center; padding: 30px 0; border-bottom: 2px solid #F5A623;">
-            <h1 style="margin: 0; color: #F5A623; font-size: 28px; font-weight: bold;">GSN</h1>
+            <img src="https://customer-assets.emergentagent.com/job_f826d6c3-4354-45f7-8eac-b606d3ae45c3/artifacts/vhexbuqj_gsn.png" alt="GSN" style="width: 60px; height: 60px; border-radius: 10px;" />
         </div>
         
         <!-- Sale Banner -->
@@ -203,7 +203,7 @@ NEWSLETTER_TEMPLATES = {
     <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
         <!-- Header -->
         <div style="text-align: center; padding: 30px 0; border-bottom: 2px solid #F5A623;">
-            <h1 style="margin: 0; color: #F5A623; font-size: 28px; font-weight: bold;">GSN</h1>
+            <img src="https://customer-assets.emergentagent.com/job_f826d6c3-4354-45f7-8eac-b606d3ae45c3/artifacts/vhexbuqj_gsn.png" alt="GSN" style="width: 60px; height: 60px; border-radius: 10px;" />
         </div>
         
         <!-- Alert Banner -->
@@ -251,7 +251,7 @@ NEWSLETTER_TEMPLATES = {
     <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
         <!-- Header -->
         <div style="text-align: center; padding: 30px 0; border-bottom: 2px solid #F5A623;">
-            <h1 style="margin: 0; color: #F5A623; font-size: 28px; font-weight: bold;">GSN</h1>
+            <img src="https://customer-assets.emergentagent.com/job_f826d6c3-4354-45f7-8eac-b606d3ae45c3/artifacts/vhexbuqj_gsn.png" alt="GSN" style="width: 60px; height: 60px; border-radius: 10px;" />
             <p style="margin: 10px 0 0; color: #888;">GameShop Nepal</p>
         </div>
         
@@ -271,6 +271,85 @@ NEWSLETTER_TEMPLATES = {
             <p style="color: #666; margin: 5px 0; font-size: 12px;">GameShop Nepal - Your Trusted Digital Store</p>
             <p style="color: #666; margin: 5px 0; font-size: 11px;">
                 <a href="{unsubscribe_link}" style="color: #666;">Unsubscribe</a> | <a href="{website_link}" style="color: #666;">Visit Website</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+    },
+    
+    "gift_card": {
+        "name": "Gift Card",
+        "subject": "🎁 You've Received a Gift Card from GameShop Nepal!",
+        "description": "Send a gift card to a customer",
+        "variables": ["recipient_name", "gift_amount", "gift_code", "message", "sender_name"],
+        "html": """
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; background-color: #000000; color: #ffffff;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <!-- Header -->
+        <div style="text-align: center; padding: 30px 0; border-bottom: 2px solid #F5A623;">
+            <img src="https://customer-assets.emergentagent.com/job_f826d6c3-4354-45f7-8eac-b606d3ae45c3/artifacts/vhexbuqj_gsn.png" alt="GSN" style="width: 60px; height: 60px; border-radius: 10px;" />
+            <p style="margin: 10px 0 0; color: #888;">GameShop Nepal</p>
+        </div>
+        
+        <!-- Gift Card Banner -->
+        <div style="text-align: center; padding: 40px 20px; background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); margin: 20px 0; border-radius: 16px; border: 2px solid #F5A623; position: relative;">
+            <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #F5A623; color: #000; padding: 6px 20px; border-radius: 20px; font-size: 12px; font-weight: bold;">🎁 GIFT CARD</div>
+            
+            <h2 style="color: #ffffff; font-size: 24px; margin: 20px 0 10px;">Hey {recipient_name}!</h2>
+            <p style="color: #888; font-size: 14px; margin: 0 0 25px;">You've received a special gift!</p>
+            
+            <!-- Gift Amount -->
+            <div style="background: linear-gradient(135deg, #F5A623 0%, #E8930C 100%); padding: 25px 40px; border-radius: 12px; display: inline-block; margin: 10px 0;">
+                <p style="margin: 0; font-size: 14px; color: rgba(0,0,0,0.7);">Gift Card Value</p>
+                <p style="margin: 5px 0 0; font-size: 42px; font-weight: bold; color: #000;">Rs {gift_amount}</p>
+            </div>
+            
+            <!-- Gift Code -->
+            <div style="margin: 30px 0 20px;">
+                <p style="color: #888; font-size: 12px; margin: 0 0 10px;">YOUR GIFT CODE</p>
+                <div style="background: #0a0a0a; border: 2px dashed #F5A623; padding: 15px 30px; border-radius: 8px; display: inline-block;">
+                    <code style="font-size: 24px; font-weight: bold; color: #F5A623; letter-spacing: 3px;">{gift_code}</code>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Personal Message -->
+        <div style="background: #111; padding: 25px; border-radius: 12px; border-left: 4px solid #F5A623; margin: 20px 0;">
+            <p style="color: #F5A623; font-size: 12px; margin: 0 0 10px; font-weight: bold;">MESSAGE FROM {sender_name}</p>
+            <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin: 0; font-style: italic;">"{message}"</p>
+        </div>
+        
+        <!-- How to Use -->
+        <div style="padding: 20px; text-align: center;">
+            <h3 style="color: #fff; margin: 0 0 15px;">How to Redeem</h3>
+            <p style="color: #888; font-size: 14px; line-height: 1.6; margin: 0;">
+                1. Visit GameShop Nepal<br>
+                2. Add products to cart<br>
+                3. Enter your gift code at checkout<br>
+                4. Enjoy your purchase! 🎉
+            </p>
+        </div>
+        
+        <!-- CTA -->
+        <div style="text-align: center; padding: 20px 0;">
+            <a href="{website_link}" style="display: inline-block; background: #F5A623; color: #000; padding: 15px 50px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                Start Shopping →
+            </a>
+        </div>
+        
+        <!-- Footer -->
+        <div style="text-align: center; padding: 30px 0; border-top: 1px solid #2a2a2a; margin-top: 20px;">
+            <p style="color: #666; margin: 5px 0; font-size: 12px;">GameShop Nepal - Your Trusted Digital Store</p>
+            <p style="color: #666; margin: 5px 0; font-size: 11px;">
+                <a href="{website_link}" style="color: #666;">Visit Website</a> | Need help? <a href="https://wa.me/9779743488871" style="color: #666;">WhatsApp Us</a>
             </p>
         </div>
     </div>

@@ -5051,8 +5051,9 @@ from newsletter_service import get_template_list, render_template, send_newslett
 class NewsletterSendRequest(BaseModel):
     template_id: str
     variables: dict
-    recipient_filter: str = "all"  # all, subscribed, recent_buyers
+    recipient_filter: str = "all"  # all, subscribed, recent_buyers, single
     test_email: Optional[str] = None  # For test sends
+    single_email: Optional[str] = None  # For sending to a specific person
 
 @api_router.get("/newsletter/templates")
 async def get_newsletter_templates(current_user: dict = Depends(get_current_user)):
@@ -5088,6 +5089,36 @@ async def send_bulk_newsletter(request: NewsletterSendRequest, current_user: dic
         subject, html = render_template(request.template_id, request.variables)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+    # Handle single email recipient
+    if request.recipient_filter == "single":
+        if not request.single_email:
+            raise HTTPException(status_code=400, detail="Email address required for single recipient")
+        
+        emails = [request.single_email]
+        result = send_newsletter(emails, subject, html)
+        
+        # Log the campaign
+        campaign_log = {
+            "id": str(uuid.uuid4()),
+            "template_id": request.template_id,
+            "subject": subject,
+            "recipient_filter": f"single: {request.single_email}",
+            "total_recipients": 1,
+            "sent": result.get("sent", 0),
+            "failed": result.get("failed", 0),
+            "sent_by": current_user.get("username"),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.newsletter_campaigns.insert_one(campaign_log)
+        
+        return {
+            "success": result.get("success", False),
+            "total_recipients": 1,
+            "sent": result.get("sent", 0),
+            "failed": result.get("failed", 0),
+            "campaign_id": campaign_log["id"]
+        }
     
     # Get recipients based on filter
     query = {}

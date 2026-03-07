@@ -15,7 +15,9 @@ import {
   Tag,
   Calendar,
   Package,
-  Sparkles
+  Sparkles,
+  Gift,
+  User
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,7 +37,8 @@ const TEMPLATE_ICONS = {
   sale_announcement: Tag,
   weekly_update: Calendar,
   restock_alert: Package,
-  custom: Sparkles
+  custom: Sparkles,
+  gift_card: Gift
 };
 
 export default function AdminNewsletter() {
@@ -43,6 +46,7 @@ export default function AdminNewsletter() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [variables, setVariables] = useState({});
   const [recipientFilter, setRecipientFilter] = useState('all');
+  const [singleEmail, setSingleEmail] = useState('');
   const [subscriberCounts, setSubscriberCounts] = useState({});
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -147,14 +151,24 @@ export default function AdminNewsletter() {
       return;
     }
 
-    const recipientCount = subscriberCounts[recipientFilter] || 0;
-    if (recipientCount === 0) {
-      toast.error('No recipients in selected group');
-      return;
-    }
-
-    if (!window.confirm(`Send newsletter to ${recipientCount} recipients?`)) {
-      return;
+    // For single email, validate the email
+    if (recipientFilter === 'single') {
+      if (!singleEmail || !singleEmail.includes('@')) {
+        toast.error('Please enter a valid email address');
+        return;
+      }
+      if (!window.confirm(`Send email to ${singleEmail}?`)) {
+        return;
+      }
+    } else {
+      const recipientCount = subscriberCounts[recipientFilter] || 0;
+      if (recipientCount === 0) {
+        toast.error('No recipients in selected group');
+        return;
+      }
+      if (!window.confirm(`Send newsletter to ${recipientCount} recipients?`)) {
+        return;
+      }
     }
 
     setSending(true);
@@ -163,11 +177,13 @@ export default function AdminNewsletter() {
       const res = await axios.post(`${API_URL}/newsletter/send`, {
         template_id: selectedTemplate.id,
         variables,
-        recipient_filter: recipientFilter
+        recipient_filter: recipientFilter,
+        single_email: recipientFilter === 'single' ? singleEmail : null
       }, { headers: { Authorization: `Bearer ${token}` }});
 
       toast.success(`Newsletter sent! ${res.data.sent} delivered, ${res.data.failed} failed`);
       setShowPreview(false);
+      setSingleEmail('');
       fetchData();
       setActiveTab('history');
     } catch (error) {
@@ -199,7 +215,12 @@ export default function AdminNewsletter() {
       heading: 'Heading',
       body_text: 'Body Text (HTML allowed)',
       button_text: 'Button Text',
-      button_link: 'Button Link'
+      button_link: 'Button Link',
+      recipient_name: 'Recipient Name',
+      gift_amount: 'Gift Amount (Rs)',
+      gift_code: 'Gift Code',
+      message: 'Personal Message',
+      sender_name: 'Sender Name'
     };
     return labels[variable] || variable.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
@@ -344,9 +365,10 @@ export default function AdminNewsletter() {
                   <div className="space-y-3">
                     <Label className="text-gray-300">Recipients</Label>
                     {[
-                      { id: 'all', label: 'All Contacts', count: subscriberCounts.all },
-                      { id: 'subscribed', label: 'Subscribed Only', count: subscriberCounts.subscribed },
-                      { id: 'recent_buyers', label: 'Recent Buyers (30 days)', count: subscriberCounts.recent_buyers }
+                      { id: 'all', label: 'All Contacts', count: subscriberCounts.all, icon: Users },
+                      { id: 'subscribed', label: 'Subscribed Only', count: subscriberCounts.subscribed, icon: Users },
+                      { id: 'recent_buyers', label: 'Recent Buyers (30 days)', count: subscriberCounts.recent_buyers, icon: Users },
+                      { id: 'single', label: 'Single Recipient', count: null, icon: User }
                     ].map((option) => (
                       <div
                         key={option.id}
@@ -358,14 +380,28 @@ export default function AdminNewsletter() {
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          <Users className={`h-4 w-4 ${recipientFilter === option.id ? 'text-amber-500' : 'text-gray-400'}`} />
+                          <option.icon className={`h-4 w-4 ${recipientFilter === option.id ? 'text-amber-500' : 'text-gray-400'}`} />
                           <span className={recipientFilter === option.id ? 'text-amber-500' : 'text-white'}>
                             {option.label}
                           </span>
                         </div>
-                        <span className="text-gray-400 text-sm">{option.count}</span>
+                        {option.count !== null && <span className="text-gray-400 text-sm">{option.count}</span>}
                       </div>
                     ))}
+                    
+                    {/* Single Email Input */}
+                    {recipientFilter === 'single' && (
+                      <div className="mt-3 p-3 bg-zinc-800 rounded-lg border border-amber-500/30">
+                        <Label className="text-amber-500 text-sm">Recipient Email</Label>
+                        <Input
+                          type="email"
+                          value={singleEmail}
+                          onChange={(e) => setSingleEmail(e.target.value)}
+                          placeholder="customer@email.com"
+                          className="bg-zinc-900 border-zinc-700 text-white mt-2"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2 pt-4 border-t border-zinc-700">
