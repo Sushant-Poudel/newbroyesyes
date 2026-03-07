@@ -25,6 +25,29 @@ export default function Navbar({ notificationBarHeight = 0 }) {
         setCustomer(JSON.parse(customerInfo));
       } catch (e) {}
     }
+    
+    // Listen for storage changes (for cross-tab sync and login updates)
+    const handleStorageChange = () => {
+      const info = localStorage.getItem('customer_info');
+      if (info) {
+        try {
+          setCustomer(JSON.parse(info));
+        } catch (e) {
+          setCustomer(null);
+        }
+      } else {
+        setCustomer(null);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    // Also listen for custom login event
+    window.addEventListener('customerLogin', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('customerLogin', handleStorageChange);
+    };
   }, []);
 
   useEffect(() => {

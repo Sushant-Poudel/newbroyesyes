@@ -41,6 +41,9 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
       localStorage.setItem('customer_token', response.data.token);
       localStorage.setItem('customer_info', JSON.stringify(response.data.customer));
       
+      // Dispatch custom event to notify Navbar of login
+      window.dispatchEvent(new Event('customerLogin'));
+      
       toast.success(`Welcome${response.data.customer.name ? ', ' + response.data.customer.name : ''}!`);
       onSuccess && onSuccess(response.data.customer);
       onClose();
@@ -104,6 +107,9 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
       
       localStorage.setItem('customer_token', response.data.token);
       localStorage.setItem('customer_info', JSON.stringify(response.data.customer));
+      
+      // Dispatch custom event to notify Navbar of login
+      window.dispatchEvent(new Event('customerLogin'));
       
       toast.success('Login successful! Welcome back');
       onSuccess && onSuccess(response.data.customer);
