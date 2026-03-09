@@ -90,28 +90,25 @@ export default function Navbar({ notificationBarHeight = 0 }) {
     <>
       {/* Dynamic Island Style Navbar */}
       <nav 
-        className={`fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-out w-[calc(100%-24px)] sm:w-auto ${
+        className={`fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-out w-[calc(100%-24px)] sm:w-auto max-w-[calc(100%-24px)] ${
           isScrolled ? 'top-2 sm:top-3' : 'top-3 sm:top-4'
         }`}
         style={{ marginTop: notificationBarHeight }}
         data-testid="navbar"
       >
         <div 
-          className={`flex items-center justify-between transition-all duration-500 ease-out rounded-full bg-black/85 backdrop-blur-xl border border-white/10 ${
+          className={`flex items-center justify-between transition-all duration-500 ease-out rounded-full bg-black/85 backdrop-blur-xl border border-white/10 overflow-hidden ${
             isScrolled
               ? 'px-3 sm:px-6 py-2 sm:py-2.5 gap-2 sm:gap-6 shadow-2xl shadow-black/50'
-              : 'px-4 sm:px-8 py-2.5 sm:py-3.5 gap-3 sm:gap-8'
+              : 'px-3 sm:px-8 py-2 sm:py-3.5 gap-2 sm:gap-8'
           }`}
-          style={{ 
-            minWidth: 'auto',
-          }}
         >
           {/* Logo */}
           <Link to="/" className="flex items-center group flex-shrink-0" data-testid="nav-logo">
             <img 
               src={LOGO_URL} 
               alt="GSN" 
-              className={`transition-all duration-300 group-hover:scale-105 ${isScrolled ? 'h-7 sm:h-8' : 'h-8 sm:h-9'}`} 
+              className={`transition-all duration-300 group-hover:scale-105 ${isScrolled ? 'h-6 sm:h-8' : 'h-7 sm:h-9'}`} 
             />
           </Link>
 
@@ -196,7 +193,7 @@ export default function Navbar({ notificationBarHeight = 0 }) {
           </div>
 
           {/* Mobile Right Actions */}
-          <div className="md:hidden flex items-center gap-0.5">
+          <div className="md:hidden flex items-center gap-0.5 flex-shrink-0">
             <Button 
               variant="ghost" 
               size="sm" 
