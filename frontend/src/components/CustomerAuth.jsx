@@ -3,7 +3,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Mail, KeyRound, Loader2, Phone, X } from 'lucide-react';
+import { Mail, KeyRound, Loader2, Phone, X, User } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -22,13 +22,15 @@ const GoogleIcon = () => (
 );
 
 export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
-  const [step, setStep] = useState('email'); // 'email' or 'otp'
+  const [step, setStep] = useState('email'); // 'email', 'otp', or 'complete-profile'
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [pendingGoogleCustomer, setPendingGoogleCustomer] = useState(null);
+  const [pendingToken, setPendingToken] = useState(null);
 
   // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
   const handleGoogleSuccess = async (credentialResponse) => {
@@ -38,20 +40,76 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
         credential: credentialResponse.credential
       });
       
-      localStorage.setItem('customer_token', response.data.token);
-      localStorage.setItem('customer_info', JSON.stringify(response.data.customer));
-      
-      // Dispatch custom event to notify Navbar of login
-      window.dispatchEvent(new Event('customerLogin'));
-      
-      toast.success(`Welcome${response.data.customer.name ? ', ' + response.data.customer.name : ''}!`);
-      onSuccess && onSuccess(response.data.customer);
-      onClose();
+      // Check if profile completion is needed
+      if (response.data.needs_profile_completion) {
+        // Store token and customer data temporarily
+        setPendingToken(response.data.token);
+        setPendingGoogleCustomer(response.data.customer);
+        setName(response.data.customer.name || '');
+        setWhatsappNumber(response.data.customer.whatsapp_number || '');
+        setStep('complete-profile');
+        toast.info('Please complete your profile to continue');
+      } else {
+        // Profile is complete, proceed with login
+        localStorage.setItem('customer_token', response.data.token);
+        localStorage.setItem('customer_info', JSON.stringify(response.data.customer));
+        
+        // Dispatch custom event to notify Navbar of login
+        window.dispatchEvent(new Event('customerLogin'));
+        
+        toast.success(`Welcome${response.data.customer.name ? ', ' + response.data.customer.name : ''}!`);
+        onSuccess && onSuccess(response.data.customer);
+        onClose();
+      }
     } catch (error) {
       console.error('Google auth error:', error);
       toast.error(error.response?.data?.detail || 'Google login failed. Please try again.');
     } finally {
       setGoogleLoading(false);
+    }
+  };
+
+  const handleCompleteProfile = async (e) => {
+    e.preventDefault();
+    
+    if (!name.trim()) {
+      toast.error('Please enter your name');
+      return;
+    }
+    if (!whatsappNumber.trim()) {
+      toast.error('Please enter your WhatsApp number');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const response = await axios.put(
+        `${API_URL}/customers/complete-profile`,
+        { name: name.trim(), whatsapp_number: whatsappNumber.trim() },
+        { headers: { Authorization: `Bearer ${pendingToken}` } }
+      );
+      
+      // Now complete the login
+      localStorage.setItem('customer_token', pendingToken);
+      localStorage.setItem('customer_info', JSON.stringify(response.data.customer));
+      
+      // Dispatch custom event to notify Navbar of login
+      window.dispatchEvent(new Event('customerLogin'));
+      
+      toast.success(`Welcome, ${response.data.customer.name}!`);
+      onSuccess && onSuccess(response.data.customer);
+      onClose();
+      
+      // Reset state
+      setPendingToken(null);
+      setPendingGoogleCustomer(null);
+      setName('');
+      setWhatsappNumber('');
+      setStep('email');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update profile');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -165,17 +223,78 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
           {/* Title */}
           <div className="text-center mb-6">
             <h2 className="text-xl font-bold text-white">
-              {step === 'email' ? 'Welcome Back' : 'Enter OTP'}
+              {step === 'email' ? 'Welcome Back' : step === 'otp' ? 'Enter OTP' : 'Complete Your Profile'}
             </h2>
             <p className="text-white/50 mt-1 text-sm">
               {step === 'email' 
                 ? 'Sign in to your account'
-                : `We've sent a 6-digit code to ${email}`
+                : step === 'otp'
+                  ? `We've sent a 6-digit code to ${email}`
+                  : 'Please provide your details to continue'
               }
             </p>
           </div>
 
-          {step === 'email' ? (
+          {step === 'complete-profile' ? (
+            <form onSubmit={handleCompleteProfile} className="space-y-4">
+              <div>
+                <Label htmlFor="profile-name" className="text-white/70 font-medium text-sm">Your Name *</Label>
+                <div className="relative mt-1.5">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+                  <Input
+                    id="profile-name"
+                    type="text"
+                    placeholder="Enter your full name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="bg-white/5 border-white/10 text-white pl-10 h-11 rounded-xl focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 placeholder:text-white/30"
+                    required
+                    data-testid="profile-name-input"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="profile-whatsapp" className="text-white/70 font-medium text-sm">WhatsApp Number *</Label>
+                <div className="relative mt-1.5">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+                  <Input
+                    id="profile-whatsapp"
+                    type="tel"
+                    placeholder="Enter your WhatsApp number"
+                    value={whatsappNumber}
+                    onChange={(e) => setWhatsappNumber(e.target.value)}
+                    className="bg-white/5 border-white/10 text-white pl-10 h-11 rounded-xl focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 placeholder:text-white/30"
+                    required
+                    data-testid="profile-whatsapp-input"
+                  />
+                </div>
+                <p className="text-xs text-white/40 mt-1.5">We'll use this to send you order updates</p>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-amber-500 hover:bg-amber-600 text-black font-semibold h-11 rounded-xl mt-2"
+                disabled={loading || !name.trim() || !whatsappNumber.trim()}
+                data-testid="complete-profile-button"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Continue'
+                )}
+              </Button>
+
+              {pendingGoogleCustomer?.email && (
+                <p className="text-center text-white/30 text-xs mt-4">
+                  Signed in as {pendingGoogleCustomer.email}
+                </p>
+              )}
+            </form>
+          ) : step === 'email' ? (
             <>
               {/* Form */}
               <form onSubmit={handleSendOTP} className="space-y-4">

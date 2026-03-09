@@ -4572,6 +4572,10 @@ async def customer_login(data: CustomerLogin):
 class GoogleAuthRequest(BaseModel):
     credential: str  # The ID token from Google
 
+class CustomerProfileUpdate(BaseModel):
+    name: str
+    whatsapp_number: str
+
 @api_router.post("/customers/google-auth")
 async def customer_google_auth(data: GoogleAuthRequest):
     """Authenticate customer via Google Sign-In"""
@@ -4608,6 +4612,9 @@ async def customer_google_auth(data: GoogleAuthRequest):
                 ]
             })
             
+            is_new_customer = False
+            needs_profile_completion = False
+            
             if customer:
                 # Update existing customer with Google info
                 await db.customers.update_one(
@@ -4620,14 +4627,20 @@ async def customer_google_auth(data: GoogleAuthRequest):
                         "last_login": datetime.now(timezone.utc).isoformat()
                     }}
                 )
+                # Check if profile is complete (has name and whatsapp)
+                if not customer.get("whatsapp_number") or not customer.get("name"):
+                    needs_profile_completion = True
             else:
                 # Create new customer
+                is_new_customer = True
+                needs_profile_completion = True  # New customers always need to complete profile
                 customer = {
                     "id": str(uuid.uuid4()),
                     "google_id": google_id,
                     "email": email,
                     "name": name,
                     "phone": None,
+                    "whatsapp_number": None,
                     "picture": picture,
                     "created_at": datetime.now(timezone.utc).isoformat(),
                     "last_login": datetime.now(timezone.utc).isoformat(),
@@ -4655,12 +4668,73 @@ async def customer_google_auth(data: GoogleAuthRequest):
                     "email": email,
                     "name": customer.get("name") or name,
                     "phone": customer.get("phone"),
+                    "whatsapp_number": customer.get("whatsapp_number"),
                     "picture": picture
-                }
+                },
+                "needs_profile_completion": needs_profile_completion
             }
             
     except httpx.RequestError as e:
         raise HTTPException(status_code=500, detail=f"Failed to verify Google token: {str(e)}")
+
+@api_router.put("/customers/complete-profile")
+async def complete_customer_profile(data: CustomerProfileUpdate, request: Request):
+    """Complete customer profile after Google login - requires name and WhatsApp number"""
+    # Get token from header
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    token = auth_header.split(" ")[1]
+    
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        customer_id = payload.get("customer_id")
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    if not customer_id:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    # Validate input
+    if not data.name or not data.name.strip():
+        raise HTTPException(status_code=400, detail="Name is required")
+    if not data.whatsapp_number or not data.whatsapp_number.strip():
+        raise HTTPException(status_code=400, detail="WhatsApp number is required")
+    
+    # Clean WhatsApp number
+    whatsapp_clean = data.whatsapp_number.strip().replace(" ", "").replace("-", "")
+    
+    # Update customer profile
+    result = await db.customers.update_one(
+        {"id": customer_id},
+        {"$set": {
+            "name": data.name.strip(),
+            "whatsapp_number": whatsapp_clean,
+            "phone": whatsapp_clean,  # Also set as phone
+            "profile_completed": True
+        }}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    
+    # Fetch updated customer
+    customer = await db.customers.find_one({"id": customer_id}, {"_id": 0})
+    
+    return {
+        "success": True,
+        "customer": {
+            "id": customer["id"],
+            "email": customer.get("email"),
+            "name": customer.get("name"),
+            "phone": customer.get("phone"),
+            "whatsapp_number": customer.get("whatsapp_number"),
+            "picture": customer.get("picture")
+        }
+    }
 
 @api_router.post("/customers/sync-from-takeapp")
 async def sync_customers_from_takeapp(current_user: dict = Depends(get_current_user)):

@@ -81,6 +81,12 @@ All backend endpoints use `/api` prefix
   - 0 = Unlimited (shown as ∞ infinity symbol)
   - Stock badges with color coding (blue=unlimited, green=in stock, red=low stock ≤5)
   - Editable when creating or editing variations
+- ✅ **Fixed Navbar Proportion Issue** - Fixed button overflow on small mobile devices
+- ✅ **Google Login Profile Completion** - After Google OAuth, users must provide:
+  - Name (compulsory)
+  - WhatsApp number (compulsory)
+  - New API endpoint `PUT /api/customers/complete-profile`
+  - Profile completion modal with user-friendly UI
 
 ## Completed in Previous Fork (Mar 3, 2026)
 - ✅ Verified Self-Hosted Ad Management System - fully functional with:
