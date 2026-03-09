@@ -1,13 +1,22 @@
-import { useEffect, useState } from 'react';
-import { Users, RefreshCw, Phone, Mail, ShoppingBag, DollarSign, Download, Coins, Plus, Minus } from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
+import { Users, RefreshCw, Phone, Mail, ShoppingBag, DollarSign, Download, Coins, Plus, Minus, ArrowUpDown, ChevronDown } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import api, { creditsAPI } from '@/lib/api';
+
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Newest First' },
+  { value: 'oldest', label: 'Oldest First' },
+  { value: 'most_spent', label: 'Most Spent' },
+  { value: 'most_orders', label: 'Most Orders' },
+  { value: 'highest_credits', label: 'Highest Credits' },
+];
 
 export default function AdminCustomers() {
   const [customers, setCustomers] = useState([]);
@@ -16,6 +25,8 @@ export default function AdminCustomers() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [creditAmount, setCreditAmount] = useState('');
   const [creditReason, setCreditReason] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchCustomers = async () => {
     try {
@@ -59,13 +70,14 @@ export default function AdminCustomers() {
   };
 
   const handleExportCSV = () => {
-    const headers = ['Phone', 'Name', 'Email', 'Total Orders', 'Total Spent', 'Created At'];
+    const headers = ['Phone', 'Name', 'Email', 'Total Orders', 'Total Spent', 'Store Credits', 'Created At'];
     const rows = customers.map(c => [
       c.phone,
       c.name || '',
       c.email || '',
       c.total_orders || 0,
       c.total_spent || 0,
+      c.credit_balance || 0,
       c.created_at ? new Date(c.created_at).toLocaleDateString() : ''
     ]);
     
@@ -80,15 +92,54 @@ export default function AdminCustomers() {
     toast.success('CSV exported');
   };
 
+  // Sort and filter customers
+  const sortedCustomers = useMemo(() => {
+    let filtered = [...customers];
+    
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(c => 
+        (c.name || '').toLowerCase().includes(query) ||
+        (c.email || '').toLowerCase().includes(query) ||
+        (c.phone || '').includes(query)
+      );
+    }
+    
+    // Apply sorting
+    switch (sortBy) {
+      case 'newest':
+        filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+        break;
+      case 'oldest':
+        filtered.sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+        break;
+      case 'most_spent':
+        filtered.sort((a, b) => (b.total_spent || 0) - (a.total_spent || 0));
+        break;
+      case 'most_orders':
+        filtered.sort((a, b) => (b.total_orders || 0) - (a.total_orders || 0));
+        break;
+      case 'highest_credits':
+        filtered.sort((a, b) => (b.credit_balance || 0) - (a.credit_balance || 0));
+        break;
+      default:
+        break;
+    }
+    
+    return filtered;
+  }, [customers, sortBy, searchQuery]);
+
   const totalSpent = customers.reduce((sum, c) => sum + (c.total_spent || 0), 0);
   const totalOrders = customers.reduce((sum, c) => sum + (c.total_orders || 0), 0);
+  const totalCredits = customers.reduce((sum, c) => sum + (c.credit_balance || 0), 0);
 
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h1 className="text-2xl font-bold text-white">Customers</h1>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button onClick={handleExportCSV} variant="outline" className="border-zinc-700 text-white">
               <Download className="w-4 h-4 mr-2" /> Export CSV
             </Button>
@@ -96,7 +147,7 @@ export default function AdminCustomers() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Card className="bg-zinc-900 border-zinc-800">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
@@ -104,7 +155,7 @@ export default function AdminCustomers() {
                   <Users className="w-5 h-5 text-amber-500" />
                 </div>
                 <div>
-                  <p className="text-gray-400 text-sm">Total Customers</p>
+                  <p className="text-gray-400 text-sm">Customers</p>
                   <p className="text-white text-xl font-bold">{customers.length}</p>
                 </div>
               </div>
@@ -117,7 +168,7 @@ export default function AdminCustomers() {
                   <ShoppingBag className="w-5 h-5 text-green-500" />
                 </div>
                 <div>
-                  <p className="text-gray-400 text-sm">Total Orders</p>
+                  <p className="text-gray-400 text-sm">Orders</p>
                   <p className="text-white text-xl font-bold">{totalOrders}</p>
                 </div>
               </div>
@@ -130,7 +181,7 @@ export default function AdminCustomers() {
                   <DollarSign className="w-5 h-5 text-blue-500" />
                 </div>
                 <div>
-                  <p className="text-gray-400 text-sm">Total Revenue</p>
+                  <p className="text-gray-400 text-sm">Revenue</p>
                   <p className="text-white text-xl font-bold">Rs {totalSpent.toLocaleString()}</p>
                 </div>
               </div>
@@ -140,10 +191,23 @@ export default function AdminCustomers() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-purple-500/10">
-                  <DollarSign className="w-5 h-5 text-purple-500" />
+                  <Coins className="w-5 h-5 text-purple-500" />
                 </div>
                 <div>
-                  <p className="text-gray-400 text-sm">Avg Order Value</p>
+                  <p className="text-gray-400 text-sm">Total Credits</p>
+                  <p className="text-white text-xl font-bold">Rs {totalCredits.toLocaleString()}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-pink-500/10">
+                  <DollarSign className="w-5 h-5 text-pink-500" />
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Avg Order</p>
                   <p className="text-white text-xl font-bold">
                     Rs {totalOrders > 0 ? Math.round(totalSpent / totalOrders).toLocaleString() : 0}
                   </p>
@@ -156,7 +220,31 @@ export default function AdminCustomers() {
         {/* Customers Table */}
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
-            <CardTitle className="text-white">All Customers</CardTitle>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <CardTitle className="text-white">All Customers ({sortedCustomers.length})</CardTitle>
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <Input
+                  placeholder="Search by name, email, phone..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-black border-zinc-700 text-white w-full sm:w-64"
+                  data-testid="customer-search"
+                />
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="bg-black border-zinc-700 text-white w-full sm:w-48" data-testid="customer-sort">
+                    <ArrowUpDown className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-900 border-zinc-700">
+                    {SORT_OPTIONS.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value} className="text-white hover:bg-zinc-800">
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -167,7 +255,11 @@ export default function AdminCustomers() {
               <div className="text-center py-8 text-gray-400">
                 <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p>No customers yet</p>
-                <p className="text-sm mt-1">Click "Sync from Take.app" to import customer data</p>
+              </div>
+            ) : sortedCustomers.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>No customers match your search</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -184,19 +276,34 @@ export default function AdminCustomers() {
                     </tr>
                   </thead>
                   <tbody>
-                    {customers.map((customer) => (
+                    {sortedCustomers.map((customer, index) => (
                       <tr key={customer.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30">
                         <td className="py-3 px-2">
-                          <p className="text-white font-medium">{customer.name || 'Unknown'}</p>
-                          {customer.source && (
-                            <span className="text-xs text-gray-500">via {customer.source}</span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {sortBy === 'most_spent' || sortBy === 'most_orders' || sortBy === 'highest_credits' ? (
+                              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                                index === 0 ? 'bg-amber-500 text-black' : 
+                                index === 1 ? 'bg-gray-400 text-black' : 
+                                index === 2 ? 'bg-amber-700 text-white' : 'bg-zinc-700 text-white'
+                              }`}>
+                                {index + 1}
+                              </span>
+                            ) : null}
+                            <div>
+                              <p className="text-white font-medium">{customer.name || 'Unknown'}</p>
+                              {customer.source && (
+                                <span className="text-xs text-gray-500">via {customer.source}</span>
+                              )}
+                            </div>
+                          </div>
                         </td>
                         <td className="py-3 px-2">
                           <div className="flex flex-col gap-1">
-                            <span className="text-gray-400 text-sm flex items-center gap-1">
-                              <Phone className="w-3 h-3" /> {customer.phone}
-                            </span>
+                            {customer.phone && (
+                              <span className="text-gray-400 text-sm flex items-center gap-1">
+                                <Phone className="w-3 h-3" /> {customer.phone}
+                              </span>
+                            )}
                             {customer.email && (
                               <span className="text-gray-400 text-sm flex items-center gap-1">
                                 <Mail className="w-3 h-3" /> {customer.email}
@@ -205,15 +312,22 @@ export default function AdminCustomers() {
                           </div>
                         </td>
                         <td className="py-3 px-2 text-center">
-                          <span className="text-white font-medium">{customer.total_orders || 0}</span>
+                          <div className="flex flex-col items-center">
+                            <span className={`text-lg font-bold ${(customer.total_orders || 0) > 0 ? 'text-green-400' : 'text-gray-500'}`}>
+                              {customer.total_orders || 0}
+                            </span>
+                            {(customer.total_orders || 0) > 0 && (
+                              <span className="text-xs text-gray-500">orders</span>
+                            )}
+                          </div>
                         </td>
                         <td className="py-3 px-2 text-right">
-                          <span className="text-amber-500 font-medium">
+                          <span className={`font-medium ${(customer.total_spent || 0) > 0 ? 'text-amber-500' : 'text-gray-500'}`}>
                             Rs {(customer.total_spent || 0).toLocaleString()}
                           </span>
                         </td>
                         <td className="py-3 px-2 text-right">
-                          <span className="text-green-500 font-medium flex items-center justify-end gap-1">
+                          <span className={`font-medium flex items-center justify-end gap-1 ${(customer.credit_balance || 0) > 0 ? 'text-green-500' : 'text-gray-500'}`}>
                             <Coins className="w-3 h-3" />
                             Rs {(customer.credit_balance || 0).toLocaleString()}
                           </span>
