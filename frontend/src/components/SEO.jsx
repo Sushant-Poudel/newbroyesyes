@@ -157,7 +157,7 @@ export function getProductSEO(product) {
         seller: {
           '@type': 'Organization',
           name: 'GameShop Nepal',
-          url: 'https://dark-digital-shop.preview.emergentagent.com'
+          url: 'https://modern-ecom-hub-2.preview.emergentagent.com'
         },
         priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       },
