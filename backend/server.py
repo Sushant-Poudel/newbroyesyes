@@ -224,6 +224,7 @@ class ProductVariation(BaseModel):
     original_price: Optional[float] = None
     cost_price: Optional[float] = None  # Admin only - for profit calculation
     description: Optional[str] = None
+    stock: int = 0  # 0 means unlimited, any other number is the available quantity
 
 class ProductFormField(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

@@ -16,7 +16,7 @@ import axios from 'axios';
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const AVAILABLE_TAGS = ['Popular', 'Sale', 'New', 'Limited', 'Hot', 'Best Seller', 'Flash Sale'];
 const emptyProduct = { name: '', slug: '', description: '', image_url: '', category_id: '', variations: [], tags: [], custom_fields: [], sort_order: 0, is_active: true, is_sold_out: false, stock_quantity: null, flash_sale_end: '', flash_sale_label: '', whatsapp_only: false, whatsapp_message: '', discord_webhooks: [] };
-const emptyVariation = { id: '', name: '', price: '', original_price: '', cost_price: '' };
+const emptyVariation = { id: '', name: '', price: '', original_price: '', cost_price: '', stock: '0' };
 const emptyCustomField = { id: '', label: '', placeholder: '', required: false };
 
 export default function AdminProducts() {
@@ -51,7 +51,7 @@ export default function AdminProducts() {
 
   const handleAddVariation = () => {
     if (!newVariation.name || !newVariation.price) { toast.error('Variation name and price are required'); return; }
-    const variation = { ...newVariation, id: `var-${Date.now()}`, price: parseFloat(newVariation.price), original_price: newVariation.original_price ? parseFloat(newVariation.original_price) : null, cost_price: newVariation.cost_price ? parseFloat(newVariation.cost_price) : null };
+    const variation = { ...newVariation, id: `var-${Date.now()}`, price: parseFloat(newVariation.price), original_price: newVariation.original_price ? parseFloat(newVariation.original_price) : null, cost_price: newVariation.cost_price ? parseFloat(newVariation.cost_price) : null, stock: parseInt(newVariation.stock) || 0 };
     setFormData({ ...formData, variations: [...formData.variations, variation] });
     setNewVariation(emptyVariation);
   };
@@ -60,14 +60,14 @@ export default function AdminProducts() {
   
   const handleEditVariation = (variation) => {
     setEditingVariationId(variation.id);
-    setEditingVariationData({ ...variation, price: String(variation.price), original_price: variation.original_price ? String(variation.original_price) : '', cost_price: variation.cost_price ? String(variation.cost_price) : '' });
+    setEditingVariationData({ ...variation, price: String(variation.price), original_price: variation.original_price ? String(variation.original_price) : '', cost_price: variation.cost_price ? String(variation.cost_price) : '', stock: String(variation.stock ?? 0) });
   };
   
   const handleSaveVariation = () => {
     if (!editingVariationData.name || !editingVariationData.price) { toast.error('Variation name and price are required'); return; }
     const updatedVariations = formData.variations.map(v => 
       v.id === editingVariationId 
-        ? { ...editingVariationData, price: parseFloat(editingVariationData.price), original_price: editingVariationData.original_price ? parseFloat(editingVariationData.original_price) : null, cost_price: editingVariationData.cost_price ? parseFloat(editingVariationData.cost_price) : null }
+        ? { ...editingVariationData, price: parseFloat(editingVariationData.price), original_price: editingVariationData.original_price ? parseFloat(editingVariationData.original_price) : null, cost_price: editingVariationData.cost_price ? parseFloat(editingVariationData.cost_price) : null, stock: parseInt(editingVariationData.stock) || 0 }
         : v
     );
     setFormData({ ...formData, variations: updatedVariations });
@@ -239,6 +239,7 @@ export default function AdminProducts() {
                             <Input type="number" value={editingVariationData.price} onChange={(e) => setEditingVariationData({ ...editingVariationData, price: e.target.value })} placeholder="Price" className="bg-black/50 border-gold-500/50 h-8 text-sm w-20" />
                             <Input type="number" value={editingVariationData.original_price} onChange={(e) => setEditingVariationData({ ...editingVariationData, original_price: e.target.value })} placeholder="Orig." className="bg-black/50 border-gold-500/50 h-8 text-sm w-20 hidden sm:block" />
                             <Input type="number" value={editingVariationData.cost_price} onChange={(e) => setEditingVariationData({ ...editingVariationData, cost_price: e.target.value })} placeholder="Cost" className="bg-black/50 border-green-500/50 h-8 text-sm w-20 hidden sm:block" title="Cost Price (Admin Only)" />
+                            <Input type="number" value={editingVariationData.stock} onChange={(e) => setEditingVariationData({ ...editingVariationData, stock: e.target.value })} placeholder="Stock" className="bg-black/50 border-blue-500/50 h-8 text-sm w-16 hidden sm:block" title="Stock (0 = Unlimited)" min="0" />
                             <Button type="button" variant="ghost" size="sm" onClick={handleSaveVariation} className="text-green-400 hover:text-green-300 p-1"><Check className="h-4 w-4" /></Button>
                             <Button type="button" variant="ghost" size="sm" onClick={handleCancelEditVariation} className="text-white/40 hover:text-white p-1"><X className="h-4 w-4" /></Button>
                           </>
@@ -249,6 +250,9 @@ export default function AdminProducts() {
                             <span className="text-gold-500">Rs {v.price}</span>
                             {v.original_price && <span className="text-white/40 line-through hidden sm:inline">Rs {v.original_price}</span>}
                             {v.cost_price && <span className="text-green-400 hidden sm:inline text-xs">(Cost: Rs {v.cost_price})</span>}
+                            <span className={`text-xs hidden sm:inline px-1.5 py-0.5 rounded ${v.stock === 0 ? 'bg-blue-500/20 text-blue-400' : v.stock <= 5 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+                              {v.stock === 0 ? '∞' : v.stock} {v.stock !== 0 && 'left'}
+                            </span>
                             <Button type="button" variant="ghost" size="sm" onClick={() => handleEditVariation(v)} className="text-white/40 hover:text-gold-500 p-1"><Pencil className="h-3 w-3" /></Button>
                             <Button type="button" variant="ghost" size="sm" onClick={() => handleRemoveVariation(v.id)} className="text-red-400 hover:text-red-300 p-1"><X className="h-4 w-4" /></Button>
                           </>
@@ -257,13 +261,15 @@ export default function AdminProducts() {
                     ))}
                   </div>
                 )}
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
+                <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
                   <Input value={newVariation.name} onChange={(e) => setNewVariation({ ...newVariation, name: e.target.value })} placeholder="Plan name" className="bg-black border-white/20 col-span-2 lg:col-span-1" />
                   <Input type="number" value={newVariation.price} onChange={(e) => setNewVariation({ ...newVariation, price: e.target.value })} placeholder="Price" className="bg-black border-white/20" />
                   <Input type="number" value={newVariation.original_price} onChange={(e) => setNewVariation({ ...newVariation, original_price: e.target.value })} placeholder="Original" className="bg-black border-white/20 hidden lg:block" />
                   <Input type="number" value={newVariation.cost_price} onChange={(e) => setNewVariation({ ...newVariation, cost_price: e.target.value })} placeholder="Cost Price" className="bg-black border-green-500/30 hidden lg:block" title="Cost Price (Admin Only - for profit calculation)" />
+                  <Input type="number" value={newVariation.stock} onChange={(e) => setNewVariation({ ...newVariation, stock: e.target.value })} placeholder="Stock (0=∞)" className="bg-black border-blue-500/30 hidden lg:block" title="Stock quantity (0 = Unlimited)" min="0" />
                   <Button type="button" onClick={handleAddVariation} variant="outline" className="border-gold-500 text-gold-500 col-span-2 lg:col-span-1">Add</Button>
                 </div>
+                <p className="text-white/40 text-xs">Stock: Set to 0 for unlimited quantity</p>
               </div>
 
               <div className="space-y-3">

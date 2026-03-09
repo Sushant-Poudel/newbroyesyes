@@ -75,6 +75,12 @@ All backend endpoints use `/api` prefix
   - Add/remove webhook URLs with validation
   - "Test" button to send test notification to each webhook
   - Purple Discord-branded styling
+- ✅ **Fixed Discord Webhooks Not Showing** - Created admin-specific `/api/admin/products` endpoint that includes webhook data
+- ✅ **Stock per Variation** - Added individual stock tracking for product variations:
+  - Stock field in variation model (backend + frontend)
+  - 0 = Unlimited (shown as ∞ infinity symbol)
+  - Stock badges with color coding (blue=unlimited, green=in stock, red=low stock ≤5)
+  - Editable when creating or editing variations
 
 ## Completed in Previous Fork (Mar 3, 2026)
 - ✅ Verified Self-Hosted Ad Management System - fully functional with:
