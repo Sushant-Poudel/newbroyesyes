@@ -9,7 +9,7 @@ import InstallPWA from "@/components/InstallPWA";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-const GOOGLE_CLIENT_ID = "971769292372-5unqcvlcamf9ggfltgkhhq051mtihra1.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || "971769292372-5unqcvlcamf9ggfltgkhhq051mtihra1.apps.googleusercontent.com";
 
 // Loading component
 const PageLoader = () => (
