@@ -1436,6 +1436,29 @@ async def get_product(product_id: str):
     
     return product
 
+@api_router.get("/admin/products", response_model=List[Product])
+async def get_products_admin(category_id: Optional[str] = None, active_only: bool = False, current_user: dict = Depends(get_current_user)):
+    """Admin endpoint that includes discord_webhooks in product list"""
+    query = {}
+    if category_id:
+        query["category_id"] = category_id
+    if active_only:
+        query["is_active"] = True
+
+    products = await db.products.find(query, {"_id": 0}).sort([("sort_order", 1), ("created_at", -1)]).to_list(1000)
+    
+    # Convert datetime fields to ISO strings - keep discord_webhooks for admin
+    for product in products:
+        if "created_at" in product and isinstance(product["created_at"], datetime):
+            product["created_at"] = product["created_at"].isoformat()
+        if "updated_at" in product and isinstance(product["updated_at"], datetime):
+            product["updated_at"] = product["updated_at"].isoformat()
+        # Ensure discord_webhooks exists
+        if "discord_webhooks" not in product:
+            product["discord_webhooks"] = []
+    
+    return products
+
 @api_router.get("/admin/products/{product_id}", response_model=Product)
 async def get_product_admin(product_id: str, current_user: dict = Depends(get_current_user)):
     """Admin endpoint that includes discord_webhooks"""

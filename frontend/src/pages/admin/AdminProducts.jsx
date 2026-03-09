@@ -34,7 +34,7 @@ export default function AdminProducts() {
 
   const fetchData = async () => {
     try {
-      const [productsRes, categoriesRes] = await Promise.all([productsAPI.getAll(null, false), categoriesAPI.getAll()]);
+      const [productsRes, categoriesRes] = await Promise.all([productsAPI.getAllAdmin(), categoriesAPI.getAll()]);
       setProducts(productsRes.data);
       setCategories(categoriesRes.data);
     } catch (error) { console.error('Error:', error); } finally { setIsLoading(false); }

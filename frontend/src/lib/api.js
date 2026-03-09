@@ -49,7 +49,14 @@ export const productsAPI = {
     params.append('active_only', activeOnly ? 'true' : 'false');
     return api.get(`/products?${params.toString()}`);
   },
+  getAllAdmin: (categoryId = null, activeOnly = false) => {
+    const params = new URLSearchParams();
+    if (categoryId) params.append('category_id', categoryId);
+    params.append('active_only', activeOnly ? 'true' : 'false');
+    return api.get(`/admin/products?${params.toString()}`);
+  },
   getOne: (id) => api.get(`/products/${id}`),
+  getOneAdmin: (id) => api.get(`/admin/products/${id}`),
   getRelated: (id, limit = 4) => api.get(`/products/${id}/related?limit=${limit}`),
   create: (data) => api.post('/products', data),
   update: (id, data) => api.put(`/products/${id}`, data),
