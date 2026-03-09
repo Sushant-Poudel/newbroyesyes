@@ -4487,7 +4487,7 @@ async def customer_login(data: CustomerLogin):
 class GoogleAuthRequest(BaseModel):
     credential: str  # The ID token from Google
 
-class CustomerProfileUpdate(BaseModel):
+class GoogleProfileCompletion(BaseModel):
     name: str
     whatsapp_number: str
 
@@ -4527,7 +4527,6 @@ async def customer_google_auth(data: GoogleAuthRequest):
                 ]
             })
             
-            is_new_customer = False
             needs_profile_completion = False
             
             if customer:
@@ -4547,7 +4546,6 @@ async def customer_google_auth(data: GoogleAuthRequest):
                     needs_profile_completion = True
             else:
                 # Create new customer
-                is_new_customer = True
                 needs_profile_completion = True  # New customers always need to complete profile
                 customer = {
                     "id": str(uuid.uuid4()),
@@ -4593,7 +4591,7 @@ async def customer_google_auth(data: GoogleAuthRequest):
         raise HTTPException(status_code=500, detail=f"Failed to verify Google token: {str(e)}")
 
 @api_router.put("/customers/complete-profile")
-async def complete_customer_profile(data: CustomerProfileUpdate, request: Request):
+async def complete_customer_profile(data: GoogleProfileCompletion, request: Request):
     """Complete customer profile after Google login - requires name and WhatsApp number"""
     # Get token from header
     auth_header = request.headers.get("Authorization")

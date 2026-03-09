@@ -431,15 +431,6 @@ def render_template(template_id: str, variables: Dict, website_url: str = "https
         html = html.replace("{" + key + "}", str(value))
     
     # Apply color customization - replace default colors with custom ones
-    color_replacements = [
-        ("#F5A623", default_colors["primary_color"]),      # Primary/accent color
-        ("#F5A623", default_colors["button_color"]),       # Button color (also primary)
-        ("color: #000", f"color: {default_colors['button_text_color']}"),  # Button text
-        ("color: #cccccc", f"color: {default_colors['text_color']}"),       # Body text
-        ("color: #888", f"color: {default_colors['text_color']}"),          # Secondary text
-        ("background-color: #000000", f"background-color: {default_colors['background_color']}"),  # Background
-    ]
-    
     # Special handling: only replace the primary color, not text-in-buttons
     html = html.replace('border-bottom: 2px solid #F5A623', f'border-bottom: 2px solid {default_colors["primary_color"]}')
     html = html.replace('border: 1px solid #F5A623', f'border: 1px solid {default_colors["primary_color"]}')
