@@ -65,7 +65,18 @@ All backend endpoints use `/api` prefix
 - ✅ Fixed customer account page 401 error handling (session expiry now properly redirects to login)
 - ✅ Redesigned email templates with premium modern design
 
-## Completed in Current Fork (Mar 3, 2026)
+## Completed in Current Fork (Mar 9, 2026)
+- ✅ **PWA "Add to Home Screen" in Admin Panel** - Added install instructions modal to admin panel mobile menu with:
+  - Button visible only on mobile devices (< 1024px viewport)
+  - Step-by-step Android Chrome and iOS Safari installation instructions
+  - Consistent styling with main website's PWA feature
+- ✅ **Discord Webhook Management on Product Edit Page** - Fully functional with:
+  - Status indicator (green "X Active" or grey "Not Configured")
+  - Add/remove webhook URLs with validation
+  - "Test" button to send test notification to each webhook
+  - Purple Discord-branded styling
+
+## Completed in Previous Fork (Mar 3, 2026)
 - ✅ Verified Self-Hosted Ad Management System - fully functional with:
   - Recommended image sizes displayed for all ad positions (Homepage Banner, Sidebar, Product Inline, Footer, Popup)
   - Preview button with Desktop/Mobile toggle and website context simulation
