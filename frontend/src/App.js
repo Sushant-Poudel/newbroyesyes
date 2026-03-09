@@ -5,7 +5,6 @@ import { WishlistProvider } from "@/components/Wishlist";
 import { CartProvider } from "@/components/Cart";
 import { LanguageProvider } from "@/components/Language";
 import { CustomerProvider } from "@/components/CustomerAccount";
-import AuthCallback from "@/components/AuthCallback";
 import InstallPWA from "@/components/InstallPWA";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
@@ -128,7 +127,6 @@ function App() {
                   <Route path="/account" element={<CustomerAccountPage />} />
                   <Route path="/track-order" element={<OrderTrackingPage />} />
                   <Route path="/reseller-plans" element={<ResellerPlansPage />} />
-                  <Route path="/auth/callback" element={<AuthCallback />} />
 
                   <Route path="/panelgsnadminbackend/login" element={<AdminLogin />} />
                   <Route path="/panelgsnadminbackend" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />

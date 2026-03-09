@@ -66,27 +66,20 @@ All backend endpoints use `/api` prefix
 - ✅ Redesigned email templates with premium modern design
 
 ## Completed in Current Fork (Mar 9, 2026)
-- ✅ **PWA "Add to Home Screen" in Admin Panel** - Added install instructions modal to admin panel mobile menu with:
-  - Button visible only on mobile devices (< 1024px viewport)
-  - Step-by-step Android Chrome and iOS Safari installation instructions
-  - Consistent styling with main website's PWA feature
-- ✅ **Discord Webhook Management on Product Edit Page** - Fully functional with:
-  - Status indicator (green "X Active" or grey "Not Configured")
-  - Add/remove webhook URLs with validation
-  - "Test" button to send test notification to each webhook
-  - Purple Discord-branded styling
-- ✅ **Fixed Discord Webhooks Not Showing** - Created admin-specific `/api/admin/products` endpoint that includes webhook data
-- ✅ **Stock per Variation** - Added individual stock tracking for product variations:
-  - Stock field in variation model (backend + frontend)
-  - 0 = Unlimited (shown as ∞ infinity symbol)
-  - Stock badges with color coding (blue=unlimited, green=in stock, red=low stock ≤5)
-  - Editable when creating or editing variations
-- ✅ **Fixed Navbar Proportion Issue** - Fixed button overflow on small mobile devices
-- ✅ **Google Login Profile Completion** - After Google OAuth, users must provide:
-  - Name (compulsory)
-  - WhatsApp number (compulsory)
-  - New API endpoint `PUT /api/customers/complete-profile`
-  - Profile completion modal with user-friendly UI
+- ✅ **PWA "Add to Home Screen" in Admin Panel** - Added install instructions modal to admin panel mobile menu
+- ✅ **Discord Webhook Management on Product Edit Page** - Status indicator, test button, add/remove URLs
+- ✅ **Fixed Discord Webhooks Not Showing** - Created `/api/admin/products` endpoint
+- ✅ **Stock per Variation** - Added stock tracking per variation with admin UI
+- ✅ **Fixed Navbar Proportion Issue** - Fixed button overflow on mobile
+- ✅ **Google Login Profile Completion** - Users must provide name & WhatsApp after Google OAuth
+- ✅ **Sidebar Ads on Homepage** - Added `home_sidebar` ad position display in All Products section (XL screens)
+- ✅ **Variation Stock Display on Product Page** - Shows stock per variation:
+  - "Only X left!" in amber for low stock (1-5)
+  - "X in stock" in green for normal stock
+  - No indicator for unlimited (stock = 0)
+  - Disabled selection for out of stock variations
+- ✅ **Removed Dead Google OAuth Code** - Deleted AuthCallback.jsx and old Emergent Auth backend endpoint
+- ✅ **Removed "About" from navbar** and **Made Reseller discount % optional**
 
 ## Completed in Previous Fork (Mar 3, 2026)
 - ✅ Verified Self-Hosted Ad Management System - fully functional with:

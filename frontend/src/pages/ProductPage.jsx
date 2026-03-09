@@ -428,23 +428,51 @@ See invoice: ${invoiceUrl}`;
                 <div className="space-y-3" data-testid="variations-section">
                   <h3 className="font-heading text-sm lg:text-base font-semibold text-white uppercase tracking-wider">{t('selectPlan')}</h3>
                   <RadioGroup value={selectedVariation} onValueChange={setSelectedVariation} className="space-y-2">
-                    {product.variations.map((variation) => (
-                      <div key={variation.id} className="relative">
-                        <RadioGroupItem value={variation.id} id={variation.id} className="peer sr-only" data-testid={`variation-${variation.id}`} />
-                        <Label htmlFor={variation.id} className="flex items-center justify-between p-3 bg-card border border-white/10 rounded-lg cursor-pointer transition-all duration-300 peer-data-[state=checked]:border-gold-500 peer-data-[state=checked]:bg-gold-500/10 hover:border-white/30 hover:scale-[1.01]">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${selectedVariation === variation.id ? 'border-gold-500' : 'border-white/30'}`}>
-                              {selectedVariation === variation.id && <Check className="h-2.5 w-2.5 text-gold-500" />}
+                    {product.variations.map((variation) => {
+                      const varStock = variation.stock ?? 0;
+                      const isUnlimited = varStock === 0;
+                      const isOutOfStock = !isUnlimited && varStock <= 0;
+                      const isLowVariationStock = !isUnlimited && varStock > 0 && varStock <= 5;
+                      
+                      return (
+                        <div key={variation.id} className="relative">
+                          <RadioGroupItem 
+                            value={variation.id} 
+                            id={variation.id} 
+                            className="peer sr-only" 
+                            data-testid={`variation-${variation.id}`}
+                            disabled={isOutOfStock}
+                          />
+                          <Label 
+                            htmlFor={variation.id} 
+                            className={`flex items-center justify-between p-3 bg-card border border-white/10 rounded-lg transition-all duration-300 peer-data-[state=checked]:border-gold-500 peer-data-[state=checked]:bg-gold-500/10 hover:border-white/30 hover:scale-[1.01] ${
+                              isOutOfStock ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${selectedVariation === variation.id ? 'border-gold-500' : 'border-white/30'}`}>
+                                {selectedVariation === variation.id && <Check className="h-2.5 w-2.5 text-gold-500" />}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="font-heading font-semibold text-white text-sm">{variation.name}</span>
+                                {/* Stock indicator per variation */}
+                                {isOutOfStock ? (
+                                  <span className="text-xs text-red-400">Out of Stock</span>
+                                ) : isLowVariationStock ? (
+                                  <span className="text-xs text-amber-400">Only {varStock} left!</span>
+                                ) : !isUnlimited ? (
+                                  <span className="text-xs text-green-400">{varStock} in stock</span>
+                                ) : null}
+                              </div>
                             </div>
-                            <span className="font-heading font-semibold text-white text-sm">{variation.name}</span>
-                          </div>
-                          <div className="text-right">
-                            <span className="font-bold text-gold-500 text-sm lg:text-base">Rs {variation.price.toLocaleString()}</span>
-                            {variation.original_price && variation.original_price > variation.price && <span className="ml-2 text-white/40 line-through text-xs">Rs {variation.original_price.toLocaleString()}</span>}
-                          </div>
-                        </Label>
-                      </div>
-                    ))}
+                            <div className="text-right">
+                              <span className="font-bold text-gold-500 text-sm lg:text-base">Rs {variation.price.toLocaleString()}</span>
+                              {variation.original_price && variation.original_price > variation.price && <span className="ml-2 text-white/40 line-through text-xs">Rs {variation.original_price.toLocaleString()}</span>}
+                            </div>
+                          </Label>
+                        </div>
+                      );
+                    })}
                   </RadioGroup>
                 </div>
               )}
