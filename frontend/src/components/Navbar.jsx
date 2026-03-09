@@ -89,17 +89,17 @@ export default function Navbar({ notificationBarHeight = 0 }) {
     <>
       {/* Dynamic Island Style Navbar */}
       <nav 
-        className={`fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-out w-[calc(100%-24px)] sm:w-auto max-w-[calc(100%-24px)] ${
-          isScrolled ? 'top-2 sm:top-3' : 'top-3 sm:top-4'
+        className={`fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-out w-[calc(100%-24px)] md:w-auto max-w-[calc(100%-24px)] ${
+          isScrolled ? 'top-2 md:top-3' : 'top-3 md:top-4'
         }`}
         style={{ marginTop: notificationBarHeight }}
         data-testid="navbar"
       >
         <div 
-          className={`flex items-center justify-between transition-all duration-500 ease-out rounded-full bg-black/85 backdrop-blur-xl border border-white/10 overflow-hidden ${
+          className={`flex items-center justify-between transition-all duration-500 ease-out rounded-full bg-black/90 backdrop-blur-xl border border-white/10 ${
             isScrolled
-              ? 'px-3 sm:px-6 py-2 sm:py-2.5 gap-2 sm:gap-6 shadow-2xl shadow-black/50'
-              : 'px-3 sm:px-8 py-2 sm:py-3.5 gap-2 sm:gap-8'
+              ? 'px-3 md:px-6 py-2 md:py-2.5 gap-3 md:gap-6 shadow-2xl shadow-black/50'
+              : 'px-4 md:px-8 py-2.5 md:py-3.5 gap-3 md:gap-8'
           }`}
         >
           {/* Logo */}
@@ -107,7 +107,7 @@ export default function Navbar({ notificationBarHeight = 0 }) {
             <img 
               src={LOGO_URL} 
               alt="GSN" 
-              className={`transition-all duration-300 group-hover:scale-105 ${isScrolled ? 'h-6 sm:h-8' : 'h-7 sm:h-9'}`} 
+              className={`transition-all duration-300 group-hover:scale-105 ${isScrolled ? 'h-7 md:h-8' : 'h-8 md:h-9'}`} 
             />
           </Link>
 
@@ -191,13 +191,13 @@ export default function Navbar({ notificationBarHeight = 0 }) {
             <CustomerAccountSidebar />
           </div>
 
-          {/* Mobile Right Actions */}
-          <div className="md:hidden flex items-center gap-0.5 flex-shrink-0">
+          {/* Mobile Right Actions - Only icons, clean layout */}
+          <div className="md:hidden flex items-center gap-1 flex-shrink-0">
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => { setIsSearchOpen(!isSearchOpen); setIsMenuOpen(false); }} 
-              className="text-white/60 hover:text-white p-1.5 h-auto rounded-full hover:bg-white/10"
+              className="text-white/70 hover:text-white p-2 h-auto rounded-full hover:bg-white/10"
             >
               <Search className="h-4 w-4" />
             </Button>
@@ -207,7 +207,7 @@ export default function Navbar({ notificationBarHeight = 0 }) {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => navigate('/account')} 
-                className="text-white/60 hover:text-white p-1.5 h-auto rounded-full hover:bg-white/10"
+                className="text-white/70 hover:text-white p-2 h-auto rounded-full hover:bg-white/10"
               >
                 <User className="h-4 w-4" />
               </Button>
@@ -216,7 +216,7 @@ export default function Navbar({ notificationBarHeight = 0 }) {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setShowAuthModal(true)} 
-                className="text-white/60 hover:text-white p-1.5 h-auto rounded-full hover:bg-white/10"
+                className="text-white/70 hover:text-white p-2 h-auto rounded-full hover:bg-white/10"
               >
                 <User className="h-4 w-4" />
               </Button>
@@ -224,7 +224,7 @@ export default function Navbar({ notificationBarHeight = 0 }) {
             <CustomerAccountSidebar />
             <button 
               onClick={() => { setIsMenuOpen(!isMenuOpen); setIsSearchOpen(false); }} 
-              className="p-1.5 text-white/60 hover:text-white rounded-full hover:bg-white/10 transition-colors" 
+              className="p-2 text-white/70 hover:text-white rounded-full hover:bg-white/10 transition-colors" 
               data-testid="mobile-menu-toggle"
             >
               {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
