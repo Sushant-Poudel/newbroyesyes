@@ -53,7 +53,7 @@ export default function AdminResellerPlans() {
     const planData = {
       ...formData,
       price: parseFloat(formData.price),
-      discount_percent: parseFloat(formData.discount_percent),
+      discount_percent: formData.discount_percent ? parseFloat(formData.discount_percent) : 0,
       features: formData.features.split('\n').filter(f => f.trim()),
       sort_order: parseInt(formData.sort_order) || 0
     };
@@ -85,7 +85,7 @@ export default function AdminResellerPlans() {
       name: plan.name,
       price: plan.price.toString(),
       duration: plan.duration,
-      discount_percent: plan.discount_percent.toString(),
+      discount_percent: plan.discount_percent ? plan.discount_percent.toString() : '',
       features: plan.features.join('\n'),
       is_popular: plan.is_popular,
       is_active: plan.is_active,
@@ -192,7 +192,9 @@ export default function AdminResellerPlans() {
                     <span className="text-3xl font-bold text-gold-500">Rs {plan.price.toLocaleString()}</span>
                     <span className="text-white/40">/{plan.duration}</span>
                   </div>
-                  <p className="text-green-500 text-sm mt-1">{plan.discount_percent}% discount</p>
+                  {plan.discount_percent > 0 && (
+                    <p className="text-green-500 text-sm mt-1">{plan.discount_percent}% discount</p>
+                  )}
                 </div>
 
                 {/* Features */}
@@ -277,14 +279,13 @@ export default function AdminResellerPlans() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-white">Discount %</Label>
+                  <Label className="text-white">Discount % (optional)</Label>
                   <Input
                     type="number"
                     value={formData.discount_percent}
                     onChange={(e) => setFormData({...formData, discount_percent: e.target.value})}
-                    placeholder="10"
+                    placeholder="0"
                     className="bg-zinc-800 border-zinc-700 text-white"
-                    required
                   />
                 </div>
                 <div className="space-y-2">

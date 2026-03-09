@@ -94,10 +94,12 @@ export default function ResellerPlansPage() {
                         <span className="text-4xl font-bold text-gold-500">Rs {plan.price.toLocaleString()}</span>
                         <span className="text-white/40">/{plan.duration}</span>
                       </div>
-                      <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-green-500/10 rounded-full border border-green-500/20">
-                        <Zap className="w-3 h-3 text-green-500" />
-                        <span className="text-green-500 text-sm font-medium">{plan.discount_percent}% OFF on all products</span>
-                      </div>
+                      {plan.discount_percent > 0 && (
+                        <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-green-500/10 rounded-full border border-green-500/20">
+                          <Zap className="w-3 h-3 text-green-500" />
+                          <span className="text-green-500 text-sm font-medium">{plan.discount_percent}% OFF on all products</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Features */}

@@ -64,7 +64,6 @@ export default function Navbar({ notificationBarHeight = 0 }) {
     { href: '/', label: 'Home' },
     { href: '/daily-reward', label: 'Daily Rewards', icon: Gift, highlight: true },
     { href: '/reseller-plans', label: 'Reseller', icon: Users },
-    { href: '/about', label: 'About' },
   ];
 
   const isActive = (path) => location.pathname === path;
