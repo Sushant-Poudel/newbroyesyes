@@ -5232,9 +5232,18 @@ async def delete_multiplier_event(event_id: str, current_user: dict = Depends(ge
 
 from newsletter_service import get_template_list, render_template, send_newsletter, NEWSLETTER_TEMPLATES
 
+class NewsletterColors(BaseModel):
+    primary_color: str = "#F59E0B"
+    secondary_color: str = "#1F2937"
+    text_color: str = "#374151"
+    background_color: str = "#FFFFFF"
+    button_color: str = "#F59E0B"
+    button_text_color: str = "#000000"
+
 class NewsletterSendRequest(BaseModel):
     template_id: str
     variables: dict
+    colors: Optional[NewsletterColors] = None
     recipient_filter: str = "all"  # all, subscribed, recent_buyers, single
     test_email: Optional[str] = None  # For test sends
     single_email: Optional[str] = None  # For sending to a specific person
@@ -5248,7 +5257,8 @@ async def get_newsletter_templates(current_user: dict = Depends(get_current_user
 async def preview_newsletter(request: NewsletterSendRequest, current_user: dict = Depends(get_current_user)):
     """Preview a newsletter before sending"""
     try:
-        subject, html = render_template(request.template_id, request.variables)
+        colors_dict = request.colors.model_dump() if request.colors else None
+        subject, html = render_template(request.template_id, request.variables, colors=colors_dict)
         return {"subject": subject, "html": html}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -5260,7 +5270,8 @@ async def send_test_newsletter(request: NewsletterSendRequest, current_user: dic
         raise HTTPException(status_code=400, detail="Test email required")
     
     try:
-        subject, html = render_template(request.template_id, request.variables)
+        colors_dict = request.colors.model_dump() if request.colors else None
+        subject, html = render_template(request.template_id, request.variables, colors=colors_dict)
         result = send_newsletter([request.test_email], subject, html)
         return result
     except ValueError as e:
@@ -5270,7 +5281,8 @@ async def send_test_newsletter(request: NewsletterSendRequest, current_user: dic
 async def send_bulk_newsletter(request: NewsletterSendRequest, current_user: dict = Depends(get_current_user)):
     """Send newsletter to customers based on filter"""
     try:
-        subject, html = render_template(request.template_id, request.variables)
+        colors_dict = request.colors.model_dump() if request.colors else None
+        subject, html = render_template(request.template_id, request.variables, colors=colors_dict)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     

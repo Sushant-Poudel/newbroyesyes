@@ -16,7 +16,8 @@ import {
   Calendar,
   Package,
   Sparkles,
-  User
+  User,
+  Palette
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,10 +41,21 @@ const TEMPLATE_ICONS = {
   gift_card: Send
 };
 
+const DEFAULT_COLORS = {
+  primary_color: '#F59E0B',      // Amber - main accent
+  secondary_color: '#1F2937',    // Dark gray - headers
+  text_color: '#374151',         // Gray - body text
+  background_color: '#FFFFFF',   // White - email bg
+  button_color: '#F59E0B',       // Amber - buttons
+  button_text_color: '#000000',  // Black - button text
+};
+
 export default function AdminNewsletter() {
   const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [variables, setVariables] = useState({});
+  const [colors, setColors] = useState(DEFAULT_COLORS);
+  const [showColorSettings, setShowColorSettings] = useState(false);
   const [recipientFilter, setRecipientFilter] = useState('all');
   const [singleEmail, setSingleEmail] = useState('');
   const [subscriberCounts, setSubscriberCounts] = useState({});
@@ -88,8 +100,13 @@ export default function AdminNewsletter() {
       initialVars[v] = '';
     });
     setVariables(initialVars);
+    setColors(DEFAULT_COLORS);
     setPreviewHtml('');
     setPreviewSubject('');
+  };
+
+  const handleColorChange = (key, value) => {
+    setColors(prev => ({ ...prev, [key]: value }));
   };
 
   const handleVariableChange = (key, value) => {
@@ -106,7 +123,8 @@ export default function AdminNewsletter() {
       const token = localStorage.getItem('admin_token');
       const res = await axios.post(`${API_URL}/newsletter/preview`, {
         template_id: selectedTemplate.id,
-        variables
+        variables,
+        colors
       }, { headers: { Authorization: `Bearer ${token}` }});
 
       setPreviewSubject(res.data.subject);
@@ -129,6 +147,7 @@ export default function AdminNewsletter() {
       const res = await axios.post(`${API_URL}/newsletter/send-test`, {
         template_id: selectedTemplate.id,
         variables,
+        colors,
         test_email: testEmail
       }, { headers: { Authorization: `Bearer ${token}` }});
 
@@ -176,6 +195,7 @@ export default function AdminNewsletter() {
       const res = await axios.post(`${API_URL}/newsletter/send`, {
         template_id: selectedTemplate.id,
         variables,
+        colors,
         recipient_filter: recipientFilter,
         single_email: recipientFilter === 'single' ? singleEmail : null
       }, { headers: { Authorization: `Bearer ${token}` }});
@@ -348,6 +368,139 @@ export default function AdminNewsletter() {
                           )}
                         </div>
                       ))}
+                      
+                      {/* Color Settings Toggle */}
+                      <div className="pt-4 border-t border-zinc-700">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setShowColorSettings(!showColorSettings)}
+                          className="w-full border-zinc-700 text-gray-300 hover:text-white"
+                        >
+                          <Palette className="h-4 w-4 mr-2" />
+                          {showColorSettings ? 'Hide' : 'Show'} Color Settings
+                        </Button>
+                        
+                        {showColorSettings && (
+                          <div className="mt-4 space-y-3 p-4 bg-zinc-800/50 rounded-lg border border-zinc-700">
+                            <p className="text-xs text-gray-400 mb-3">Customize email colors</p>
+                            
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <Label className="text-gray-400 text-xs">Primary/Accent</Label>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="color"
+                                    value={colors.primary_color}
+                                    onChange={(e) => handleColorChange('primary_color', e.target.value)}
+                                    className="w-8 h-8 rounded cursor-pointer border-0"
+                                  />
+                                  <Input
+                                    value={colors.primary_color}
+                                    onChange={(e) => handleColorChange('primary_color', e.target.value)}
+                                    className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 flex-1"
+                                  />
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-1">
+                                <Label className="text-gray-400 text-xs">Heading Color</Label>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="color"
+                                    value={colors.secondary_color}
+                                    onChange={(e) => handleColorChange('secondary_color', e.target.value)}
+                                    className="w-8 h-8 rounded cursor-pointer border-0"
+                                  />
+                                  <Input
+                                    value={colors.secondary_color}
+                                    onChange={(e) => handleColorChange('secondary_color', e.target.value)}
+                                    className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 flex-1"
+                                  />
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-1">
+                                <Label className="text-gray-400 text-xs">Body Text</Label>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="color"
+                                    value={colors.text_color}
+                                    onChange={(e) => handleColorChange('text_color', e.target.value)}
+                                    className="w-8 h-8 rounded cursor-pointer border-0"
+                                  />
+                                  <Input
+                                    value={colors.text_color}
+                                    onChange={(e) => handleColorChange('text_color', e.target.value)}
+                                    className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 flex-1"
+                                  />
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-1">
+                                <Label className="text-gray-400 text-xs">Background</Label>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="color"
+                                    value={colors.background_color}
+                                    onChange={(e) => handleColorChange('background_color', e.target.value)}
+                                    className="w-8 h-8 rounded cursor-pointer border-0"
+                                  />
+                                  <Input
+                                    value={colors.background_color}
+                                    onChange={(e) => handleColorChange('background_color', e.target.value)}
+                                    className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 flex-1"
+                                  />
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-1">
+                                <Label className="text-gray-400 text-xs">Button Color</Label>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="color"
+                                    value={colors.button_color}
+                                    onChange={(e) => handleColorChange('button_color', e.target.value)}
+                                    className="w-8 h-8 rounded cursor-pointer border-0"
+                                  />
+                                  <Input
+                                    value={colors.button_color}
+                                    onChange={(e) => handleColorChange('button_color', e.target.value)}
+                                    className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 flex-1"
+                                  />
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-1">
+                                <Label className="text-gray-400 text-xs">Button Text</Label>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="color"
+                                    value={colors.button_text_color}
+                                    onChange={(e) => handleColorChange('button_text_color', e.target.value)}
+                                    className="w-8 h-8 rounded cursor-pointer border-0"
+                                  />
+                                  <Input
+                                    value={colors.button_text_color}
+                                    onChange={(e) => handleColorChange('button_text_color', e.target.value)}
+                                    className="bg-zinc-900 border-zinc-700 text-white text-xs h-8 flex-1"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setColors(DEFAULT_COLORS)}
+                              className="w-full mt-2 text-gray-400 hover:text-white text-xs"
+                            >
+                              Reset to Default Colors
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center py-12">

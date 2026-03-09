@@ -368,12 +368,28 @@ def get_template_list() -> List[Dict]:
     ]
 
 
-def render_template(template_id: str, variables: Dict, website_url: str = "https://gameshopnepal.com") -> tuple:
-    """Render a template with given variables"""
+def render_template(template_id: str, variables: Dict, website_url: str = "https://gameshopnepal.com", colors: Dict = None) -> tuple:
+    """Render a template with given variables and custom colors"""
     if template_id not in NEWSLETTER_TEMPLATES:
         raise ValueError(f"Template '{template_id}' not found")
     
     template = NEWSLETTER_TEMPLATES[template_id]
+    
+    # Default colors
+    default_colors = {
+        "primary_color": "#F5A623",
+        "secondary_color": "#1F2937",
+        "text_color": "#cccccc",
+        "background_color": "#000000",
+        "button_color": "#F5A623",
+        "button_text_color": "#000000"
+    }
+    
+    # Merge with provided colors
+    if colors:
+        for key, value in colors.items():
+            if value:
+                default_colors[key] = value
     
     # Add default variables
     variables["unsubscribe_link"] = f"{website_url}/unsubscribe"
@@ -396,7 +412,7 @@ def render_template(template_id: str, variables: Dict, website_url: str = "https
         if variables.get("button_text") and variables.get("button_link"):
             variables["button_section"] = f'''
             <div style="text-align: center; padding: 20px 0;">
-                <a href="{variables['button_link']}" style="display: inline-block; background: #F5A623; color: #000; padding: 15px 50px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                <a href="{variables['button_link']}" style="display: inline-block; background: {default_colors['button_color']}; color: {default_colors['button_text_color']}; padding: 15px 50px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
                     {variables['button_text']}
                 </a>
             </div>
@@ -413,6 +429,24 @@ def render_template(template_id: str, variables: Dict, website_url: str = "https
     html = template["html"]
     for key, value in variables.items():
         html = html.replace("{" + key + "}", str(value))
+    
+    # Apply color customization - replace default colors with custom ones
+    color_replacements = [
+        ("#F5A623", default_colors["primary_color"]),      # Primary/accent color
+        ("#F5A623", default_colors["button_color"]),       # Button color (also primary)
+        ("color: #000", f"color: {default_colors['button_text_color']}"),  # Button text
+        ("color: #cccccc", f"color: {default_colors['text_color']}"),       # Body text
+        ("color: #888", f"color: {default_colors['text_color']}"),          # Secondary text
+        ("background-color: #000000", f"background-color: {default_colors['background_color']}"),  # Background
+    ]
+    
+    # Special handling: only replace the primary color, not text-in-buttons
+    html = html.replace('border-bottom: 2px solid #F5A623', f'border-bottom: 2px solid {default_colors["primary_color"]}')
+    html = html.replace('border: 1px solid #F5A623', f'border: 1px solid {default_colors["primary_color"]}')
+    html = html.replace('border: 2px solid #F5A623', f'border: 2px solid {default_colors["primary_color"]}')
+    html = html.replace('background: #F5A623', f'background: {default_colors["button_color"]}')
+    html = html.replace('color: #F5A623', f'color: {default_colors["primary_color"]}')
+    html = html.replace('background-color: #000000', f'background-color: {default_colors["background_color"]}')
     
     return subject, html
 
