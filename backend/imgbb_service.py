@@ -41,8 +41,8 @@ async def upload_to_imgbb(image_bytes: bytes, filename: str) -> dict:
             'name': filename
         }
         
-        # Upload to ImgBB
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        # Upload to ImgBB (increased timeout for larger images)
+        async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(IMGBB_UPLOAD_URL, data=payload)
             response.raise_for_status()
             result = response.json()

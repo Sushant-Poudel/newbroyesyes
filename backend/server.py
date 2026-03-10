@@ -1169,9 +1169,20 @@ async def upload_image(file: UploadFile = File(...), current_user: dict = Depend
 @api_router.post("/upload/payment")
 async def upload_payment_image(file: UploadFile = File(...)):
     """Public endpoint for uploading payment screenshots - using ImgBB"""
-    allowed_types = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-    if file.content_type not in allowed_types:
-        raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG, PNG, WebP, GIF allowed.")
+    # Accept common image formats including HEIC for iOS
+    allowed_types = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif", "application/octet-stream"]
+    allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif']
+    
+    # Get file extension
+    file_ext = file.filename.split(".")[-1].lower() if "." in file.filename else ""
+    
+    # Check either content type or extension (iOS sometimes sends octet-stream)
+    content_type_ok = file.content_type in allowed_types
+    extension_ok = file_ext in allowed_extensions
+    
+    if not content_type_ok and not extension_ok:
+        logger.warning(f"Invalid file type: {file.content_type}, extension: {file_ext}")
+        raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG, PNG, WebP, GIF, HEIC allowed.")
     
     # Limit file size to 10MB
     contents = await file.read()
@@ -1179,8 +1190,11 @@ async def upload_payment_image(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="File too large. Max 10MB allowed.")
     
     try:
-        # Generate unique filename
-        file_ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+        # Generate unique filename - use jpg for HEIC for compatibility
+        if file_ext in ['heic', 'heif']:
+            file_ext = 'jpg'
+        elif not file_ext or file_ext not in allowed_extensions:
+            file_ext = 'jpg'
         filename = f"payment_{uuid.uuid4()}.{file_ext}"
         
         # Upload to ImgBB

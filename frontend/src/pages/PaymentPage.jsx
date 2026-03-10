@@ -123,8 +123,18 @@ export default function PaymentPage() {
     try {
       // Upload screenshot using public endpoint
       setIsUploading(true);
-      const uploadRes = await uploadAPI.uploadPaymentImage(screenshot);
-      const screenshotUrl = uploadRes.data.url;
+      let screenshotUrl;
+      try {
+        const uploadRes = await uploadAPI.uploadPaymentImage(screenshot);
+        screenshotUrl = uploadRes.data.url;
+      } catch (uploadError) {
+        console.error('Upload error:', uploadError);
+        const uploadErrorMsg = uploadError.response?.data?.detail || 'Failed to upload screenshot. Please try again.';
+        toast.error(uploadErrorMsg);
+        setIsUploading(false);
+        setIsSubmitting(false);
+        return;
+      }
       setIsUploading(false);
 
       // Save screenshot to order with payment method - this also sets status to "Confirmed"
@@ -190,8 +200,9 @@ See invoice ${fullInvoiceUrl}`;
       }, 500);
       
     } catch (error) {
-      console.error('Error:', error);
-      toast.error('Failed to process order. Please try again.');
+      console.error('Error processing order:', error);
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message || 'Failed to process order. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
       setIsUploading(false);
