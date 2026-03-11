@@ -19,7 +19,8 @@ export default function AdminCreditSettings() {
     usable_categories: [],
     usable_products: [],
     max_credit_per_order: 0,
-    max_credit_percentage: 0
+    max_credit_percentage: 0,
+    free_customer_credit_cap: 0
   });
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
@@ -184,6 +185,19 @@ export default function AdminCreditSettings() {
                 <p className="text-white/40 text-xs">Max % of order total payable via credits (0 = no limit)</p>
               </div>
             </div>
+
+            <div className="mt-4 space-y-2">
+              <Label className="text-white">Free Customer Credit Cap (Rs)</Label>
+              <Input
+                type="number"
+                min="0"
+                value={settings.free_customer_credit_cap || 0}
+                onChange={(e) => setSettings({ ...settings, free_customer_credit_cap: parseFloat(e.target.value) || 0 })}
+                className="bg-black border-white/20 max-w-xs"
+                data-testid="free-customer-credit-cap-input"
+              />
+              <p className="text-white/40 text-xs">Max credits a customer who hasn't ordered yet can accumulate via daily rewards (0 = no limit)</p>
+            </div>
           </CardContent>
         </Card>
 
@@ -258,6 +272,7 @@ export default function AdminCreditSettings() {
               <li>• Credits can only be used on products in usable categories (if specified)</li>
               <li>• {settings.max_credit_per_order > 0 ? `Maximum ${settings.max_credit_per_order} credits can be used per order` : 'No limit on credits per order'}</li>
               <li>• {settings.max_credit_percentage > 0 ? `Credits can cover up to ${settings.max_credit_percentage}% of order total` : 'No percentage limit on credit usage'}</li>
+              <li>• {settings.free_customer_credit_cap > 0 ? `Customers who haven't ordered are capped at Rs ${settings.free_customer_credit_cap} from daily rewards` : 'No cap on daily reward credits for free customers'}</li>
               <li>• Empty category selection means all categories are eligible</li>
             </ul>
           </CardContent>

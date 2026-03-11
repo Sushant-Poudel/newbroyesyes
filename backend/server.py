@@ -429,6 +429,7 @@ class CreditSettings(BaseModel):
     usable_products: List[str] = []  # Products where credits can be used (empty = all)
     max_credit_per_order: float = 0  # Maximum credits usable per order (0 = unlimited)
     max_credit_percentage: float = 0  # Max % of order total usable as credits (0 = no limit)
+    free_customer_credit_cap: float = 0  # Max credits a non-ordering customer can hold via daily rewards (0 = no limit)
 
 class CustomerCreditUpdate(BaseModel):
     customer_id: str
@@ -2900,6 +2901,8 @@ async def get_credit_settings():
         settings["max_credit_per_order"] = 0
     if "max_credit_percentage" not in settings:
         settings["max_credit_percentage"] = 0
+    if "free_customer_credit_cap" not in settings:
+        settings["free_customer_credit_cap"] = 0
     return settings
 
 @api_router.put("/credits/settings")
@@ -5006,8 +5009,24 @@ async def claim_daily_reward(email: str):
     streak_bonus_multiplied = streak_bonus * multiplier
     total_reward = base_reward_multiplied + streak_bonus_multiplied
     
-    # Update customer
+    # Check free customer credit cap (customers who haven't ordered yet)
     current_balance = customer.get("credit_balance", 0)
+    credit_settings = await db.credit_settings.find_one({"id": "main"})
+    free_cap = credit_settings.get("free_customer_credit_cap", 0) if credit_settings else 0
+    
+    if free_cap > 0:
+        # Check if customer has ever placed an order
+        order_count = await db.orders.count_documents({"customer_email": email})
+        if order_count == 0:
+            # Cap: don't let balance exceed the limit
+            room = max(0, free_cap - current_balance)
+            if room <= 0:
+                raise HTTPException(status_code=400, detail=f"Credit cap reached. Free customers can hold up to Rs {int(free_cap)} credits. Place an order to unlock more!")
+            total_reward = min(total_reward, room)
+            base_reward_multiplied = min(base_reward_multiplied, total_reward)
+            streak_bonus_multiplied = max(0, total_reward - base_reward_multiplied)
+    
+    # Update customer
     new_balance = current_balance + total_reward
     
     await db.customers.update_one(
