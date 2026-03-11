@@ -2877,6 +2877,84 @@ async def record_promo_usage(promo_code: str, order_id: str, customer_email: Opt
     return {"message": "Promo usage recorded"}
 
 
+@api_router.get("/promo-codes/analytics")
+async def get_promo_analytics(current_user: dict = Depends(get_current_user)):
+    """Get promo code analytics: most used, total discounts, daily/weekly/monthly stats"""
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    week_start = (now - timedelta(days=7)).isoformat()
+    month_start = (now - timedelta(days=30)).isoformat()
+
+    # Get all promo codes
+    codes = await db.promo_codes.find({}, {"_id": 0}).to_list(200)
+    code_map = {c["code"]: c for c in codes}
+
+    # Get all orders with promo codes
+    promo_orders = await db.orders.find(
+        {"promo_code": {"$ne": None, "$exists": True}},
+        {"_id": 0, "promo_code": 1, "total_amount": 1, "created_at": 1, "items": 1}
+    ).to_list(5000)
+
+    # Build per-code stats
+    code_stats = {}
+    today_discount = 0
+    today_count = 0
+    week_discount = 0
+    week_count = 0
+    month_discount = 0
+    month_count = 0
+    total_discount = 0
+
+    for order in promo_orders:
+        pc = order.get("promo_code", "").upper()
+        created = order.get("created_at", "")
+        promo = code_map.get(pc)
+
+        # Calculate discount for this order
+        discount = 0
+        if promo:
+            if promo.get("discount_type") == "percentage":
+                # Reverse-calculate: total_amount = subtotal * (1 - pct/100), so subtotal = total / (1 - pct/100)
+                pct = promo.get("discount_value", 0)
+                if pct < 100:
+                    subtotal_est = order.get("total_amount", 0) / (1 - pct / 100)
+                    discount = subtotal_est - order.get("total_amount", 0)
+            else:
+                discount = promo.get("discount_value", 0)
+        
+        discount = round(max(0, discount), 2)
+        total_discount += discount
+
+        if pc not in code_stats:
+            code_stats[pc] = {"code": pc, "uses": 0, "total_discount": 0, "discount_type": promo.get("discount_type", "fixed") if promo else "fixed", "discount_value": promo.get("discount_value", 0) if promo else 0, "is_active": promo.get("is_active", False) if promo else False}
+        code_stats[pc]["uses"] += 1
+        code_stats[pc]["total_discount"] += discount
+
+        if created >= today_start:
+            today_discount += discount
+            today_count += 1
+        if created >= week_start:
+            week_discount += discount
+            week_count += 1
+        if created >= month_start:
+            month_discount += discount
+            month_count += 1
+
+    stats_list = sorted(code_stats.values(), key=lambda x: x["uses"], reverse=True)
+    most_used = stats_list[0] if stats_list else None
+    most_discount = max(stats_list, key=lambda x: x["total_discount"]) if stats_list else None
+
+    return {
+        "most_used": most_used,
+        "most_discounted": most_discount,
+        "today": {"count": today_count, "discount": round(today_discount, 2)},
+        "week": {"count": week_count, "discount": round(week_discount, 2)},
+        "month": {"count": month_count, "discount": round(month_discount, 2)},
+        "total": {"count": len(promo_orders), "discount": round(total_discount, 2)},
+        "per_code": stats_list
+    }
+
+
 # ==================== STORE CREDITS ====================
 
 @api_router.get("/credits/settings")
