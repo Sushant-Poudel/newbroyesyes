@@ -8,27 +8,34 @@ Build a premium, modern, dark-themed e-commerce website for digital goods, inspi
 
 ## Admin Access
 - **URL:** `/panelgsnadminbackend/login`
-- **Username:** `gsnadmin`
+- **Username/Email:** `gsnadmin`
 - **Password:** `gsnadmin`
 
 ## Core Features Implemented
 - Homepage with customer reviews and product grid
-- Product system with variations (different plans/prices)
-- Checkout & payment flow
+- Product system with variations (different plans/prices) with stock management
+- Checkout & payment flow with HEIC/HEIF support
 - Admin panel for managing products, categories, reviews, blogs, FAQs, orders
-- Customer OTP-based login system
+- Customer OTP-based login + Direct Google OAuth with profile completion flow
 - Daily rewards system
 - Referral program
 - Store credits system with category eligibility and max usage per order
-- Newsletter management
+- Newsletter management with color customization
 - Promo codes
 - AI Chatbot powered by ChatGPT
 - Liquid glass UI design with orange brand theme
+- PWA support (Add to Home Screen) for admin panel
+- Discord order notifications via webhook
+- Self-hosted ad management system
+- Product variation stock tracking
+- Advanced customer management (sorting, ranking badges)
 
 ## Technical Stack
-- **Backend:** FastAPI, Python, Motor (async MongoDB)
-- **Frontend:** React, Tailwind CSS, Shadcn UI
+- **Backend:** FastAPI, Python, Motor (async MongoDB), APScheduler
+- **Frontend:** React, Tailwind CSS, Shadcn UI, Recharts
 - **Database:** MongoDB
+- **Image Processing:** Pillow, pillow-heif (HEIC conversion)
+- **Auth:** JWT (Admin), Email OTP + JWT (Customer), Direct Google OAuth
 
 ## Database Collections (23 total)
 - admins, customers, products, categories, orders
@@ -44,66 +51,50 @@ Build a premium, modern, dark-themed e-commerce website for digital goods, inspi
 - ADMIN_USERNAME, ADMIN_PASSWORD
 - JWT_SECRET
 - IMGBB_API_KEY
-- TAKEAPP_API_KEY (optional)
+- SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM_EMAIL, SMTP_FROM_NAME
+- GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+- DISCORD_ORDER_WEBHOOK
+- OPENAI_API_KEY, EMERGENT_LLM_KEY
 
 ### Frontend (.env)
 - REACT_APP_BACKEND_URL
+- REACT_APP_GOOGLE_CLIENT_ID
 
 ## API Prefix
 All backend endpoints use `/api` prefix
 
 ## Changelog
-- **Mar 1, 2026:** Fixed "couldn't fetch data" bug on Customer Account Page - added proper 401 error handling to redirect expired sessions to login
-- **Mar 1, 2026:** Enhanced email templates with premium modern design, better visual hierarchy, and brand consistency
-- **Feb 28, 2026:** Implemented AI chatbot with ChatGPT integration, enhanced store credit system
-- **Feb 28, 2026:** Applied liquid glass UI redesign with orange brand theme
-- **Feb 18, 2026:** Swapped to Nobeosh repository, preserved all data
-- **Feb 15, 2026:** Fixed "Admin not found" bug in staff management (id vs _id issue)
-- Multiple previous codebase swaps (gangbro, nglbro, ganguli, ganbro)
-
-## Completed This Session
-- ✅ Fixed customer account page 401 error handling (session expiry now properly redirects to login)
-- ✅ Redesigned email templates with premium modern design
-
-## Completed in Current Fork (Mar 9, 2026)
-- ✅ **PWA "Add to Home Screen" in Admin Panel** - Added install instructions modal to admin panel mobile menu
-- ✅ **Discord Webhook Management on Product Edit Page** - Status indicator, test button, add/remove URLs
-- ✅ **Fixed Discord Webhooks Not Showing** - Created `/api/admin/products` endpoint
-- ✅ **Stock per Variation** - Added stock tracking per variation with admin UI
-- ✅ **Fixed Navbar Proportion Issue** - Fixed button overflow on mobile
-- ✅ **Google Login Profile Completion** - Users must provide name & WhatsApp after Google OAuth
-- ✅ **Sidebar Ads on Homepage** - Added `home_sidebar` ad position display in All Products section (XL screens)
-- ✅ **Variation Stock Display on Product Page** - Shows stock per variation:
-  - "Only X left!" in amber for low stock (1-5)
-  - "X in stock" in green for normal stock
-  - No indicator for unlimited (stock = 0)
-  - Disabled selection for out of stock variations
-- ✅ **Removed Dead Google OAuth Code** - Deleted AuthCallback.jsx and old Emergent Auth backend endpoint
-- ✅ **Removed "About" from navbar** and **Made Reseller discount % optional**
-
-## Completed in Previous Fork (Mar 3, 2026)
-- ✅ Verified Self-Hosted Ad Management System - fully functional with:
-  - Recommended image sizes displayed for all ad positions (Homepage Banner, Sidebar, Product Inline, Footer, Popup)
-  - Preview button with Desktop/Mobile toggle and website context simulation
-  - Stats dashboard (Total Ads, Active, Impressions, Clicks, CTR)
-  - Position-based aspect ratio guidance
-- ✅ Moved "Advertisements" menu from Content to Marketing section for better discoverability
-- ✅ Ad positions available: home_banner (1200x200), home_sidebar (300x250), product_inline (728x90), product_page_sidebar (300x600), footer (970x90), popup (500x500)
+- **Mar 11, 2026:** Completed Admin Experience Enhancements:
+  - Fixed Daily Sales Summary email (html_content -> html_body parameter fix), scheduler sends at 10 PM NPT
+  - Peak Hours chart verified working on analytics page with bar chart, insights, period breakdown
+  - Implemented Quick Order Actions: one-click Complete, WhatsApp message, Copy order info buttons
+  - Fixed analytics date range filter bug (dependency array now uses dateRange.from/to instead of chartDays)
+- **Mar 9, 2026:** PWA admin, Discord webhook fix, stock per variation, Google login profile completion, customer sorting, newsletter colors, navbar fixes, sidebar ads, code cleanup
+- **Mar 3, 2026:** Self-hosted ad management system verified
+- **Mar 1, 2026:** Fixed customer account 401 error, enhanced email templates
+- **Feb 28, 2026:** AI chatbot, enhanced store credits, liquid glass UI
+- **Feb 18, 2026:** Swapped to Nobeosh repository
 
 ## Pending/Future Tasks
+### P0 - Critical
+- **Refactor backend/server.py** (>5800 lines monolith -> modular APIRouter files)
+
 ### P1 - High Priority
-- Re-implement Product Variation Editing in Admin Panel (edit/reorder variations)
+- Reorder Product Variations (drag-and-drop in admin)
+- Re-implement Product Variation Editing in Admin Panel
 - Enhance FAQ Page with categories and search
 
 ### P2 - Medium Priority
+- Flash Sales Timer (countdown for deals)
+- Product Bundles (combo deals)
 - Live purchase ticker
 - Bundle deals section
 - Loyalty/Rewards program enhancements
-- Add sidebar ad component to homepage (home_sidebar ads not currently displayed)
 
 ### P3 - Backlog
-- Order tracking page improvements
-- Sales analytics dashboard
+- eSewa/Khalti payment gateway integration
+- Public Order Tracking Page improvements
 - Trustpilot / Take.app integrations
 - Public referral program
-- Clean up unused Google OAuth code (AuthCallback.jsx and backend endpoint)
+- Help Center/Knowledge Base
+- Sales analytics dashboard enhancements
