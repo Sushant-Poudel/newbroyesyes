@@ -26,6 +26,7 @@ from imgbb_service import upload_to_imgbb
 import google_sheets_service
 from discord_service import send_discord_order_notification, send_discord_order_status_update, send_discord_test_notification, send_confirmed_order_notification
 from order_cleanup import run_cleanup_task
+from daily_summary_service import run_daily_summary_scheduler, send_daily_summary
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 
@@ -4113,6 +4114,97 @@ async def get_order_status_breakdown(current_user: dict = Depends(get_current_us
         for item in status_data
     }
 
+@api_router.get("/analytics/peak-hours")
+async def get_peak_hours_analytics(days: int = 30, current_user: dict = Depends(get_current_user)):
+    """Get peak hours analysis based on historical order data"""
+    start_date = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    
+    # Aggregate orders by hour of day across all days
+    pipeline = [
+        {
+            "$match": {
+                "created_at": {"$gte": start_date},
+                "status": {"$in": ["Confirmed", "Completed"]}
+            }
+        },
+        {
+            "$addFields": {
+                "hour": {"$substr": ["$created_at", 11, 2]}
+            }
+        },
+        {
+            "$group": {
+                "_id": "$hour",
+                "total_orders": {"$sum": 1},
+                "total_revenue": {"$sum": "$total_amount"},
+                "avg_order_value": {"$avg": "$total_amount"}
+            }
+        },
+        {"$sort": {"_id": 1}}
+    ]
+    
+    hourly_data = await db.orders.aggregate(pipeline).to_list(24)
+    
+    # Build complete 24-hour data
+    hourly_map = {d["_id"]: d for d in hourly_data}
+    result = []
+    max_orders = 0
+    peak_hour = "00"
+    
+    for hour in range(24):
+        hour_str = f"{hour:02d}"
+        data = hourly_map.get(hour_str, {"total_orders": 0, "total_revenue": 0, "avg_order_value": 0})
+        
+        orders = data.get("total_orders", 0)
+        if orders > max_orders:
+            max_orders = orders
+            peak_hour = hour_str
+        
+        result.append({
+            "hour": hour_str,
+            "label": f"{hour:02d}:00",
+            "orders": orders,
+            "revenue": round(data.get("total_revenue", 0), 2),
+            "avgOrderValue": round(data.get("avg_order_value", 0), 2)
+        })
+    
+    # Calculate insights
+    total_orders = sum(d["orders"] for d in result)
+    total_revenue = sum(d["revenue"] for d in result)
+    
+    # Find busiest period (morning, afternoon, evening, night)
+    morning = sum(d["orders"] for d in result if 6 <= int(d["hour"]) < 12)
+    afternoon = sum(d["orders"] for d in result if 12 <= int(d["hour"]) < 18)
+    evening = sum(d["orders"] for d in result if 18 <= int(d["hour"]) < 22)
+    night = sum(d["orders"] for d in result if int(d["hour"]) >= 22 or int(d["hour"]) < 6)
+    
+    periods = {"Morning (6AM-12PM)": morning, "Afternoon (12PM-6PM)": afternoon, "Evening (6PM-10PM)": evening, "Night (10PM-6AM)": night}
+    busiest_period = max(periods, key=periods.get)
+    
+    return {
+        "hourly": result,
+        "insights": {
+            "peakHour": f"{peak_hour}:00",
+            "peakHourOrders": max_orders,
+            "busiestPeriod": busiest_period,
+            "periodBreakdown": periods,
+            "totalOrders": total_orders,
+            "totalRevenue": total_revenue,
+            "analyzedDays": days
+        }
+    }
+
+
+@api_router.post("/admin/send-daily-summary")
+async def trigger_daily_summary(current_user: dict = Depends(get_current_user)):
+    """Manually trigger daily summary email (for testing)"""
+    recipient = os.environ.get("DAILY_SUMMARY_EMAIL", "poudelsushant79@gmail.com")
+    result = await send_daily_summary(db, recipient)
+    if result:
+        return {"success": True, "message": f"Daily summary sent to {recipient}"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to send daily summary")
+
 @api_router.get("/analytics/profit")
 async def get_profit_analytics(current_user: dict = Depends(get_current_user)):
     """Get profit analytics based on cost price vs selling price"""
@@ -5775,6 +5867,11 @@ async def startup_event():
     """Start background tasks on server startup"""
     asyncio.create_task(run_cleanup_task())
     logger.info("✅ Order cleanup task started")
+    
+    # Start daily summary scheduler - sends at 10 PM NPT
+    DAILY_SUMMARY_EMAIL = os.environ.get("DAILY_SUMMARY_EMAIL", "poudelsushant79@gmail.com")
+    asyncio.create_task(run_daily_summary_scheduler(db, DAILY_SUMMARY_EMAIL))
+    logger.info(f"✅ Daily summary scheduler started (10 PM NPT to {DAILY_SUMMARY_EMAIL})")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

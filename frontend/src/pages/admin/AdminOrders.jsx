@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { RefreshCw, Search, Package, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Mail, Phone, User, Calendar, FileText, Image, ExternalLink, Trash2, Square, CheckSquare, Filter } from 'lucide-react';
+import { RefreshCw, Search, Package, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Mail, Phone, User, Calendar, FileText, Image, ExternalLink, Trash2, Square, CheckSquare, Filter, MessageCircle, Send, Copy } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -253,6 +253,24 @@ export default function AdminOrders() {
     }
   };
 
+  const handleSendWhatsApp = (order) => {
+    const phone = order.customer_phone?.replace(/[^0-9]/g, '');
+    if (!phone) {
+      toast.error('No phone number available for this customer');
+      return;
+    }
+    const orderNum = order.takeapp_order_number || order.id?.slice(0, 8);
+    const items = order.items_text || order.items?.map(i => i.name).join(', ') || 'your items';
+    const message = `Hi ${order.customer_name || 'there'}! Your order #${orderNum} (${items}) has been processed. Total: Rs ${Math.round(order.total_amount || 0).toLocaleString()}. Thank you for shopping with GameShop Nepal!`;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
+  const handleCopyOrderInfo = (order) => {
+    const orderNum = order.takeapp_order_number || order.id?.slice(0, 8);
+    const text = `Order #${orderNum}\nCustomer: ${order.customer_name || 'N/A'}\nEmail: ${order.customer_email || 'N/A'}\nPhone: ${order.customer_phone || 'N/A'}\nItems: ${order.items_text || 'N/A'}\nTotal: Rs ${Math.round(order.total_amount || 0).toLocaleString()}\nStatus: ${order.status}`;
+    navigator.clipboard.writeText(text).then(() => toast.success('Order info copied!')).catch(() => toast.error('Failed to copy'));
+  };
+
   const getBackendUrl = () => {
     return process.env.REACT_APP_BACKEND_URL || '';
   };
@@ -439,6 +457,52 @@ export default function AdminOrders() {
                         </p>
                         <p className="text-white/40 text-sm">{order.items?.length || 0} items</p>
                       </div>
+                      
+                      {/* Quick Actions */}
+                      <div className="flex items-center gap-2">
+                        {(order.status === 'pending' || order.status === 'Confirmed') && (
+                          <Button
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCompleteOrder(order);
+                            }}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                            data-testid={`complete-order-btn-${order.id}`}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            <span className="hidden sm:inline">Complete</span>
+                          </Button>
+                        )}
+                        {order.customer_phone && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSendWhatsApp(order);
+                            }}
+                            className="border-green-500/30 text-green-400 hover:bg-green-500/10"
+                            data-testid={`whatsapp-btn-${order.id}`}
+                          >
+                            <MessageCircle className="h-4 w-4 mr-1" />
+                            <span className="hidden sm:inline">WhatsApp</span>
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyOrderInfo(order);
+                          }}
+                          className="border-white/20 text-white/60 hover:bg-white/10"
+                          data-testid={`copy-order-btn-${order.id}`}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+
                       <Button
                         onClick={(e) => {
                           e.stopPropagation();

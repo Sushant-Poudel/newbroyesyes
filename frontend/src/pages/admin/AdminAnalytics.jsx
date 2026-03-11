@@ -38,6 +38,7 @@ export default function AdminAnalytics() {
   const [loading, setLoading] = useState(true);
   const [isToday, setIsToday] = useState(false);
   const [todayStats, setTodayStats] = useState(null);
+  const [peakHoursData, setPeakHoursData] = useState(null);
   
   // Date range state
   const [dateRange, setDateRange] = useState({
@@ -46,13 +47,15 @@ export default function AdminAnalytics() {
   });
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  const chartDays = Math.ceil((dateRange.to - dateRange.from) / (1000 * 60 * 60 * 24)) + 1;
-
   const fetchAnalytics = useCallback(async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('admin_token');
       const headers = { Authorization: `Bearer ${token}` };
+
+      // Always fetch peak hours data
+      const peakHoursRes = await axios.get(`${API_URL}/analytics/peak-hours?days=30`, { headers });
+      setPeakHoursData(peakHoursRes.data);
 
       if (isToday) {
         // Fetch today's hourly data
@@ -65,9 +68,12 @@ export default function AdminAnalytics() {
         setRevenueChart(todayRes.data.hourly);
         setTopProducts(topRes.data);
       } else {
+        // Calculate actual days from the date range
+        const days = Math.ceil((dateRange.to - dateRange.from) / (1000 * 60 * 60 * 24)) + 1;
+        
         // Fetch daily data for date range
         const [chartRes, topRes] = await Promise.all([
-          analyticsAPI.getRevenueChart(chartDays),
+          analyticsAPI.getRevenueChart(days),
           analyticsAPI.getTopProducts(10),
         ]);
         
@@ -87,7 +93,7 @@ export default function AdminAnalytics() {
     } finally {
       setLoading(false);
     }
-  }, [chartDays, isToday]);
+  }, [dateRange.from, dateRange.to, isToday]);
 
   useEffect(() => {
     fetchAnalytics();
@@ -542,6 +548,79 @@ export default function AdminAnalytics() {
             )}
           </CardContent>
         </Card>
+
+        {/* Peak Hours Analysis */}
+        {peakHoursData && (
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-white text-lg flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-purple-500" />
+                  Peak Hours (Last 30 Days)
+                </CardTitle>
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400">Peak Hour:</span>
+                    <span className="text-purple-400 font-bold">{peakHoursData.insights?.peakHour}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400">Busiest Period:</span>
+                    <span className="text-amber-400 font-bold">{peakHoursData.insights?.busiestPeriod?.split(' ')[0]}</span>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={peakHoursData.hourly}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+                    <XAxis 
+                      dataKey="label"
+                      stroke="#666"
+                      fontSize={11}
+                      tickLine={false}
+                      axisLine={false}
+                      interval={2}
+                    />
+                    <YAxis 
+                      stroke="#666" 
+                      fontSize={11}
+                      tickLine={false}
+                      axisLine={false}
+                      allowDecimals={false}
+                    />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px' }}
+                      labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+                      formatter={(value, name) => {
+                        if (name === 'orders') return [value, 'Total Orders'];
+                        if (name === 'revenue') return [`Rs ${Math.round(value).toLocaleString()}`, 'Total Revenue'];
+                        return [value, name];
+                      }}
+                    />
+                    <Bar 
+                      dataKey="orders" 
+                      fill="#8B5CF6"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              
+              {/* Period Breakdown */}
+              <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                {peakHoursData.insights?.periodBreakdown && Object.entries(peakHoursData.insights.periodBreakdown).map(([period, orders]) => (
+                  <div key={period} className="bg-zinc-800/50 rounded-lg p-3 text-center">
+                    <p className="text-gray-400 text-xs mb-1">{period.split(' ')[0]}</p>
+                    <p className="text-white font-bold text-lg">{orders}</p>
+                    <p className="text-gray-500 text-xs">orders</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </AdminLayout>
   );
