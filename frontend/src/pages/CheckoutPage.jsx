@@ -148,7 +148,7 @@ export default function CheckoutPage() {
     return maxCreditsUsable;
   };
   const creditsToUse = getCreditsToUse();
-  const total = Math.max(0, totalBeforeCredits - creditsToUse);
+  const total = Math.ceil(Math.max(0, totalBeforeCredits - creditsToUse) / 10) * 10;
 
   const handleApplyPromo = async () => {
     if (!promoCode.trim()) return;
