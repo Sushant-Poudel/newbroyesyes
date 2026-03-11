@@ -37,7 +37,7 @@ export default function CheckoutPage() {
   const [creditBalance, setCreditBalance] = useState(0);
   const [useCredits, setUseCredits] = useState(false);
   const [customCreditAmount, setCustomCreditAmount] = useState('');
-  const [creditSettings, setCreditSettings] = useState({ cashback_percentage: 5, is_enabled: true, max_credit_per_order: 0 });
+  const [creditSettings, setCreditSettings] = useState({ cashback_percentage: 5, is_enabled: true, max_credit_per_order: 0, max_credit_percentage: 0 });
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [creditValidation, setCreditValidation] = useState({ can_use_credits: true, max_usable: 0, unlimited: true });
 
@@ -114,6 +114,13 @@ export default function CheckoutPage() {
     if (!creditValidation.can_use_credits) return 0;
     
     let max = Math.min(creditBalance, totalBeforeCredits);
+    
+    // Apply max_credit_percentage limit (e.g. 20% means max Rs 20 on Rs 100 order)
+    const maxPct = creditSettings.max_credit_percentage || creditValidation.max_credit_percentage || 0;
+    if (maxPct > 0) {
+      const pctCap = Math.floor(totalBeforeCredits * (maxPct / 100));
+      max = Math.min(max, pctCap);
+    }
     
     // Apply max_credit_per_order limit if set
     const maxPerOrder = creditSettings.max_credit_per_order || 0;

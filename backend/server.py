@@ -428,6 +428,7 @@ class CreditSettings(BaseModel):
     usable_categories: List[str] = []  # Categories where credits can be used (empty = all)
     usable_products: List[str] = []  # Products where credits can be used (empty = all)
     max_credit_per_order: float = 0  # Maximum credits usable per order (0 = unlimited)
+    max_credit_percentage: float = 0  # Max % of order total usable as credits (0 = no limit)
 
 class CustomerCreditUpdate(BaseModel):
     customer_id: str
@@ -2891,11 +2892,14 @@ async def get_credit_settings():
             "min_order_amount": 0,
             "usable_categories": [],
             "usable_products": [],
-            "max_credit_per_order": 0
+            "max_credit_per_order": 0,
+            "max_credit_percentage": 0
         }
-    # Ensure max_credit_per_order exists for backward compatibility
+    # Ensure fields exist for backward compatibility
     if "max_credit_per_order" not in settings:
         settings["max_credit_per_order"] = 0
+    if "max_credit_percentage" not in settings:
+        settings["max_credit_percentage"] = 0
     return settings
 
 @api_router.put("/credits/settings")
@@ -3088,6 +3092,7 @@ async def validate_credit_usage(data: CreditValidationRequest):
     usable_categories = settings.get("usable_categories", [])
     usable_products = settings.get("usable_products", [])
     max_credit_per_order = settings.get("max_credit_per_order", 0)
+    max_credit_percentage = settings.get("max_credit_percentage", 0)
     
     # If no restrictions, all products are eligible
     if not usable_categories and not usable_products:
@@ -3096,6 +3101,7 @@ async def validate_credit_usage(data: CreditValidationRequest):
             "can_use_credits": True,
             "max_usable": max_usable if max_usable != float('inf') else 0,
             "unlimited": max_usable == float('inf'),
+            "max_credit_percentage": max_credit_percentage,
             "reason": "All products eligible"
         }
     
@@ -3127,6 +3133,7 @@ async def validate_credit_usage(data: CreditValidationRequest):
         "can_use_credits": True,
         "max_usable": max_usable if max_usable != float('inf') else 0,
         "unlimited": max_usable == float('inf'),
+        "max_credit_percentage": max_credit_percentage,
         "reason": "Products eligible for credit usage"
     }
 

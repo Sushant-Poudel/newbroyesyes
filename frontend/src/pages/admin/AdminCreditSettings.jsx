@@ -18,7 +18,8 @@ export default function AdminCreditSettings() {
     min_order_amount: 0,
     usable_categories: [],
     usable_products: [],
-    max_credit_per_order: 0
+    max_credit_per_order: 0,
+    max_credit_percentage: 0
   });
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
@@ -122,7 +123,7 @@ export default function AdminCreditSettings() {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label className="text-white flex items-center gap-2">
                   <Percent className="h-4 w-4" /> Cashback Percentage
@@ -164,6 +165,23 @@ export default function AdminCreditSettings() {
                   data-testid="max-credit-per-order-input"
                 />
                 <p className="text-white/40 text-xs">Max credits usable per order (0 = unlimited)</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-white flex items-center gap-2">
+                  <Percent className="h-4 w-4 text-amber-500" /> Max Credit % of Order
+                </Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={settings.max_credit_percentage || 0}
+                  onChange={(e) => setSettings({ ...settings, max_credit_percentage: parseFloat(e.target.value) || 0 })}
+                  className="bg-black border-white/20"
+                  data-testid="max-credit-percentage-input"
+                />
+                <p className="text-white/40 text-xs">Max % of order total payable via credits (0 = no limit)</p>
               </div>
             </div>
           </CardContent>
@@ -239,6 +257,7 @@ export default function AdminCreditSettings() {
               <li>• Credits are only earned from products in eligible categories (if specified)</li>
               <li>• Credits can only be used on products in usable categories (if specified)</li>
               <li>• {settings.max_credit_per_order > 0 ? `Maximum ${settings.max_credit_per_order} credits can be used per order` : 'No limit on credits per order'}</li>
+              <li>• {settings.max_credit_percentage > 0 ? `Credits can cover up to ${settings.max_credit_percentage}% of order total` : 'No percentage limit on credit usage'}</li>
               <li>• Empty category selection means all categories are eligible</li>
             </ul>
           </CardContent>
