@@ -920,6 +920,50 @@ async def send_customer_otp(request: OTPRequest):
     
     return {"message": "OTP sent to your email", "expires_in": "10 minutes"}
 
+
+async def send_customer_welcome_email(customer: dict, is_new: bool = False):
+    """Send welcome/login notification email with profile details"""
+    email = customer.get("email")
+    if not email:
+        return
+    try:
+        name = customer.get("name") or "Customer"
+        phone = customer.get("phone") or customer.get("whatsapp_number") or "Not set"
+        registered = customer.get("created_at", "")[:10] or "N/A"
+        site_url = os.environ.get("SITE_URL", "https://gameshopnepal.com")
+        account_url = f"{site_url}/account"
+
+        subject = f"Welcome to GameShop Nepal!" if is_new else f"Login Notification - GameShop Nepal"
+        greeting = "Welcome aboard!" if is_new else "You just logged in."
+
+        html = f"""
+        <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:520px;margin:0 auto;background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;">
+          <div style="background:linear-gradient(135deg,#d97706,#b45309);padding:28px 24px;text-align:center;">
+            <h1 style="margin:0;color:#fff;font-size:22px;">GameShop Nepal</h1>
+            <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;">{greeting}</p>
+          </div>
+          <div style="padding:24px;">
+            <p style="color:#ccc;font-size:14px;margin:0 0 18px;">Hi <strong style="color:#fff;">{name}</strong>, here are your profile details:</p>
+            <table style="width:100%;border-collapse:collapse;">
+              <tr><td style="padding:10px 12px;color:#999;font-size:13px;border-bottom:1px solid #222;">Name</td><td style="padding:10px 12px;color:#fff;font-size:13px;border-bottom:1px solid #222;text-align:right;">{name}</td></tr>
+              <tr><td style="padding:10px 12px;color:#999;font-size:13px;border-bottom:1px solid #222;">Email</td><td style="padding:10px 12px;color:#fff;font-size:13px;border-bottom:1px solid #222;text-align:right;">{email}</td></tr>
+              <tr><td style="padding:10px 12px;color:#999;font-size:13px;border-bottom:1px solid #222;">Phone</td><td style="padding:10px 12px;color:#fff;font-size:13px;border-bottom:1px solid #222;text-align:right;">{phone}</td></tr>
+              <tr><td style="padding:10px 12px;color:#999;font-size:13px;">Registered</td><td style="padding:10px 12px;color:#fff;font-size:13px;text-align:right;">{registered}</td></tr>
+            </table>
+            <div style="text-align:center;margin:24px 0 8px;">
+              <a href="{account_url}" style="display:inline-block;background:#d97706;color:#000;font-weight:600;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;">View My Account</a>
+            </div>
+          </div>
+          <div style="padding:16px 24px;border-top:1px solid #222;text-align:center;">
+            <p style="margin:0;color:#666;font-size:11px;">If this wasn't you, please ignore this email or contact support.</p>
+          </div>
+        </div>
+        """
+        send_email(to_email=email, subject=subject, html_body=html)
+    except Exception as e:
+        logger.warning(f"Failed to send welcome email to {email}: {e}")
+
+
 @api_router.post("/auth/customer/verify-otp")
 async def verify_customer_otp(verify: OTPVerify):
     """Verify OTP and create customer session"""
@@ -976,6 +1020,10 @@ async def verify_customer_otp(verify: OTPVerify):
     
     # Create JWT token for customer
     token = create_token(customer["id"])
+    
+    # Send login notification email
+    is_new = customer.get("created_at", "") == customer.get("last_login", "")
+    asyncio.create_task(send_customer_welcome_email(customer, is_new=is_new))
     
     return {
         "token": token,
@@ -4645,6 +4693,10 @@ async def customer_login(data: CustomerLogin):
             algorithm="HS256"
         )
         
+        # Send login email if customer has email
+        if customer.get("email"):
+            asyncio.create_task(send_customer_welcome_email(customer, is_new=False))
+        
         return {
             "token": token,
             "customer": {
@@ -4746,6 +4798,10 @@ async def customer_google_auth(data: GoogleAuthRequest):
                 algorithm="HS256"
             )
             
+            # Send welcome/login email
+            customer_for_email = await db.customers.find_one({"id": customer["id"]}, {"_id": 0})
+            asyncio.create_task(send_customer_welcome_email(customer_for_email, is_new=needs_profile_completion))
+
             return {
                 "token": token,
                 "customer": {
