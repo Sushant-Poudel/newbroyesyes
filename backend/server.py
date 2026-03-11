@@ -933,7 +933,7 @@ async def send_customer_welcome_email(customer: dict, is_new: bool = False):
         site_url = os.environ.get("SITE_URL", "https://gameshopnepal.com")
         account_url = f"{site_url}/account"
 
-        subject = f"Welcome to GameShop Nepal!" if is_new else f"Login Notification - GameShop Nepal"
+        subject = "Welcome to GameShop Nepal!" if is_new else "Login Notification - GameShop Nepal"
         greeting = "Welcome aboard!" if is_new else "You just logged in."
 
         html = f"""
