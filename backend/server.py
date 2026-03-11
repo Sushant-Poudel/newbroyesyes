@@ -88,50 +88,7 @@ async def api_health_check():
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# ==================== RATE LIMITING ====================
-from collections import defaultdict
-from time import time
-
-# In-memory rate limiter (for production, use Redis)
-rate_limit_store = defaultdict(list)
-
-def rate_limit_check(ip: str, limit: int = 100, window: int = 60):
-    """Check if IP is rate limited. Returns True if allowed, False if limited."""
-    now = time()
-    # Clean old requests
-    rate_limit_store[ip] = [req_time for req_time in rate_limit_store[ip] if now - req_time < window]
-    
-    if len(rate_limit_store[ip]) >= limit:
-        return False
-    
-    rate_limit_store[ip].append(now)
-    return True
-
-@app.middleware("http")
-async def rate_limit_middleware(request: Request, call_next):
-    """Rate limiting middleware"""
-    client_ip = request.client.host
-    
-    # Skip rate limiting for health checks
-    if request.url.path == "/health":
-        return await call_next(request)
-    
-    # More relaxed for login endpoints (30 attempts per minute)
-    if "/auth/login" in request.url.path:
-        if not rate_limit_check(client_ip, limit=30, window=60):
-            return fastapi.responses.JSONResponse(
-                status_code=429,
-                content={"detail": "Too many login attempts. Please try again later."}
-            )
-    else:
-        # General rate limit
-        if not rate_limit_check(client_ip, limit=100, window=60):
-            return fastapi.responses.JSONResponse(
-                status_code=429,
-                content={"detail": "Too many requests. Please slow down."}
-            )
-    
-    return await call_next(request)
+# Rate limiting removed
 
 # ==================== SECURITY HEADERS ====================
 @app.middleware("http")
