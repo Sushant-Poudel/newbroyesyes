@@ -64,6 +64,7 @@ Build a premium, modern, dark-themed e-commerce website for digital goods, inspi
 All backend endpoints use `/api` prefix
 
 ## Changelog
+- **Mar 11, 2026:** Redesigned Admin Dashboard with comprehensive KPIs, tabbed 7-day chart (Sales/Orders/Views), recent orders, period summaries, conversion rate, and mobile-responsive layout
 - **Mar 11, 2026:** Completed Admin Experience Enhancements:
   - Fixed Daily Sales Summary email (html_content -> html_body parameter fix), scheduler sends at 10 PM NPT
   - Peak Hours chart verified working on analytics page with bar chart, insights, period breakdown
