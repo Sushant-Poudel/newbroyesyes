@@ -110,8 +110,8 @@ export const ordersAPI = {
   create: (data) => api.post('/orders/create', data),
   getAll: (days = 30) => api.get(`/orders?days=${days}&limit=5000`),
   getOne: (orderId) => api.get(`/orders/${orderId}`),
-  uploadPaymentScreenshot: (orderId, screenshotUrl, paymentMethod) =>
-    api.post(`/orders/${orderId}/payment-screenshot`, { screenshot_url: screenshotUrl, payment_method: paymentMethod }),
+  uploadPaymentScreenshot: (orderId, screenshotUrl, paymentMethod, paymentSentTo) =>
+    api.post(`/orders/${orderId}/payment-screenshot`, { screenshot_url: screenshotUrl, payment_method: paymentMethod, payment_sent_to: paymentSentTo }),
   complete: (orderId) => api.post(`/orders/${orderId}/complete`),
   delete: (orderId) => api.delete(`/orders/${orderId}`),
   getInvoice: (orderId) => api.get(`/invoice/${orderId}`),

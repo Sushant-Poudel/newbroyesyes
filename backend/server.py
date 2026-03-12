@@ -2301,6 +2301,7 @@ async def delete_payment_method(method_id: str, current_user: dict = Depends(get
 class PaymentScreenshotUpload(BaseModel):
     screenshot_url: str
     payment_method: Optional[str] = None
+    payment_sent_to: Optional[str] = None
 
 @api_router.post("/orders/{order_id}/payment-screenshot")
 async def upload_payment_screenshot(order_id: str, data: PaymentScreenshotUpload):
@@ -2333,6 +2334,7 @@ async def upload_payment_screenshot(order_id: str, data: PaymentScreenshotUpload
         {"$set": {
             "payment_screenshot": data.screenshot_url,
             "payment_method": data.payment_method,
+            "payment_sent_to": data.payment_sent_to,
             "payment_uploaded_at": datetime.now(timezone.utc).isoformat(),
             "status": "Confirmed",
             "invoice_url": invoice_url,
@@ -2340,6 +2342,35 @@ async def upload_payment_screenshot(order_id: str, data: PaymentScreenshotUpload
             "credits_deducted": credits_deducted > 0
         }}
     )
+    
+    # Send payment screenshot to dedicated webhook
+    PAYMENT_WEBHOOK = "https://discord.com/api/webhooks/1481673730177372284/ZSwFuiblK2sJ0QaXU45pwsJDaMSZyQQN5_yTYmIWxFnIHI3WVYHPmUYDOfP_ykxpYwE7"
+    try:
+        import httpx
+        order_num = order.get("takeapp_order_number") or order_id[:8]
+        customer_name = order.get("customer_name") or "Unknown"
+        items_text = order.get("items_text") or ", ".join(i.get("name", "") for i in order.get("items", []))
+        total_amt = f"Rs {round(order.get('total_amount', 0)):,}"
+        
+        embed = {
+            "title": f"Payment Screenshot - Order #{order_num}",
+            "color": 0xF59E0B,
+            "fields": [
+                {"name": "Customer", "value": customer_name, "inline": True},
+                {"name": "Total", "value": total_amt, "inline": True},
+                {"name": "Payment Method", "value": data.payment_method or "Not specified", "inline": True},
+                {"name": "Payment Sent To", "value": data.payment_sent_to or "Not specified", "inline": True},
+                {"name": "Items", "value": items_text or "N/A", "inline": False},
+            ],
+            "image": {"url": data.screenshot_url},
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        async with httpx.AsyncClient() as client:
+            await client.post(PAYMENT_WEBHOOK, json={"embeds": [embed]}, timeout=10)
+        logger.info(f"Payment screenshot webhook sent for order {order_id}")
+    except Exception as e:
+        logger.warning(f"Failed to send payment screenshot webhook: {e}")
     
     # Send Discord webhook notifications for products with webhooks
     try:

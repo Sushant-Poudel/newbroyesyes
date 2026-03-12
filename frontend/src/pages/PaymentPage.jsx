@@ -138,7 +138,9 @@ export default function PaymentPage() {
       setIsUploading(false);
 
       // Save screenshot to order with payment method - this also sets status to "Confirmed"
-      const response = await ordersAPI.uploadPaymentScreenshot(orderId, screenshotUrl, selectedMethod?.name);
+      const activeQR = selectedMethod?.qr_codes?.[activeQRIndex];
+      const paymentSentTo = activeQR?.label || `QR Code ${activeQRIndex + 1}`;
+      const response = await ordersAPI.uploadPaymentScreenshot(orderId, screenshotUrl, selectedMethod?.name, paymentSentTo);
       const invoiceUrl = response.data.invoice_url;
 
       // Calculate order values from orderData state
