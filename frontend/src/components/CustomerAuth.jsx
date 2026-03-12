@@ -123,17 +123,13 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
       toast.error('Please enter your email');
       return;
     }
-    if (!whatsappNumber) {
-      toast.error('Please enter your WhatsApp number');
-      return;
-    }
 
     setLoading(true);
     try {
       const response = await axios.post(`${API_URL}/auth/customer/send-otp`, {
         email: email.toLowerCase().trim(),
         name: name || email.split('@')[0],
-        whatsapp_number: whatsappNumber
+        whatsapp_number: whatsappNumber || 'pending'
       });
       
       if (response.data.otp) {
@@ -163,14 +159,28 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
         otp: otp
       });
       
-      localStorage.setItem('customer_token', response.data.token);
-      localStorage.setItem('customer_info', JSON.stringify(response.data.customer));
+      const customer = response.data.customer;
+      const token = response.data.token;
+      
+      // Check if profile is incomplete (no name or no whatsapp number)
+      if (!customer.name || !customer.whatsapp_number) {
+        setPendingToken(token);
+        setPendingGoogleCustomer(customer);
+        setName(customer.name || '');
+        setWhatsappNumber(customer.whatsapp_number || whatsappNumber || '');
+        setStep('complete-profile');
+        toast.info('Almost there! Please complete your profile');
+        return;
+      }
+      
+      localStorage.setItem('customer_token', token);
+      localStorage.setItem('customer_info', JSON.stringify(customer));
       
       // Dispatch custom event to notify Navbar of login
       window.dispatchEvent(new Event('customerLogin'));
       
       toast.success('Login successful! Welcome back');
-      onSuccess && onSuccess(response.data.customer);
+      onSuccess && onSuccess(customer);
       onClose();
       
       setEmail('');
@@ -190,7 +200,7 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
       await axios.post(`${API_URL}/auth/customer/send-otp`, {
         email: email.toLowerCase().trim(),
         name: name || email.split('@')[0],
-        whatsapp_number: whatsappNumber
+        whatsapp_number: whatsappNumber || 'pending'
       });
       toast.success('New OTP sent!');
       setOtp('');
@@ -311,23 +321,6 @@ export default function CustomerAuthModal({ isOpen, onClose, onSuccess }) {
                       className="bg-white/5 border-white/10 text-white pl-10 h-11 rounded-xl focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 placeholder:text-white/30"
                       required
                       data-testid="customer-email-input"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="whatsapp" className="text-white/70 font-medium text-sm">WhatsApp Number</Label>
-                  <div className="relative mt-1.5">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
-                    <Input
-                      id="whatsapp"
-                      type="tel"
-                      placeholder="Enter your WhatsApp number"
-                      value={whatsappNumber}
-                      onChange={(e) => setWhatsappNumber(e.target.value)}
-                      className="bg-white/5 border-white/10 text-white pl-10 h-11 rounded-xl focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 placeholder:text-white/30"
-                      required
-                      data-testid="customer-whatsapp-input"
                     />
                   </div>
                 </div>
