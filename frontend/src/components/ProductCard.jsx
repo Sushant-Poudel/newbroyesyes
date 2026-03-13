@@ -10,38 +10,27 @@ export default function ProductCard({ product }) {
     : 0;
 
   const tags = product.tags || [];
-  
-  // Check if flash sale is active
   const isFlashSale = product.flash_sale_end && new Date(product.flash_sale_end) > new Date();
-  
-  // Use slug if available, otherwise fall back to ID
   const productUrl = product.slug ? `/product/${product.slug}` : `/product/${product.id}`;
 
   return (
     <Link
       to={productUrl}
-      className="product-card group block relative rounded-3xl overflow-hidden glass-card glass-card-hover"
+      className="group block relative rounded-xl overflow-hidden bg-zinc-900/60 border border-white/[0.06] hover:border-amber-500/20 transition-all duration-300"
       data-testid={`product-card-${product.id}`}
     >
-      {/* Glow effect on hover */}
-      <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none ${
-        isFlashSale ? 'bg-red-500/5' : 'bg-amber-500/5'
-      }`} />
-      
-      <div className="aspect-square relative overflow-hidden bg-black/30 rounded-t-3xl">
+      <div className="aspect-square relative overflow-hidden bg-black/30">
         <img 
           src={product.image_url} 
           alt={product.name} 
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" 
           loading="lazy" 
         />
 
-        {/* Wishlist Button */}
-        <div className="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+        <div className="absolute top-2.5 left-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300">
           <WishlistButton productId={product.id} size="sm" />
         </div>
         
-        {/* Flash Sale Badge */}
         {isFlashSale && (
           <FlashSaleBadge endTime={product.flash_sale_end} small={true} />
         )}
@@ -53,7 +42,7 @@ export default function ProductCard({ product }) {
         )}
 
         {!product.is_sold_out && !isFlashSale && tags.length > 0 && (
-          <div className="absolute top-3 right-3 flex flex-col gap-1.5">
+          <div className="absolute top-2.5 right-2.5 flex flex-col gap-1">
             {tags.slice(0, 2).map(tag => (
               <Badge 
                 key={tag} 
@@ -64,20 +53,23 @@ export default function ProductCard({ product }) {
             ))}
           </div>
         )}
+
+        {/* Bottom gradient for text readability */}
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
       </div>
 
-      <div className="p-4 space-y-2">
-        <h3 className="font-heading text-sm font-semibold text-white truncate group-hover:text-amber-500 transition-colors duration-300">
+      <div className="p-3 sm:p-3.5">
+        <h3 className="text-[13px] sm:text-sm font-semibold text-white truncate group-hover:text-amber-400 transition-colors duration-200">
           {product.name}
         </h3>
-        <div className="flex items-baseline gap-2">
-          <span className={`font-bold text-lg ${isFlashSale ? 'text-red-400' : 'text-white'}`}>
+        <div className="flex items-baseline gap-1.5 mt-1">
+          <span className={`font-bold text-base sm:text-lg ${isFlashSale ? 'text-red-400' : 'text-white'}`}>
             Rs {lowestPrice.toLocaleString()}
           </span>
           {product.variations?.length > 1 && (
-            <span className="text-white/40 text-xs">onwards</span>
+            <span className="text-white/35 text-xs">onwards</span>
           )}
-          {isFlashSale && <Zap className="w-4 h-4 text-red-400 animate-pulse" />}
+          {isFlashSale && <Zap className="w-3.5 h-3.5 text-red-400 animate-pulse" />}
         </div>
       </div>
     </Link>
