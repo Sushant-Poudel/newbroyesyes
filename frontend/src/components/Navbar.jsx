@@ -89,14 +89,14 @@ export default function Navbar({ notificationBarHeight = 0 }) {
     <>
       {/* Dynamic Island Style Navbar */}
       <nav 
-        className={`fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-out w-[calc(100%-24px)] md:w-auto max-w-[calc(100%-24px)] ${
+        className={`fixed left-1/2 -translate-x-1/2 z-50 transition-[top] duration-300 w-[calc(100%-24px)] md:w-auto max-w-[calc(100%-24px)] ${
           isScrolled ? 'top-2 md:top-3' : 'top-3 md:top-4'
         }`}
         style={{ marginTop: notificationBarHeight }}
         data-testid="navbar"
       >
         <div 
-          className={`flex items-center justify-between transition-all duration-500 ease-out rounded-full bg-black/90 backdrop-blur-xl border border-white/10 ${
+          className={`flex items-center justify-between transition-[padding] duration-300 rounded-full bg-black/95 border border-white/10 ${
             isScrolled
               ? 'px-3 md:px-6 py-2 md:py-2.5 gap-3 md:gap-6 shadow-2xl shadow-black/50'
               : 'px-4 md:px-8 py-2.5 md:py-3.5 gap-3 md:gap-8'
@@ -107,7 +107,7 @@ export default function Navbar({ notificationBarHeight = 0 }) {
             <img 
               src={LOGO_URL} 
               alt="GSN" 
-              className={`transition-all duration-300 group-hover:scale-105 ${isScrolled ? 'h-7 md:h-8' : 'h-8 md:h-9'}`} 
+              className={`transition-[height] duration-200 ${isScrolled ? 'h-7 md:h-8' : 'h-8 md:h-9'}`} 
             />
           </Link>
 
@@ -118,7 +118,7 @@ export default function Navbar({ notificationBarHeight = 0 }) {
                 key={link.href}
                 to={link.href}
                 data-testid={`nav-link-${link.label.toLowerCase().replace(' ', '-')}`}
-                className={`px-4 py-2 text-sm font-medium transition-all duration-200 flex items-center gap-2 rounded-full ${
+                className={`px-4 py-2 text-sm font-medium transition-colors duration-200 flex items-center gap-2 rounded-full ${
                   link.highlight 
                     ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10' 
                     : isActive(link.href) 
@@ -235,7 +235,7 @@ export default function Navbar({ notificationBarHeight = 0 }) {
         {/* Mobile Dropdown Menu */}
         {(isMenuOpen || isSearchOpen) && (
           <div 
-            className="md:hidden mt-2 bg-black/90 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden shadow-2xl shadow-black/50"
+            className="md:hidden mt-2 bg-black/95 rounded-2xl border border-white/10 overflow-hidden shadow-2xl shadow-black/50"
             data-testid="mobile-menu"
           >
             {/* Mobile Search */}

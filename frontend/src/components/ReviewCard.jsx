@@ -8,7 +8,7 @@ export default function ReviewCard({ review }) {
 
   return (
     <div 
-      className="review-card bg-zinc-900/60 border border-white/[0.06] rounded-xl p-4 lg:p-5 hover:border-white/10 transition-all duration-300 h-[140px] lg:h-[160px] flex flex-col" 
+      className="review-card bg-zinc-900/60 border border-white/[0.06] rounded-xl p-4 lg:p-5 h-[140px] lg:h-[160px] flex flex-col" 
       data-testid={`review-card-${review.id}`}
     >
       <div className="flex items-center gap-0.5 mb-2">

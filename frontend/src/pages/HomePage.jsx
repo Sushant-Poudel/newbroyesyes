@@ -233,8 +233,8 @@ export default function HomePage() {
             </div>
           ) : filteredProducts.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {filteredProducts.map((product, index) => (
-                <div key={product.id} className="animate-fade-in" style={{ animationDelay: `${index * 20}ms` }}>
+              {filteredProducts.map((product) => (
+                <div key={product.id}>
                   <ProductCard product={product} />
                 </div>
               ))}

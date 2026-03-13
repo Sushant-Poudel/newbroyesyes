@@ -16,14 +16,14 @@ export default function ProductCard({ product }) {
   return (
     <Link
       to={productUrl}
-      className="group block relative rounded-xl overflow-hidden bg-zinc-900/60 border border-white/[0.06] hover:border-amber-500/20 transition-all duration-300"
+      className="group block relative rounded-xl overflow-hidden bg-zinc-900/60 border border-white/[0.06] hover:border-amber-500/20 transition-colors duration-200"
       data-testid={`product-card-${product.id}`}
     >
       <div className="aspect-square relative overflow-hidden bg-black/30">
         <img 
           src={product.image_url} 
           alt={product.name} 
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" 
+          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300" 
           loading="lazy" 
         />
 
