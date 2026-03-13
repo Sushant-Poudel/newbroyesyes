@@ -4118,7 +4118,7 @@ async def get_revenue_chart(current_user: dict = Depends(get_current_user), days
         {"$sort": {"_id": 1}}
     ]
     
-    daily_data = await db.orders.aggregate(pipeline).to_list(days)
+    daily_data = await db.orders.aggregate(pipeline).to_list(days + 2)
     
     # Get visits data
     visits_pipeline = [
@@ -4130,7 +4130,7 @@ async def get_revenue_chart(current_user: dict = Depends(get_current_user), days
         {"$sort": {"_id": 1}}
     ]
     
-    visits_data = await db.visits.aggregate(visits_pipeline).to_list(days)
+    visits_data = await db.visits.aggregate(visits_pipeline).to_list(days + 2)
     visits_map = {v["_id"]: v["visits"] for v in visits_data}
     
     # Fill in missing dates with zero values
