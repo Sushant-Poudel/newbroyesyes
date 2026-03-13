@@ -232,19 +232,12 @@ export default function HomePage() {
               ))}
             </div>
           ) : filteredProducts.length > 0 ? (
-            <div className="flex gap-5">
-              <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {filteredProducts.map((product, index) => (
-                  <div key={product.id} className="animate-fade-in" style={{ animationDelay: `${index * 20}ms` }}>
-                    <ProductCard product={product} />
-                  </div>
-                ))}
-              </div>
-              <div className="hidden xl:block w-[280px] flex-shrink-0">
-                <div className="sticky top-24">
-                  <AdBanner position="home_sidebar" className="rounded-xl" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+              {filteredProducts.map((product, index) => (
+                <div key={product.id} className="animate-fade-in" style={{ animationDelay: `${index * 20}ms` }}>
+                  <ProductCard product={product} />
                 </div>
-              </div>
+              ))}
             </div>
           ) : (
             <div className="text-center py-10">
