@@ -3145,22 +3145,22 @@ async def award_credits_for_order(order_id: str, customer_email: str, order_tota
     order_items = order.get("items", [])
     
     for item in order_items:
-        item_eligible = True
+        item_eligible = False
         product_id = item.get("product_id")
         
-        # Get product to check category
-        if product_id:
+        # No restrictions = all eligible
+        if not eligible_categories and not eligible_products:
+            item_eligible = True
+        elif product_id:
             product = await db.products.find_one({"id": product_id}, {"category_id": 1})
             if product:
                 category_id = product.get("category_id")
                 
-                # Check category eligibility (if categories are specified)
-                if eligible_categories and category_id not in eligible_categories:
-                    item_eligible = False
-                
-                # Check product eligibility (if products are specified)
-                if eligible_products and product_id not in eligible_products:
-                    item_eligible = False
+                # OR logic: eligible if in eligible_categories OR in eligible_products
+                if eligible_categories and category_id in eligible_categories:
+                    item_eligible = True
+                if eligible_products and product_id in eligible_products:
+                    item_eligible = True
         
         if item_eligible:
             item_total = item.get("price", 0) * item.get("quantity", 1)
@@ -3262,29 +3262,34 @@ async def validate_credit_usage(data: CreditValidationRequest):
             "max_usable": max_usable if max_usable != float('inf') else 0,
             "unlimited": max_usable == float('inf'),
             "max_credit_percentage": max_credit_percentage,
+            "eligible_product_ids": data.product_ids,
             "reason": "All products eligible"
         }
     
-    # Check if any product in cart is eligible for credit usage
-    eligible_for_credits = False
+    # Check each product individually — OR logic: eligible if in usable_products OR in usable_categories
+    eligible_product_ids = []
     
     for product_id in data.product_ids:
+        is_eligible = False
+        
         # Check if product is directly in usable_products
         if usable_products and product_id in usable_products:
-            eligible_for_credits = True
-            break
+            is_eligible = True
         
         # Check if product's category is in usable_categories
-        if usable_categories:
+        if not is_eligible and usable_categories:
             product = await db.products.find_one({"id": product_id}, {"category_id": 1})
             if product and product.get("category_id") in usable_categories:
-                eligible_for_credits = True
-                break
+                is_eligible = True
+        
+        if is_eligible:
+            eligible_product_ids.append(product_id)
     
-    if not eligible_for_credits:
+    if not eligible_product_ids:
         return {
             "can_use_credits": False,
             "max_usable": 0,
+            "eligible_product_ids": [],
             "reason": "None of the products in cart are eligible for credit usage"
         }
     
@@ -3294,7 +3299,8 @@ async def validate_credit_usage(data: CreditValidationRequest):
         "max_usable": max_usable if max_usable != float('inf') else 0,
         "unlimited": max_usable == float('inf'),
         "max_credit_percentage": max_credit_percentage,
-        "reason": "Products eligible for credit usage"
+        "eligible_product_ids": eligible_product_ids,
+        "reason": f"{len(eligible_product_ids)} of {len(data.product_ids)} products eligible"
     }
 
 

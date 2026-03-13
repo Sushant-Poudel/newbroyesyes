@@ -113,12 +113,22 @@ export default function CheckoutPage() {
   const getMaxCreditsUsable = () => {
     if (!creditValidation.can_use_credits) return 0;
     
-    let max = Math.min(creditBalance, totalBeforeCredits);
+    // Calculate the eligible portion of the cart (only products that can use credits)
+    let eligibleTotal = totalBeforeCredits;
+    const eligibleIds = creditValidation.eligible_product_ids || [];
+    if (eligibleIds.length > 0 && eligibleIds.length < cart.length) {
+      // Only some products are eligible — cap to their total
+      eligibleTotal = cart
+        .filter(item => eligibleIds.includes(item.product_id))
+        .reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
+    }
     
-    // Apply max_credit_percentage limit (e.g. 20% means max Rs 20 on Rs 100 order)
+    let max = Math.min(creditBalance, eligibleTotal);
+    
+    // Apply max_credit_percentage limit (e.g. 20% means max Rs 20 on Rs 100 eligible total)
     const maxPct = creditSettings.max_credit_percentage || creditValidation.max_credit_percentage || 0;
     if (maxPct > 0) {
-      const pctCap = Math.floor(totalBeforeCredits * (maxPct / 100));
+      const pctCap = Math.floor(eligibleTotal * (maxPct / 100));
       max = Math.min(max, pctCap);
     }
     
