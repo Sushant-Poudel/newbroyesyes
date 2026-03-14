@@ -82,6 +82,8 @@ export const reviewsAPI = {
   submitCustomerReview: (data) => api.post('/reviews/customer', data),
   updateCustomerReview: (data) => api.put('/reviews/customer', data),
   getMyReview: () => api.get('/reviews/my-review'),
+  getRewardSettings: () => api.get('/reviews/reward-settings'),
+  updateRewardSettings: (data) => api.put('/reviews/reward-settings', data),
 };
 
 export const faqsAPI = {

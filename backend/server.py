@@ -1910,13 +1910,112 @@ async def get_my_review(current_customer: dict = Depends(get_current_customer)):
 
 @api_router.put("/reviews/{review_id}/status")
 async def update_review_status(review_id: str, status: str, current_user: dict = Depends(get_current_user)):
-    """Admin approve/reject a review"""
+    """Admin approve/reject a review. On approval of customer review, generate reward promo code."""
     if status not in ["approved", "rejected", "pending"]:
         raise HTTPException(status_code=400, detail="Status must be approved, rejected, or pending")
-    result = await db.reviews.update_one({"id": review_id}, {"$set": {"status": status}})
-    if result.matched_count == 0:
+    
+    review = await db.reviews.find_one({"id": review_id}, {"_id": 0})
+    if not review:
         raise HTTPException(status_code=404, detail="Review not found")
-    return {"message": f"Review {status}"}
+    
+    await db.reviews.update_one({"id": review_id}, {"$set": {"status": status}})
+    
+    promo_code = None
+    # Generate reward promo code when approving a customer review
+    if status == "approved" and review.get("is_customer_review") and review.get("customer_email"):
+        # Check if reward already given for this review
+        if not review.get("reward_promo_code"):
+            # Get reward settings
+            reward_settings = await db.site_settings.find_one({"id": "review_reward"}, {"_id": 0})
+            reward_pct = 5
+            reward_enabled = True
+            if reward_settings:
+                reward_pct = reward_settings.get("review_reward_percentage", 5)
+                reward_enabled = reward_settings.get("review_reward_enabled", True)
+            
+            if reward_enabled and reward_pct > 0:
+                # Generate unique promo code
+                code_str = f"REVIEW-{review_id[:8].upper()}"
+                # Ensure uniqueness
+                existing_code = await db.promo_codes.find_one({"code": code_str})
+                if existing_code:
+                    code_str = f"REVIEW-{uuid.uuid4().hex[:8].upper()}"
+                
+                expiry = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+                promo = {
+                    "id": str(uuid.uuid4()),
+                    "code": code_str,
+                    "discount_type": "percentage",
+                    "discount_value": reward_pct,
+                    "min_order_amount": 0,
+                    "max_uses": 1,
+                    "max_uses_per_customer": 1,
+                    "used_count": 0,
+                    "is_active": True,
+                    "expiry_date": expiry,
+                    "applicable_categories": [],
+                    "applicable_products": [],
+                    "first_time_only": False,
+                    "buy_quantity": None,
+                    "get_quantity": None,
+                    "auto_apply": False,
+                    "stackable": False,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "source": "review_reward",
+                    "customer_email": review["customer_email"]
+                }
+                await db.promo_codes.insert_one(promo)
+                await db.reviews.update_one({"id": review_id}, {"$set": {"reward_promo_code": code_str}})
+                promo_code = code_str
+                
+                # Send email with promo code
+                try:
+                    customer_name = review.get("reviewer_name", "Customer")
+                    subject = f"Thank you for your review! Here's {reward_pct}% off - GameShop Nepal"
+                    html = f"""
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #1a1a1a; color: #fff;">
+                        <div style="background: linear-gradient(135deg, #F5A623 0%, #D4920D 100%); padding: 30px; text-align: center;">
+                            <h1 style="margin: 0; color: #000; font-size: 28px;">Thank You!</h1>
+                        </div>
+                        <div style="padding: 30px;">
+                            <p style="color: #ccc; font-size: 16px;">Hi {customer_name},</p>
+                            <p style="color: #ccc; font-size: 16px;">Thank you for sharing your experience! As a token of appreciation, here's a special discount for your next purchase:</p>
+                            <div style="background: linear-gradient(135deg, #F5A623 0%, #D4920D 100%); border-radius: 10px; padding: 25px; margin: 25px 0; text-align: center;">
+                                <p style="color: #000; margin: 0 0 8px 0; font-size: 14px; font-weight: 600;">YOUR PROMO CODE</p>
+                                <p style="color: #000; margin: 0; font-size: 32px; font-weight: 800; letter-spacing: 3px;">{code_str}</p>
+                                <p style="color: rgba(0,0,0,0.7); margin: 10px 0 0 0; font-size: 14px;">{reward_pct}% off your next order &bull; Valid for 30 days</p>
+                            </div>
+                            <p style="color: #666; font-size: 14px; text-align: center;">Thank you for being a valued customer!</p>
+                        </div>
+                    </div>
+                    """
+                    text = f"Hi {customer_name}, thank you for your review! Use code {code_str} for {reward_pct}% off your next order. Valid for 30 days."
+                    from email_service import send_email
+                    send_email(review["customer_email"], subject, html, text)
+                except Exception as e:
+                    logger.warning(f"Failed to send review reward email: {e}")
+    
+    response = {"message": f"Review {status}"}
+    if promo_code:
+        response["promo_code"] = promo_code
+    return response
+
+@api_router.get("/reviews/reward-settings")
+async def get_review_reward_settings(current_user: dict = Depends(get_current_user)):
+    """Get review reward settings"""
+    settings = await db.site_settings.find_one({"id": "review_reward"}, {"_id": 0})
+    if not settings:
+        settings = {"id": "review_reward", "review_reward_percentage": 5, "review_reward_enabled": True}
+    return settings
+
+@api_router.put("/reviews/reward-settings")
+async def update_review_reward_settings(data: dict, current_user: dict = Depends(get_current_user)):
+    """Update review reward settings"""
+    data["id"] = "review_reward"
+    await db.site_settings.update_one({"id": "review_reward"}, {"$set": data}, upsert=True)
+    return data
+
+
 
 @api_router.put("/reviews/{review_id}")
 async def update_review(review_id: str, review_data: ReviewCreate, current_user: dict = Depends(get_current_user)):

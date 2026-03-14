@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, Star, CheckCircle, XCircle, Clock, MessageSquare } from 'lucide-react';
+import { Plus, Pencil, Trash2, Star, CheckCircle, XCircle, Clock, MessageSquare, Gift, Settings } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { reviewsAPI } from '@/lib/api';
@@ -19,6 +20,9 @@ export default function AdminReviews() {
   const [editingReview, setEditingReview] = useState(null);
   const [formData, setFormData] = useState(emptyReview);
   const [filter, setFilter] = useState('all');
+  const [rewardEnabled, setRewardEnabled] = useState(true);
+  const [rewardPct, setRewardPct] = useState(5);
+  const [savingReward, setSavingReward] = useState(false);
 
   const fetchReviews = async () => {
     try {
@@ -31,7 +35,30 @@ export default function AdminReviews() {
     }
   };
 
-  useEffect(() => { fetchReviews(); }, []);
+  useEffect(() => { 
+    fetchReviews(); 
+    fetchRewardSettings();
+  }, []);
+
+  const fetchRewardSettings = async () => {
+    try {
+      const res = await reviewsAPI.getRewardSettings();
+      setRewardEnabled(res.data.review_reward_enabled ?? true);
+      setRewardPct(res.data.review_reward_percentage ?? 5);
+    } catch (e) {}
+  };
+
+  const saveRewardSettings = async () => {
+    setSavingReward(true);
+    try {
+      await reviewsAPI.updateRewardSettings({ review_reward_enabled: rewardEnabled, review_reward_percentage: rewardPct });
+      toast.success('Reward settings saved!');
+    } catch (e) {
+      toast.error('Failed to save');
+    } finally {
+      setSavingReward(false);
+    }
+  };
 
   const handleOpenDialog = (review = null) => {
     if (review) { 
@@ -87,8 +114,12 @@ export default function AdminReviews() {
 
   const handleStatusChange = async (id, status) => {
     try {
-      await reviewsAPI.updateStatus(id, status);
-      toast.success(`Review ${status}!`);
+      const res = await reviewsAPI.updateStatus(id, status);
+      if (res.data.promo_code) {
+        toast.success(`Review approved! Promo code ${res.data.promo_code} sent to customer.`);
+      } else {
+        toast.success(`Review ${status}!`);
+      }
       fetchReviews();
     } catch (error) {
       toast.error('Failed to update status');
@@ -141,6 +172,35 @@ export default function AdminReviews() {
             <p className="text-amber-400 text-sm">From Customers</p>
             <p className="font-heading text-2xl font-bold text-amber-400">{customerCount}</p>
           </div>
+        </div>
+
+        {/* Reward Settings */}
+        <div className="bg-card border border-amber-500/20 rounded-lg p-4 lg:p-5" data-testid="review-reward-settings">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-amber-500/15 rounded-lg"><Gift className="h-5 w-5 text-amber-500" /></div>
+            <div className="flex-1">
+              <h3 className="font-heading font-semibold text-white text-sm">Review Reward</h3>
+              <p className="text-white/50 text-xs">Customers get a discount code when their review is approved</p>
+            </div>
+            <Switch checked={rewardEnabled} onCheckedChange={setRewardEnabled} data-testid="reward-toggle" />
+          </div>
+          {rewardEnabled && (
+            <div className="flex items-center gap-3">
+              <Label className="text-white/60 text-sm whitespace-nowrap">Discount %</Label>
+              <Input
+                type="number"
+                min={1}
+                max={100}
+                value={rewardPct}
+                onChange={e => setRewardPct(Number(e.target.value))}
+                className="bg-black border-white/20 w-24"
+                data-testid="reward-pct-input"
+              />
+              <Button onClick={saveRewardSettings} disabled={savingReward} size="sm" className="bg-amber-500 hover:bg-amber-600 text-black" data-testid="save-reward-btn">
+                {savingReward ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Pending Alert */}
@@ -204,7 +264,10 @@ export default function AdminReviews() {
                     </div>
                     <p className="text-white/70 text-sm line-clamp-2">"{review.comment}"</p>
                     {review.customer_email && (
-                      <p className="text-white/30 text-xs mt-1">{review.customer_email}</p>
+                      <p className="text-white/30 text-xs mt-1">
+                        {review.customer_email}
+                        {review.reward_promo_code && <span className="ml-2 text-amber-400">Rewarded: {review.reward_promo_code}</span>}
+                      </p>
                     )}
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">

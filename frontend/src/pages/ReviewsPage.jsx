@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Star, ChevronLeft, ChevronRight, MessageSquarePlus, Pencil, Send } from 'lucide-react';
+import { Star, ChevronLeft, ChevronRight, MessageSquarePlus, Pencil, Send, Gift } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -146,6 +146,12 @@ export default function ReviewsPage() {
                 ))}
               </div>
             </div>
+          </div>
+
+          {/* Reward Incentive */}
+          <div className="flex items-center justify-center gap-3 mb-6 bg-amber-500/5 border border-amber-500/15 rounded-xl px-5 py-3" data-testid="review-reward-banner">
+            <Gift className="h-5 w-5 text-amber-500 flex-shrink-0" />
+            <p className="text-white/70 text-sm">Leave a review and get a <span className="text-amber-500 font-semibold">discount code</span> for your next purchase!</p>
           </div>
 
           {/* Action Button */}
