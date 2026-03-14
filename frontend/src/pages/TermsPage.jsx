@@ -33,7 +33,7 @@ export default function TermsPage() {
   return (
     <div className="min-h-screen bg-black">
       <Navbar />
-      <main className="pt-20">
+      <main className="pt-14 sm:pt-16 pb-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16" data-testid="terms-page">
           {isLoading ? (
             <div className="space-y-6"><div className="h-12 w-1/2 skeleton rounded"></div><div className="h-40 skeleton rounded"></div></div>

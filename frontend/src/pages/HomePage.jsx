@@ -92,7 +92,7 @@ export default function HomePage() {
       <Navbar notificationBarHeight={hasNotification ? 36 : 0} />
 
       {/* Reviews Section */}
-      <section className={`${hasNotification ? 'pt-20 lg:pt-24' : 'pt-20 lg:pt-24'}`} data-testid="reviews-section">
+      <section className={`pt-14 sm:pt-16`} data-testid="reviews-section">
         <div className="py-3 border-b border-white/[0.06]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3">

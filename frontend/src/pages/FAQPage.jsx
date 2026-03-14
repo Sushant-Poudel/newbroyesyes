@@ -57,7 +57,7 @@ export default function FAQPage() {
   return (
     <div className="min-h-screen bg-black">
       <Navbar />
-      <main className="pt-20">
+      <main className="pt-14 sm:pt-16 pb-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16" data-testid="faq-page">
           {isLoading ? (
             <div className="space-y-6">

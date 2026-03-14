@@ -223,7 +223,7 @@ See invoice ${fullInvoiceUrl}`;
     <div className="min-h-screen bg-black">
       <Navbar />
       
-      <main className="pt-20 pb-16">
+      <main className="pt-14 sm:pt-16 pb-24">
         <div className="max-w-lg mx-auto px-4">
           {/* Header */}
           <button 
