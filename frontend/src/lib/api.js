@@ -71,6 +71,12 @@ export const categoriesAPI = {
   delete: (id) => api.delete(`/categories/${id}`),
 };
 
+// Helper to get customer auth headers
+const customerHeaders = () => {
+  const token = localStorage.getItem('customer_token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 export const reviewsAPI = {
   getAll: () => api.get('/reviews'),
   getPublic: (page = 1) => api.get(`/reviews/public?page=${page}`),
@@ -79,9 +85,9 @@ export const reviewsAPI = {
   update: (id, data) => api.put(`/reviews/${id}`, data),
   delete: (id) => api.delete(`/reviews/${id}`),
   updateStatus: (id, status) => api.put(`/reviews/${id}/status?status=${status}`),
-  submitCustomerReview: (data) => api.post('/reviews/customer', data),
-  updateCustomerReview: (data) => api.put('/reviews/customer', data),
-  getMyReview: () => api.get('/reviews/my-review'),
+  submitCustomerReview: (data) => api.post('/reviews/customer', data, { headers: customerHeaders() }),
+  updateCustomerReview: (data) => api.put('/reviews/customer', data, { headers: customerHeaders() }),
+  getMyReview: () => api.get('/reviews/my-review', { headers: customerHeaders() }),
   getRewardSettings: () => api.get('/reviews/reward-settings'),
   updateRewardSettings: (data) => api.put('/reviews/reward-settings', data),
 };
