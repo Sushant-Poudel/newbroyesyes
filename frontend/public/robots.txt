@@ -5,7 +5,7 @@ Disallow: /admin/
 Disallow: /api/
 
 # Sitemaps
-Sitemap: https://ecom-dashboard-test.preview.emergentagent.com/sitemap.xml
+Sitemap: https://premium-goods-store.preview.emergentagent.com/sitemap.xml
 
 # Crawl-delay for better server performance
 Crawl-delay: 1

@@ -157,7 +157,7 @@ export function getProductSEO(product) {
         seller: {
           '@type': 'Organization',
           name: 'GameShop Nepal',
-          url: 'https://ecom-dashboard-test.preview.emergentagent.com'
+          url: 'https://premium-goods-store.preview.emergentagent.com'
         },
         priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       },

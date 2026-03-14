@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ecom-dashboard-test.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://premium-goods-store.preview.emergentagent.com')
 
 class TestAdminAuth:
     """Test admin authentication - required for all dashboard API calls"""
