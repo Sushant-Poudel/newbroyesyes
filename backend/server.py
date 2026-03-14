@@ -2848,7 +2848,8 @@ async def get_notification_bar():
     notification = await db.notification_bar.find_one({"is_active": True})
     if notification:
         notification.pop("_id", None)
-    return notification
+        return notification
+    return {"is_active": False, "message": "", "type": "info"}
 
 @api_router.put("/notification-bar")
 async def update_notification_bar(notification: NotificationBar, current_user: dict = Depends(get_current_user)):
