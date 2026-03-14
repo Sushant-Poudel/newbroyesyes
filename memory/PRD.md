@@ -29,6 +29,7 @@ Build a premium, modern, dark-themed e-commerce website for digital goods, inspi
 - Self-hosted ad management system
 - Product variation stock tracking
 - Advanced customer management (sorting, ranking badges)
+- **On-Site Review System** - Native customer reviews with approval workflow (replaced Trustpilot)
 
 ## Technical Stack
 - **Backend:** FastAPI, Python, Motor (async MongoDB), APScheduler
@@ -37,9 +38,9 @@ Build a premium, modern, dark-themed e-commerce website for digital goods, inspi
 - **Image Processing:** Pillow, pillow-heif (HEIC conversion)
 - **Auth:** JWT (Admin), Email OTP + JWT (Customer), Direct Google OAuth
 
-## Database Collections (23 total)
+## Database Collections
 - admins, customers, products, categories, orders
-- reviews, faqs, blog_posts, pages
+- reviews (now with status, customer_id, is_customer_review fields), faqs, blog_posts, pages
 - payment_methods, promo_codes, social_links
 - notification_bar, site_settings, trustpilot_config
 - visits, users, otp_records, newsletter
@@ -63,14 +64,27 @@ Build a premium, modern, dark-themed e-commerce website for digital goods, inspi
 ## API Prefix
 All backend endpoints use `/api` prefix
 
+## Key Review System Endpoints
+- `GET /api/reviews` - Approved reviews for homepage (max 20)
+- `GET /api/reviews/public?page=N` - Paginated public reviews with stats
+- `GET /api/reviews/admin` - All reviews for admin (requires auth)
+- `POST /api/reviews` - Admin creates manual review (auto-approved)
+- `POST /api/reviews/customer` - Customer submits review (requires auth + completed order)
+- `PUT /api/reviews/customer` - Customer updates their review
+- `GET /api/reviews/my-review` - Customer's own review + eligibility
+- `PUT /api/reviews/{id}/status?status=approved|rejected|pending` - Admin approval
+
 ## Changelog
-- **Mar 11, 2026:** Redesigned Admin Dashboard with comprehensive KPIs, tabbed 7-day chart (Sales/Orders/Views), recent orders, period summaries, conversion rate, and mobile-responsive layout
-- **Mar 11, 2026:** Completed Admin Experience Enhancements:
-  - Fixed Daily Sales Summary email (html_content -> html_body parameter fix), scheduler sends at 10 PM NPT
-  - Peak Hours chart verified working on analytics page with bar chart, insights, period breakdown
-  - Implemented Quick Order Actions: one-click Complete, WhatsApp message, Copy order info buttons
-  - Fixed analytics date range filter bug (dependency array now uses dateRange.from/to instead of chartDays)
-- **Mar 9, 2026:** PWA admin, Discord webhook fix, stock per variation, Google login profile completion, customer sorting, newsletter colors, navbar fixes, sidebar ads, code cleanup
+- **Mar 14, 2026:** Implemented On-Site Review System:
+  - Public `/reviews` page with rating stats, distribution chart, paginated reviews
+  - Customer review submission (requires completed order, pending admin approval)
+  - Admin review management with filter tabs (all/pending/approved/rejected/customer)
+  - Admin can approve/reject customer reviews
+  - Replaced all Trustpilot references on homepage and navbar
+  - Homepage now shows dynamic avg rating and links to /reviews
+  - Navbar has "Reviews" link with star icon
+- **Mar 11, 2026:** Redesigned Admin Dashboard, completed Admin Experience Enhancements
+- **Mar 9, 2026:** PWA admin, Discord webhook fix, stock per variation, Google login profile completion
 - **Mar 3, 2026:** Self-hosted ad management system verified
 - **Mar 1, 2026:** Fixed customer account 401 error, enhanced email templates
 - **Feb 28, 2026:** AI chatbot, enhanced store credits, liquid glass UI
@@ -78,7 +92,7 @@ All backend endpoints use `/api` prefix
 
 ## Pending/Future Tasks
 ### P0 - Critical
-- **Refactor backend/server.py** (>5800 lines monolith -> modular APIRouter files)
+- **Refactor backend/server.py** (>6000 lines monolith -> modular APIRouter files)
 
 ### P1 - High Priority
 - Reorder Product Variations (drag-and-drop in admin)
@@ -95,7 +109,6 @@ All backend endpoints use `/api` prefix
 ### P3 - Backlog
 - eSewa/Khalti payment gateway integration
 - Public Order Tracking Page improvements
-- Trustpilot / Take.app integrations
+- Take.app integrations
 - Public referral program
 - Help Center/Knowledge Base
-- Sales analytics dashboard enhancements
