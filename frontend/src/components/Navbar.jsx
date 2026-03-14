@@ -63,7 +63,7 @@ export default function Navbar({ notificationBarHeight = 0 }) {
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/reviews', label: 'Reviews', icon: Star },
-    { href: '/daily-reward', label: 'Daily Rewards', icon: Gift, highlight: true },
+    { href: '/daily-reward', label: 'Rewards', icon: Gift, highlight: true },
     { href: '/reseller-plans', label: 'Reseller', icon: Users },
   ];
 

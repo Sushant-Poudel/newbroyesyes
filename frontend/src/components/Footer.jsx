@@ -167,7 +167,7 @@ export default function Footer() {
               {[
                 { to: '/', label: 'Home' },
                 { to: '/reviews', label: 'Reviews' },
-                { to: '/daily-reward', label: 'Daily Rewards' },
+                { to: '/daily-reward', label: 'Rewards' },
                 { to: '/reseller-plans', label: 'Reseller Plans' },
               ].map(link => (
                 <li key={link.to}>
