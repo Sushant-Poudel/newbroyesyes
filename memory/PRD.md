@@ -83,6 +83,13 @@ All backend endpoints use `/api` prefix
   - Replaced all Trustpilot references on homepage and navbar
   - Homepage now shows dynamic avg rating and links to /reviews
   - Navbar has "Reviews" link with star icon
+- **Mar 14, 2026:** Review Reward System:
+  - Auto-generates single-use promo code (default 5%) when admin approves a customer review
+  - Admin-configurable reward percentage via reward settings card on admin reviews page
+  - Reward can be toggled on/off by admin
+  - Customer receives email with promo code upon approval
+  - Order completion email now links to /reviews instead of Trustpilot
+  - Public reviews page shows reward incentive banner
 - **Mar 11, 2026:** Redesigned Admin Dashboard, completed Admin Experience Enhancements
 - **Mar 9, 2026:** PWA admin, Discord webhook fix, stock per variation, Google login profile completion
 - **Mar 3, 2026:** Self-hosted ad management system verified
