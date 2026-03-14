@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Star, ExternalLink, Search, X, Shield, Clock, Headphones, Lock, Zap, ChevronRight } from 'lucide-react';
+import { Star, Search, X, Shield, Clock, Headphones, Lock, Zap, ChevronRight } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
@@ -8,8 +8,6 @@ import ReviewCard from '@/components/ReviewCard';
 import { AdBanner, AdPopup } from '@/components/AdBanner';
 import { Button } from '@/components/ui/button';
 import { productsAPI, categoriesAPI, reviewsAPI, notificationBarAPI, blogAPI, paymentMethodsAPI } from '@/lib/api';
-
-const TRUSTPILOT_URL = "https://www.trustpilot.com/review/gameshopnepal.com";
 
 const TRUST_FEATURES = [
   { icon: Shield, title: 'Secure Payments', desc: '100% safe & encrypted' },
@@ -91,7 +89,7 @@ export default function HomePage() {
 
       <Navbar notificationBarHeight={hasNotification ? 36 : 0} />
 
-      {/* Trustpilot & Reviews Section */}
+      {/* Reviews Section */}
       <section className={`${hasNotification ? 'pt-20 lg:pt-24' : 'pt-20 lg:pt-24'}`} data-testid="reviews-section">
         <div className="py-3 border-b border-white/[0.06]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -105,14 +103,16 @@ export default function HomePage() {
                     />
                   ))}
                 </div>
-                <span className="text-amber-500 font-bold text-sm">4.5/5</span>
-                <span className="text-white/70 text-sm">Excellent on Trustpilot</span>
+                <span className="text-amber-500 font-bold text-sm">
+                  {reviews.length > 0 ? (reviews.reduce((a, r) => a + r.rating, 0) / reviews.length).toFixed(1) : '5.0'}/5
+                </span>
+                <span className="text-white/70 text-sm">Based on {reviews.length} review{reviews.length !== 1 ? 's' : ''}</span>
               </div>
-              <a href={TRUSTPILOT_URL} target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" size="sm" className="border-white/15 text-white/70 hover:bg-white/5 hover:text-white text-xs">
-                  Check All Reviews<ExternalLink className="ml-1.5 h-3 w-3" />
+              <Link to="/reviews">
+                <Button variant="outline" size="sm" className="border-white/15 text-white/70 hover:bg-white/5 hover:text-white text-xs" data-testid="view-all-reviews-btn">
+                  View All Reviews<ChevronRight className="ml-1.5 h-3 w-3" />
                 </Button>
-              </a>
+              </Link>
             </div>
           </div>
         </div>

@@ -29,6 +29,7 @@ const FAQPage = lazy(() => import("@/pages/FAQPage"));
 const TermsPage = lazy(() => import("@/pages/TermsPage"));
 const BlogPage = lazy(() => import("@/pages/BlogPage"));
 const BlogPostPage = lazy(() => import("@/pages/BlogPostPage"));
+const ReviewsPage = lazy(() => import("@/pages/ReviewsPage"));
 const DailyRewardPage = lazy(() => import("@/pages/DailyRewardPage"));
 const CustomerAccountPage = lazy(() => import("@/pages/CustomerAccountPage"));
 const OrderTrackingPage = lazy(() => import("@/pages/OrderTrackingPage"));
@@ -123,6 +124,7 @@ function App() {
                   <Route path="/terms" element={<TermsPage />} />
                   <Route path="/blog" element={<BlogPage />} />
                   <Route path="/blog/:slug" element={<BlogPostPage />} />
+                  <Route path="/reviews" element={<ReviewsPage />} />
                   <Route path="/daily-reward" element={<DailyRewardPage />} />
                   <Route path="/account" element={<CustomerAccountPage />} />
                   <Route path="/track-order" element={<OrderTrackingPage />} />

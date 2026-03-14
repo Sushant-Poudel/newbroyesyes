@@ -300,6 +300,10 @@ class ReviewCreate(BaseModel):
     comment: str
     review_date: Optional[str] = None
 
+class CustomerReviewCreate(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    comment: str
+
 class Review(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -309,6 +313,11 @@ class Review(BaseModel):
     review_date: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     source: Optional[str] = None
+    customer_id: Optional[str] = None
+    customer_email: Optional[str] = None
+    is_customer_review: bool = False
+    status: str = "approved"
+    order_id: Optional[str] = None
 
 class PageContent(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -1755,12 +1764,14 @@ async def get_ad_positions():
 
 # ==================== REVIEW ROUTES ====================
 
-@api_router.get("/reviews", response_model=List[Review])
+@api_router.get("/reviews")
 async def get_reviews():
-    # Limit to 20 most recent reviews for display
-    reviews = await db.reviews.find({}, {"_id": 0}).sort("review_date", -1).to_list(20)
+    """Get approved reviews for homepage display (limit 20)"""
+    reviews = await db.reviews.find(
+        {"status": {"$in": ["approved", None]}},
+        {"_id": 0}
+    ).sort("review_date", -1).to_list(20)
     
-    # Convert datetime fields to ISO strings
     for review in reviews:
         if "created_at" in review and isinstance(review["created_at"], datetime):
             review["created_at"] = review["created_at"].isoformat()
@@ -1769,18 +1780,145 @@ async def get_reviews():
     
     return reviews
 
+@api_router.get("/reviews/public")
+async def get_reviews_public(page: int = 1, limit: int = 20):
+    """Get all approved reviews for public reviews page with pagination"""
+    skip = (page - 1) * limit
+    total = await db.reviews.count_documents({"status": {"$in": ["approved", None]}})
+    reviews = await db.reviews.find(
+        {"status": {"$in": ["approved", None]}},
+        {"_id": 0}
+    ).sort("review_date", -1).skip(skip).limit(limit).to_list(limit)
+    
+    for review in reviews:
+        if "created_at" in review and isinstance(review["created_at"], datetime):
+            review["created_at"] = review["created_at"].isoformat()
+        if "review_date" in review and isinstance(review["review_date"], datetime):
+            review["review_date"] = review["review_date"].isoformat()
+
+    # Compute aggregate stats
+    pipeline = [
+        {"$match": {"status": {"$in": ["approved", None]}}},
+        {"$group": {"_id": None, "avg_rating": {"$avg": "$rating"}, "count": {"$sum": 1}}}
+    ]
+    stats_result = await db.reviews.aggregate(pipeline).to_list(1)
+    avg_rating = round(stats_result[0]["avg_rating"], 1) if stats_result else 0
+    
+    # Rating distribution
+    dist_pipeline = [
+        {"$match": {"status": {"$in": ["approved", None]}}},
+        {"$group": {"_id": "$rating", "count": {"$sum": 1}}}
+    ]
+    dist_result = await db.reviews.aggregate(dist_pipeline).to_list(5)
+    distribution = {str(i): 0 for i in range(1, 6)}
+    for d in dist_result:
+        distribution[str(d["_id"])] = d["count"]
+    
+    return {
+        "reviews": reviews,
+        "total": total,
+        "page": page,
+        "pages": (total + limit - 1) // limit if limit > 0 else 1,
+        "avg_rating": avg_rating,
+        "distribution": distribution
+    }
+
+@api_router.get("/reviews/admin")
+async def get_reviews_admin(current_user: dict = Depends(get_current_user)):
+    """Get all reviews for admin (including pending)"""
+    reviews = await db.reviews.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    for review in reviews:
+        if "created_at" in review and isinstance(review["created_at"], datetime):
+            review["created_at"] = review["created_at"].isoformat()
+        if "review_date" in review and isinstance(review["review_date"], datetime):
+            review["review_date"] = review["review_date"].isoformat()
+    return reviews
+
 @api_router.post("/reviews", response_model=Review)
 async def create_review(review_data: ReviewCreate, current_user: dict = Depends(get_current_user)):
+    """Admin creates a review (auto-approved)"""
     review = Review(
         reviewer_name=review_data.reviewer_name,
         rating=review_data.rating,
         comment=review_data.comment,
-        review_date=review_data.review_date or datetime.now(timezone.utc).isoformat()
+        review_date=review_data.review_date or datetime.now(timezone.utc).isoformat(),
+        status="approved"
     )
     await db.reviews.insert_one(review.model_dump())
     return review
 
-@api_router.put("/reviews/{review_id}", response_model=Review)
+@api_router.post("/reviews/customer")
+async def create_customer_review(review_data: CustomerReviewCreate, current_customer: dict = Depends(get_current_customer)):
+    """Customer submits a review (requires completed order)"""
+    # Check if customer has at least one completed order
+    completed_order = await db.orders.find_one({
+        "customer_email": current_customer["email"],
+        "status": {"$regex": "^(completed|delivered)$", "$options": "i"}
+    })
+    if not completed_order:
+        raise HTTPException(status_code=403, detail="You need at least one completed order to leave a review")
+    
+    # Check if customer already submitted a review
+    existing_review = await db.reviews.find_one({
+        "customer_id": current_customer["id"],
+        "is_customer_review": True
+    })
+    if existing_review:
+        raise HTTPException(status_code=400, detail="You have already submitted a review. You can edit it instead.")
+    
+    customer_name = current_customer.get("name", current_customer.get("email", "Customer"))
+    review = Review(
+        reviewer_name=customer_name,
+        rating=review_data.rating,
+        comment=review_data.comment,
+        review_date=datetime.now(timezone.utc).isoformat(),
+        customer_id=current_customer["id"],
+        customer_email=current_customer["email"],
+        is_customer_review=True,
+        status="pending",
+        order_id=completed_order.get("id")
+    )
+    await db.reviews.insert_one(review.model_dump())
+    return {"message": "Review submitted successfully! It will appear after admin approval.", "review_id": review.id}
+
+@api_router.put("/reviews/customer")
+async def update_customer_review(review_data: CustomerReviewCreate, current_customer: dict = Depends(get_current_customer)):
+    """Customer updates their own review"""
+    existing = await db.reviews.find_one({"customer_id": current_customer["id"], "is_customer_review": True})
+    if not existing:
+        raise HTTPException(status_code=404, detail="You haven't submitted a review yet")
+    
+    await db.reviews.update_one(
+        {"customer_id": current_customer["id"], "is_customer_review": True},
+        {"$set": {"rating": review_data.rating, "comment": review_data.comment, "status": "pending", "review_date": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"message": "Review updated! It will appear after admin re-approval."}
+
+@api_router.get("/reviews/my-review")
+async def get_my_review(current_customer: dict = Depends(get_current_customer)):
+    """Get the current customer's review if exists"""
+    review = await db.reviews.find_one(
+        {"customer_id": current_customer["id"], "is_customer_review": True},
+        {"_id": 0}
+    )
+    # Also check if customer has a completed order
+    has_completed_order = await db.orders.count_documents({
+        "customer_email": current_customer["email"],
+        "status": {"$regex": "^(completed|delivered)$", "$options": "i"}
+    }) > 0
+    return {"review": review, "can_review": has_completed_order}
+
+@api_router.put("/reviews/{review_id}/status")
+async def update_review_status(review_id: str, status: str, current_user: dict = Depends(get_current_user)):
+    """Admin approve/reject a review"""
+    if status not in ["approved", "rejected", "pending"]:
+        raise HTTPException(status_code=400, detail="Status must be approved, rejected, or pending")
+    result = await db.reviews.update_one({"id": review_id}, {"$set": {"status": status}})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Review not found")
+    return {"message": f"Review {status}"}
+
+@api_router.put("/reviews/{review_id}")
 async def update_review(review_id: str, review_data: ReviewCreate, current_user: dict = Depends(get_current_user)):
     existing = await db.reviews.find_one({"id": review_id})
     if not existing:

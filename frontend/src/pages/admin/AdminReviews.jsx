@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, Star, RefreshCw, ExternalLink, CheckCircle } from 'lucide-react';
+import { Plus, Pencil, Trash2, Star, CheckCircle, XCircle, Clock, MessageSquare } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,12 +18,11 @@ export default function AdminReviews() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingReview, setEditingReview] = useState(null);
   const [formData, setFormData] = useState(emptyReview);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [trustpilotStatus, setTrustpilotStatus] = useState(null);
+  const [filter, setFilter] = useState('all');
 
   const fetchReviews = async () => {
     try {
-      const res = await reviewsAPI.getAll();
+      const res = await reviewsAPI.getAdmin();
       setReviews(res.data);
     } catch (error) {
       console.error('Error:', error);
@@ -32,19 +31,7 @@ export default function AdminReviews() {
     }
   };
 
-  const fetchTrustpilotStatus = async () => {
-    try {
-      const res = await reviewsAPI.getTrustpilotStatus();
-      setTrustpilotStatus(res.data);
-    } catch (error) {
-      console.error('Error fetching Trustpilot status:', error);
-    }
-  };
-
-  useEffect(() => { 
-    fetchReviews(); 
-    fetchTrustpilotStatus();
-  }, []);
+  useEffect(() => { fetchReviews(); }, []);
 
   const handleOpenDialog = (review = null) => {
     if (review) { 
@@ -98,17 +85,13 @@ export default function AdminReviews() {
     }
   };
 
-  const handleSyncTrustpilot = async () => {
-    setIsSyncing(true);
+  const handleStatusChange = async (id, status) => {
     try {
-      const res = await reviewsAPI.syncTrustpilot();
-      toast.success(res.data.message);
+      await reviewsAPI.updateStatus(id, status);
+      toast.success(`Review ${status}!`);
       fetchReviews();
-      fetchTrustpilotStatus();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to sync Trustpilot reviews');
-    } finally {
-      setIsSyncing(false);
+      toast.error('Failed to update status');
     }
   };
 
@@ -117,97 +100,93 @@ export default function AdminReviews() {
     return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
-  const trustpilotReviewCount = reviews.filter(r => r.source === 'trustpilot').length;
-  const manualReviewCount = reviews.filter(r => !r.source || r.source !== 'trustpilot').length;
+  const pendingCount = reviews.filter(r => r.status === 'pending').length;
+  const approvedCount = reviews.filter(r => r.status === 'approved' || !r.status).length;
+  const customerCount = reviews.filter(r => r.is_customer_review).length;
+
+  const filteredReviews = reviews.filter(r => {
+    if (filter === 'pending') return r.status === 'pending';
+    if (filter === 'approved') return r.status === 'approved' || !r.status;
+    if (filter === 'rejected') return r.status === 'rejected';
+    if (filter === 'customer') return r.is_customer_review;
+    return true;
+  });
+
+  const statusBadge = (review) => {
+    const s = review.status || 'approved';
+    if (s === 'approved') return <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Approved</Badge>;
+    if (s === 'pending') return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">Pending</Badge>;
+    if (s === 'rejected') return <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">Rejected</Badge>;
+    return null;
+  };
 
   return (
     <AdminLayout title="Reviews">
       <div className="space-y-4 lg:space-y-6" data-testid="admin-reviews">
-        {/* Trustpilot Sync Section */}
-        <div className="bg-gradient-to-r from-green-500/10 to-transparent border border-green-500/30 rounded-lg p-4 lg:p-6">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-green-500/20 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-green-500" />
-              </div>
-              <div>
-                <h3 className="font-heading text-lg font-semibold text-white">Trustpilot Integration</h3>
-                <p className="text-white/60 text-sm mt-1">
-                  Automatically sync reviews from your Trustpilot page
-                </p>
-                <div className="flex items-center gap-4 mt-2 text-sm">
-                  <span className="text-white/40">Domain: <span className="text-gold-500">gameshopnepal.com</span></span>
-                  {trustpilotStatus?.last_sync && (
-                    <span className="text-white/40">Last sync: {formatDate(trustpilotStatus.last_sync)}</span>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <a 
-                href="https://www.trustpilot.com/review/gameshopnepal.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-gold-500 hover:text-gold-400 text-sm flex items-center gap-1"
-              >
-                View on Trustpilot <ExternalLink className="h-3 w-3" />
-              </a>
-              <Button 
-                onClick={handleSyncTrustpilot} 
-                disabled={isSyncing}
-                className="bg-green-600 hover:bg-green-700 text-white"
-                data-testid="sync-trustpilot-btn"
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
-                {isSyncing ? 'Syncing...' : 'Sync Reviews'}
-              </Button>
-            </div>
-          </div>
-        </div>
-
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="bg-card border border-white/10 rounded-lg p-4">
-            <p className="text-white/60 text-sm">Total Reviews</p>
+            <p className="text-white/60 text-sm">Total</p>
             <p className="font-heading text-2xl font-bold text-white">{reviews.length}</p>
           </div>
-          <div className="bg-card border border-green-500/30 rounded-lg p-4">
-            <p className="text-green-400 text-sm">From Trustpilot</p>
-            <p className="font-heading text-2xl font-bold text-green-400">{trustpilotReviewCount}</p>
+          <div className="bg-card border border-yellow-500/30 rounded-lg p-4 cursor-pointer hover:border-yellow-500/50 transition-colors" onClick={() => setFilter(filter === 'pending' ? 'all' : 'pending')}>
+            <p className="text-yellow-400 text-sm">Pending</p>
+            <p className="font-heading text-2xl font-bold text-yellow-400">{pendingCount}</p>
           </div>
-          <div className="bg-card border border-gold-500/30 rounded-lg p-4">
-            <p className="text-gold-500 text-sm">Manual Reviews</p>
-            <p className="font-heading text-2xl font-bold text-gold-500">{manualReviewCount}</p>
+          <div className="bg-card border border-green-500/30 rounded-lg p-4 cursor-pointer hover:border-green-500/50 transition-colors" onClick={() => setFilter(filter === 'approved' ? 'all' : 'approved')}>
+            <p className="text-green-400 text-sm">Approved</p>
+            <p className="font-heading text-2xl font-bold text-green-400">{approvedCount}</p>
+          </div>
+          <div className="bg-card border border-amber-500/30 rounded-lg p-4 cursor-pointer hover:border-amber-500/50 transition-colors" onClick={() => setFilter(filter === 'customer' ? 'all' : 'customer')}>
+            <p className="text-amber-400 text-sm">From Customers</p>
+            <p className="font-heading text-2xl font-bold text-amber-400">{customerCount}</p>
           </div>
         </div>
 
+        {/* Pending Alert */}
+        {pendingCount > 0 && (
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 flex items-center gap-3" data-testid="pending-alert">
+            <Clock className="h-5 w-5 text-yellow-400 flex-shrink-0" />
+            <p className="text-yellow-200 text-sm flex-1">
+              <strong>{pendingCount}</strong> review{pendingCount > 1 ? 's' : ''} waiting for approval
+            </p>
+            <Button size="sm" className="bg-yellow-500 hover:bg-yellow-600 text-black" onClick={() => setFilter('pending')}>
+              Review Now
+            </Button>
+          </div>
+        )}
+
+        {/* Filter tabs + Add button */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <p className="text-white/60 text-sm lg:text-base">Manage customer reviews displayed on the homepage</p>
+          <div className="flex flex-wrap gap-2">
+            {['all', 'pending', 'approved', 'rejected', 'customer'].map(f => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filter === f ? 'bg-amber-500 text-black' : 'bg-zinc-800 text-white/60 hover:text-white'}`}
+                data-testid={`filter-${f}`}
+              >
+                {f.charAt(0).toUpperCase() + f.slice(1)}
+              </button>
+            ))}
+          </div>
           <Button onClick={() => handleOpenDialog()} className="bg-gold-500 hover:bg-gold-600 text-black w-full sm:w-auto" data-testid="add-review-btn">
             <Plus className="h-4 w-4 mr-2" />Add Manual Review
           </Button>
         </div>
 
+        {/* Reviews List */}
         <div className="space-y-3">
           {isLoading ? (
             <div className="text-center py-8 text-white/40">Loading...</div>
-          ) : reviews.length === 0 ? (
+          ) : filteredReviews.length === 0 ? (
             <div className="text-center py-12 bg-card border border-white/10 rounded-lg">
-              <Star className="h-12 w-12 mx-auto text-white/20 mb-4" />
-              <p className="text-white/40 mb-4">No reviews yet</p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button onClick={handleSyncTrustpilot} disabled={isSyncing} className="bg-green-600 hover:bg-green-700 text-white">
-                  <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
-                  Sync from Trustpilot
-                </Button>
-                <Button onClick={() => handleOpenDialog()} variant="outline" className="border-gold-500 text-gold-500">
-                  <Plus className="h-4 w-4 mr-2" />Add Manual Review
-                </Button>
-              </div>
+              <MessageSquare className="h-12 w-12 mx-auto text-white/20 mb-4" />
+              <p className="text-white/40 mb-4">No reviews match this filter</p>
             </div>
           ) : (
-            reviews.map((review) => (
-              <div key={review.id} className={`bg-card border rounded-lg p-4 hover:border-gold-500/30 transition-all ${review.source === 'trustpilot' ? 'border-green-500/30' : 'border-white/10'}`} data-testid={`review-row-${review.id}`}>
+            filteredReviews.map((review) => (
+              <div key={review.id} className={`bg-card border rounded-lg p-4 hover:border-gold-500/30 transition-all ${review.status === 'pending' ? 'border-yellow-500/30' : review.status === 'rejected' ? 'border-red-500/20' : 'border-white/10'}`} data-testid={`review-row-${review.id}`}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
@@ -217,19 +196,43 @@ export default function AdminReviews() {
                           <Star key={star} className={`h-3.5 w-3.5 ${star <= review.rating ? 'text-gold-500 fill-gold-500' : 'text-white/20'}`} />
                         ))}
                       </div>
-                      {review.source === 'trustpilot' && (
-                        <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
-                          Trustpilot
-                        </Badge>
+                      {statusBadge(review)}
+                      {review.is_customer_review && (
+                        <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">Customer</Badge>
                       )}
                       <span className="text-white/40 text-xs">{formatDate(review.review_date)}</span>
                     </div>
                     <p className="text-white/70 text-sm line-clamp-2">"{review.comment}"</p>
+                    {review.customer_email && (
+                      <p className="text-white/30 text-xs mt-1">{review.customer_email}</p>
+                    )}
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <Button variant="ghost" size="sm" onClick={() => handleOpenDialog(review)} className="text-white/60 hover:text-gold-500 p-2" data-testid={`edit-review-${review.id}`}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+                    {review.status === 'pending' && (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => handleStatusChange(review.id, 'approved')} className="text-green-400 hover:text-green-300 hover:bg-green-500/10 p-2" data-testid={`approve-review-${review.id}`} title="Approve">
+                          <CheckCircle className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleStatusChange(review.id, 'rejected')} className="text-red-400 hover:text-red-300 hover:bg-red-500/10 p-2" data-testid={`reject-review-${review.id}`} title="Reject">
+                          <XCircle className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                    {review.status === 'rejected' && (
+                      <Button variant="ghost" size="sm" onClick={() => handleStatusChange(review.id, 'approved')} className="text-green-400 hover:text-green-300 hover:bg-green-500/10 p-2" data-testid={`approve-review-${review.id}`} title="Approve">
+                        <CheckCircle className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {(review.status === 'approved' || !review.status) && review.is_customer_review && (
+                      <Button variant="ghost" size="sm" onClick={() => handleStatusChange(review.id, 'rejected')} className="text-red-400 hover:text-red-300 hover:bg-red-500/10 p-2" data-testid={`reject-review-${review.id}`} title="Reject">
+                        <XCircle className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {!review.is_customer_review && (
+                      <Button variant="ghost" size="sm" onClick={() => handleOpenDialog(review)} className="text-white/60 hover:text-gold-500 p-2" data-testid={`edit-review-${review.id}`}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(review.id)} className="text-white/60 hover:text-red-500 p-2" data-testid={`delete-review-${review.id}`}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -240,6 +243,7 @@ export default function AdminReviews() {
           )}
         </div>
 
+        {/* Add/Edit Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="bg-card border-white/10 text-white max-w-md sm:mx-auto">
             <DialogHeader>

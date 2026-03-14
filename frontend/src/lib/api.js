@@ -73,11 +73,15 @@ export const categoriesAPI = {
 
 export const reviewsAPI = {
   getAll: () => api.get('/reviews'),
+  getPublic: (page = 1) => api.get(`/reviews/public?page=${page}`),
+  getAdmin: () => api.get('/reviews/admin'),
   create: (data) => api.post('/reviews', data),
   update: (id, data) => api.put(`/reviews/${id}`, data),
   delete: (id) => api.delete(`/reviews/${id}`),
-  syncTrustpilot: () => api.post('/reviews/sync-trustpilot'),
-  getTrustpilotStatus: () => api.get('/reviews/trustpilot-status'),
+  updateStatus: (id, status) => api.put(`/reviews/${id}/status?status=${status}`),
+  submitCustomerReview: (data) => api.post('/reviews/customer', data),
+  updateCustomerReview: (data) => api.put('/reviews/customer', data),
+  getMyReview: () => api.get('/reviews/my-review'),
 };
 
 export const faqsAPI = {
