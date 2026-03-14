@@ -1853,7 +1853,7 @@ async def create_customer_review(review_data: CustomerReviewCreate, current_cust
     # Check if customer has at least one completed order
     completed_order = await db.orders.find_one({
         "customer_email": current_customer["email"],
-        "status": {"$regex": "^(completed|delivered)$", "$options": "i"}
+        "status": {"$regex": "^(completed|delivered|confirmed)$", "$options": "i"}
     })
     if not completed_order:
         raise HTTPException(status_code=403, detail="You need at least one completed order to leave a review")
@@ -1904,7 +1904,7 @@ async def get_my_review(current_customer: dict = Depends(get_current_customer)):
     # Also check if customer has a completed order
     has_completed_order = await db.orders.count_documents({
         "customer_email": current_customer["email"],
-        "status": {"$regex": "^(completed|delivered)$", "$options": "i"}
+        "status": {"$regex": "^(completed|delivered|confirmed)$", "$options": "i"}
     }) > 0
     return {"review": review, "can_review": has_completed_order}
 
