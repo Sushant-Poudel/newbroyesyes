@@ -218,9 +218,15 @@ export default function ReviewsPage() {
                 </div>
               ))
             ) : (
-              <div className="text-center py-16">
-                <Star className="h-12 w-12 text-white/10 mx-auto mb-4" />
-                <p className="text-white/30 text-sm">No reviews yet. Be the first to share your experience!</p>
+              <div className="flex flex-col items-center justify-center py-16" data-testid="empty-state-reviews">
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 bg-amber-500/10 rounded-full blur-xl scale-150" />
+                  <div className="relative p-5 rounded-full bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.08]">
+                    <Star className="h-8 w-8 text-white/25" strokeWidth={1.5} />
+                  </div>
+                </div>
+                <h3 className="font-heading text-lg font-semibold text-white/80 mb-2">No reviews yet</h3>
+                <p className="text-white/40 text-sm">Be the first to share your experience!</p>
               </div>
             )}
           </div>

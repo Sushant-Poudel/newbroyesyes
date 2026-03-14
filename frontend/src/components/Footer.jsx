@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, MessageCircle, Send, Loader2 } from 'lucide-react';
+import { Facebook, Instagram, MessageCircle, Send, Loader2, Shield, Truck, Clock, CreditCard, Star } from 'lucide-react';
 import { socialLinksAPI } from '@/lib/api';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,15 @@ const DiscordIcon = () => (
   </svg>
 );
 
+const TRUST_BADGES = [
+  { icon: Shield, label: 'Secure Payment' },
+  { icon: Truck, label: 'Instant Delivery' },
+  { icon: Clock, label: '24/7 Support' },
+  { icon: Star, label: 'Trusted Since 2021' },
+];
+
+const PAYMENT_METHODS = ['eSewa', 'Khalti', 'Bank Transfer', 'IME Pay'];
+
 export default function Footer() {
   const [socialLinks, setSocialLinks] = useState([]);
   const [email, setEmail] = useState('');
@@ -28,19 +37,13 @@ export default function Footer() {
 
   useEffect(() => {
     socialLinksAPI.getAll()
-      .then(res => {
-        setSocialLinks(Array.isArray(res.data) ? res.data : []);
-      })
+      .then(res => setSocialLinks(Array.isArray(res.data) ? res.data : []))
       .catch(() => {});
   }, []);
 
   const handleSubscribe = async (e) => {
     e.preventDefault();
-    if (!email || !email.includes('@')) {
-      toast.error('Please enter a valid email address');
-      return;
-    }
-
+    if (!email || !email.includes('@')) { toast.error('Please enter a valid email address'); return; }
     setIsSubscribing(true);
     try {
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/newsletter/subscribe`, { email });
@@ -63,91 +66,166 @@ export default function Footer() {
     return null;
   };
 
-  // socialLinks is now an array directly
   const socialLinksArray = socialLinks.filter(link => link.url && link.platform);
 
   return (
-    <footer className="bg-black border-t border-white/10" data-testid="footer">
-      {/* Newsletter Section */}
-      <div className="border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="text-center md:text-left">
-              <h3 className="font-heading text-lg lg:text-xl font-semibold text-white mb-2">
-                Subscribe to Our Newsletter
-              </h3>
-              <p className="text-white/60 text-sm">
-                Get exclusive deals, new product alerts & special offers delivered to your inbox!
-              </p>
-            </div>
-            <form onSubmit={handleSubscribe} className="flex w-full md:w-auto gap-2">
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-white/5 border-white/20 text-white placeholder:text-white/40 w-full md:w-72"
-                data-testid="newsletter-email-input"
-              />
-              <Button 
-                type="submit" 
-                disabled={isSubscribing}
-                className="bg-gold-500 hover:bg-gold-600 text-black font-semibold px-6"
-                data-testid="newsletter-subscribe-btn"
-              >
-                {isSubscribing ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-2" />
-                    Subscribe
-                  </>
-                )}
-              </Button>
-            </form>
+    <footer className="relative bg-black border-t border-white/[0.06]" data-testid="footer">
+      {/* Subtle ambient glow */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent" />
+
+      {/* Trust Badges Strip */}
+      <div className="border-b border-white/[0.06]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {TRUST_BADGES.map(({ icon: Icon, label }) => (
+              <div key={label} className="flex items-center gap-3 justify-center md:justify-start" data-testid={`trust-badge-${label.toLowerCase().replace(/\s/g, '-')}`}>
+                <div className="p-2 rounded-lg bg-amber-500/10">
+                  <Icon className="h-4 w-4 text-amber-500" />
+                </div>
+                <span className="text-white/60 text-xs sm:text-sm font-medium">{label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8">
-          <div className="col-span-2">
-            <Link to="/" className="inline-block mb-3 lg:mb-4">
-              <img src={LOGO_URL} alt="GameShop Nepal" className="h-8 lg:h-12 w-auto" />
+      {/* Newsletter Section */}
+      <div className="border-b border-white/[0.06]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
+          <div className="glass-depth rounded-2xl p-6 sm:p-8">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="text-center md:text-left">
+                <h3 className="font-heading text-lg lg:text-xl font-semibold text-white mb-1.5">
+                  Get Exclusive Deals
+                </h3>
+                <p className="text-white/50 text-sm">
+                  New products, special offers & discounts — straight to your inbox
+                </p>
+              </div>
+              <form onSubmit={handleSubscribe} className="flex w-full md:w-auto gap-2">
+                <Input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/30 w-full md:w-72 rounded-xl focus:border-amber-500/30"
+                  data-testid="newsletter-email-input"
+                />
+                <Button 
+                  type="submit" 
+                  disabled={isSubscribing}
+                  className="bg-amber-500 hover:bg-amber-400 text-black font-semibold px-6 rounded-xl transition-colors duration-200"
+                  data-testid="newsletter-subscribe-btn"
+                >
+                  {isSubscribing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Subscribe
+                    </>
+                  )}
+                </Button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Footer Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+        <div className="grid grid-cols-2 md:grid-cols-12 gap-8 lg:gap-12">
+          {/* Brand */}
+          <div className="col-span-2 md:col-span-4">
+            <Link to="/" className="inline-block mb-4">
+              <img src={LOGO_URL} alt="GameShop Nepal" className="h-9 lg:h-12 w-auto" />
             </Link>
-            <p className="text-white/60 text-xs lg:text-sm leading-relaxed max-w-md">
-              Your trusted source for digital products in Nepal since 2021. Gaming subscriptions, OTT services, software licenses, and more.
+            <p className="text-white/50 text-xs sm:text-sm leading-relaxed max-w-sm mb-5">
+              Nepal's trusted destination for digital subscriptions, gaming, OTT, and software since 2021.
             </p>
-          </div>
-
-          <div>
-            <h3 className="font-heading text-sm lg:text-lg font-semibold text-white uppercase tracking-wider mb-3 lg:mb-4">Quick Links</h3>
-            <ul className="space-y-1.5 lg:space-y-2">
-              <li><Link to="/" className="text-white/60 hover:text-gold-500 text-xs lg:text-sm transition-colors" data-testid="footer-link-home">Home</Link></li>
-              <li><Link to="/about" className="text-white/60 hover:text-gold-500 text-xs lg:text-sm transition-colors" data-testid="footer-link-about">About Us</Link></li>
-              <li><Link to="/faq" className="text-white/60 hover:text-gold-500 text-xs lg:text-sm transition-colors" data-testid="footer-link-faq">FAQ</Link></li>
-              <li><Link to="/terms" className="text-white/60 hover:text-gold-500 text-xs lg:text-sm transition-colors" data-testid="footer-link-terms">Terms & Conditions</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-heading text-sm lg:text-lg font-semibold text-white uppercase tracking-wider mb-3 lg:mb-4">Connect</h3>
-            <p className="text-white/60 text-xs lg:text-sm mb-3 lg:mb-4 break-all">support@gameshopnepal.com</p>
-            <div className="flex items-center space-x-3 lg:space-x-4">
+            {/* Social Links */}
+            <div className="flex items-center gap-3">
               {socialLinksArray.map((link) => (
-                <a key={link.platform} href={link.url} target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-gold-500 transition-colors" data-testid={`social-link-${link.platform.toLowerCase()}`}>
+                <a 
+                  key={link.platform} 
+                  href={link.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="p-2 rounded-lg bg-white/5 text-white/50 hover:bg-amber-500/15 hover:text-amber-500 transition-colors duration-200" 
+                  data-testid={`social-link-${link.platform.toLowerCase()}`}
+                >
                   {getIcon(link.platform)}
                 </a>
               ))}
             </div>
           </div>
-        </div>
 
-        <div className="mt-8 lg:mt-12 pt-6 lg:pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-white/40 text-xs lg:text-sm text-center sm:text-left">© {new Date().getFullYear()} GameShop Nepal. All rights reserved.</p>
-          <a href="https://www.trustpilot.com/review/gameshopnepal.com" target="_blank" rel="noopener noreferrer" className="text-gold-500 hover:text-gold-400 text-xs lg:text-sm flex items-center" data-testid="footer-trustpilot-link">
-            View reviews on Trustpilot →
-          </a>
+          {/* Quick Links */}
+          <div className="md:col-span-2">
+            <h3 className="font-heading text-xs uppercase tracking-widest text-white/40 font-semibold mb-4">Quick Links</h3>
+            <ul className="space-y-2.5">
+              {[
+                { to: '/', label: 'Home' },
+                { to: '/reviews', label: 'Reviews' },
+                { to: '/daily-reward', label: 'Daily Rewards' },
+                { to: '/reseller-plans', label: 'Reseller Plans' },
+              ].map(link => (
+                <li key={link.to}>
+                  <Link to={link.to} className="text-white/50 hover:text-amber-400 text-sm transition-colors duration-200" data-testid={`footer-link-${link.label.toLowerCase().replace(/\s/g, '-')}`}>
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Support */}
+          <div className="md:col-span-2">
+            <h3 className="font-heading text-xs uppercase tracking-widest text-white/40 font-semibold mb-4">Support</h3>
+            <ul className="space-y-2.5">
+              {[
+                { to: '/about', label: 'About Us' },
+                { to: '/faq', label: 'FAQ' },
+                { to: '/terms', label: 'Terms & Conditions' },
+                { to: '/blog', label: 'Blog' },
+              ].map(link => (
+                <li key={link.to}>
+                  <Link to={link.to} className="text-white/50 hover:text-amber-400 text-sm transition-colors duration-200" data-testid={`footer-link-${link.label.toLowerCase().replace(/\s/g, '-')}`}>
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact & Payment */}
+          <div className="col-span-2 md:col-span-4">
+            <h3 className="font-heading text-xs uppercase tracking-widest text-white/40 font-semibold mb-4">Contact</h3>
+            <p className="text-white/50 text-sm mb-1">support@gameshopnepal.com</p>
+            <p className="text-white/50 text-sm mb-5">+977 9743488871</p>
+            
+            <h3 className="font-heading text-xs uppercase tracking-widest text-white/40 font-semibold mb-3">We Accept</h3>
+            <div className="flex flex-wrap gap-2">
+              {PAYMENT_METHODS.map(method => (
+                <div key={method} className="flex items-center gap-1.5 bg-white/5 border border-white/[0.06] rounded-lg px-3 py-1.5" data-testid={`payment-method-${method.toLowerCase().replace(/\s/g, '-')}`}>
+                  <CreditCard className="h-3 w-3 text-amber-500/70" />
+                  <span className="text-white/50 text-xs font-medium">{method}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Bar */}
+      <div className="border-t border-white/[0.06]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-white/30 text-xs text-center sm:text-left">&copy; {new Date().getFullYear()} GameShop Nepal. All rights reserved.</p>
+            <Link to="/reviews" className="text-amber-500/70 hover:text-amber-400 text-xs flex items-center gap-1 transition-colors duration-200" data-testid="footer-reviews-link">
+              <Star className="h-3 w-3" /> Customer Reviews
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

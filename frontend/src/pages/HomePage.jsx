@@ -6,6 +6,8 @@ import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import ReviewCard from '@/components/ReviewCard';
 import { AdBanner, AdPopup } from '@/components/AdBanner';
+import { ProductGridSkeleton } from '@/components/LoadingSkeletons';
+import EmptyState from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
 import { productsAPI, categoriesAPI, reviewsAPI, notificationBarAPI, blogAPI, paymentMethodsAPI } from '@/lib/api';
 
@@ -226,23 +228,15 @@ export default function HomePage() {
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
-                <div key={i} className="aspect-square bg-zinc-900/50 rounded-xl animate-pulse" />
-              ))}
-            </div>
+            <ProductGridSkeleton count={10} />
           ) : filteredProducts.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {filteredProducts.map((product) => (
-                <div key={product.id}>
-                  <ProductCard product={product} />
-                </div>
+              {filteredProducts.map((product, index) => (
+                <ProductCard key={product.id} product={product} index={index} />
               ))}
             </div>
           ) : (
-            <div className="text-center py-10">
-              <p className="text-white/30 text-sm">No products found</p>
-            </div>
+            <EmptyState type="search" title="No products found" description={searchQuery ? `No results for "${searchQuery}"` : 'No products in this category'} />
           )}
         </div>
       </section>
@@ -253,7 +247,7 @@ export default function HomePage() {
             <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 text-center">Payment Options</h2>
             <div className="flex flex-wrap items-center justify-center gap-3 lg:gap-4">
               {paymentMethods.map((method) => (
-                <div key={method.id} className="bg-zinc-900/60 border border-white/[0.06] rounded-lg px-4 py-2.5 flex items-center gap-2.5 hover:border-white/15 transition-colors">
+                <div key={method.id} className="glass-depth rounded-lg px-4 py-2.5 flex items-center gap-2.5 hover:border-white/15 transition-colors duration-200">
                   <img src={method.image_url} alt={method.name} className="h-7 w-auto object-contain" onError={(e) => e.target.style.display = 'none'} />
                   <span className="text-white/70 font-medium text-sm">{method.name}</span>
                 </div>
@@ -270,7 +264,7 @@ export default function HomePage() {
             {TRUST_FEATURES.map((feature, i) => {
               const Icon = feature.icon;
               return (
-                <div key={i} className="bg-zinc-900/60 border border-white/[0.06] rounded-xl p-4 text-center hover:border-amber-500/15 transition-all duration-200">
+                <div key={i} className="depth-card p-4 text-center opacity-0 animate-fade-in-up" style={{ animationDelay: `${i * 0.08}s` }}>
                   <div className="w-10 h-10 bg-amber-500/10 rounded-lg flex items-center justify-center mx-auto mb-2.5"><Icon className="h-5 w-5 text-amber-500" /></div>
                   <h3 className="font-semibold text-white text-sm">{feature.title}</h3>
                   <p className="text-white/40 text-xs mt-0.5">{feature.desc}</p>
@@ -289,11 +283,11 @@ export default function HomePage() {
               <Link to="/blog" className="text-amber-500 text-xs sm:text-sm hover:text-amber-400 flex items-center gap-1 transition-colors">View All <ChevronRight className="h-3.5 w-3.5" /></Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {blogPosts.map((post) => (
-                <Link key={post.id} to={`/blog/${post.slug}`} className="bg-zinc-900/60 border border-white/[0.06] rounded-xl overflow-hidden hover:border-white/15 transition-all duration-200 group">
-                  {post.image_url && <img src={post.image_url} alt={post.title} className="w-full h-32 object-cover" />}
+              {blogPosts.map((post, i) => (
+                <Link key={post.id} to={`/blog/${post.slug}`} className="depth-card overflow-hidden group opacity-0 animate-fade-in-up" style={{ animationDelay: `${i * 0.08}s` }}>
+                  {post.image_url && <img src={post.image_url} alt={post.title} className="w-full h-32 object-cover transition-transform duration-500 group-hover:scale-[1.03]" />}
                   <div className="p-3.5">
-                    <h3 className="font-semibold text-white text-sm group-hover:text-amber-400 transition-colors line-clamp-2">{post.title}</h3>
+                    <h3 className="font-semibold text-white text-sm group-hover:text-amber-400 transition-colors duration-200 line-clamp-2">{post.title}</h3>
                     <p className="text-white/40 text-xs mt-1.5 line-clamp-2">{post.excerpt}</p>
                   </div>
                 </Link>

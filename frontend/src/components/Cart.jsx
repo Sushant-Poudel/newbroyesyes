@@ -140,12 +140,17 @@ export function CartSidebar() {
 
         <div className="mt-6 space-y-4 max-h-[55vh] overflow-y-auto">
           {cart.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">
-              <ShoppingCart className="w-16 h-16 mx-auto mb-4 opacity-30" />
-              <p className="text-lg">Your cart is empty</p>
-              <p className="text-sm mt-1">Add some products to get started!</p>
+            <div className="flex flex-col items-center justify-center py-12 px-4" data-testid="empty-state-cart">
+              <div className="relative mb-5">
+                <div className="absolute inset-0 bg-amber-500/10 rounded-full blur-xl scale-150" />
+                <div className="relative p-5 rounded-full bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.08]">
+                  <ShoppingCart className="h-7 w-7 text-white/25" strokeWidth={1.5} />
+                </div>
+              </div>
+              <p className="text-white/70 font-medium">Your cart is empty</p>
+              <p className="text-white/40 text-sm mt-1">Add some products to get started!</p>
               <Link to="/">
-                <Button className="mt-4 bg-amber-500 hover:bg-amber-600 text-black" onClick={() => setIsOpen(false)}>
+                <Button className="mt-4 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-xl transition-colors duration-200" onClick={() => setIsOpen(false)}>
                   Browse Products
                 </Button>
               </Link>
