@@ -2698,7 +2698,7 @@ async def complete_order(order_id: str, current_user: dict = Depends(get_current
         try:
             site_url = os.environ.get("SITE_URL", "https://gameshopnepal.com")
             invoice_url = f"{site_url}/invoice/{order_id}"
-            review_url = f"{site_url}/reviews"
+            review_url = "https://gameshopnepal.com/reviews"
             
             # Credits message
             credits_message = ""
@@ -4022,7 +4022,7 @@ async def update_order_status(order_id: str, status_data: OrderStatusUpdate, cur
             try:
                 site_url = os.environ.get("SITE_URL", "https://gameshopnepal.com")
                 invoice_url = f"{site_url}/invoice/{order_id}"
-                trustpilot_url = "https://www.trustpilot.com/evaluate/gameshopnepal.com"
+                review_url = "https://gameshopnepal.com/reviews"
                 
                 # Credits message
                 credits_message = ""
@@ -4126,8 +4126,8 @@ async def update_order_status(order_id: str, status_data: OrderStatusUpdate, cur
                                                 <tr>
                                                     <td style="padding: 25px; text-align: center;">
                                                         <p style="margin: 0 0 15px; font-size: 15px; color: #bbb;">Enjoyed your experience? We'd love your feedback!</p>
-                                                        <a href="{trustpilot_url}" style="display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #00b67a 0%, #009567 100%); color: #fff; text-decoration: none; border-radius: 10px; font-size: 14px; font-weight: 600;">
-                                                            Leave a Review on Trustpilot
+                                                        <a href="{review_url}" style="display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #F5A623 0%, #D4920D 100%); color: #000; text-decoration: none; border-radius: 10px; font-size: 14px; font-weight: 600;">
+                                                            Leave a Review
                                                         </a>
                                                     </td>
                                                 </tr>
@@ -4150,7 +4150,7 @@ async def update_order_status(order_id: str, status_data: OrderStatusUpdate, cur
                 </body>
                 </html>
                 """
-                text = f"Order #{order_number} Complete!\n\nYour order has been completed.\n{'You earned Rs ' + str(int(credits_awarded)) + ' in store credits!' if credits_awarded > 0 else ''}\nView Invoice: {invoice_url}\nLeave a Review: {trustpilot_url}"
+                text = f"Order #{order_number} Complete!\n\nYour order has been completed.\n{'You earned Rs ' + str(int(credits_awarded)) + ' in store credits!' if credits_awarded > 0 else ''}\nView Invoice: {invoice_url}\nLeave a Review: {review_url}"
                 
                 send_email(customer_email, subject, html, text)
                 logger.info(f"Invoice email sent to {customer_email} for completed order {order_id}")
