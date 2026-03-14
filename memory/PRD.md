@@ -90,6 +90,14 @@ All backend endpoints use `/api` prefix
   - Customer receives email with promo code upon approval
   - Order completion email now links to /reviews instead of Trustpilot
   - Public reviews page shows reward incentive banner
+- **Mar 14, 2026:** Design Enhancements:
+  - Micro-animations: stagger fade-in-up on product grid, trust cards, blog cards
+  - Depth card system: gradient bg, amber border glow, translateY hover on product cards
+  - Glassmorphism cards (GPU-friendly, no blur): newsletter section, payment methods
+  - Enhanced footer: trust badges strip, newsletter with glass-depth card, 4-column organized layout, payment method icons, social links, Customer Reviews link
+  - Loading skeletons with shimmer animation for product grids, reviews, detail pages
+  - Empty state designs for cart, search, reviews, orders with icon + CTA
+  - Product card image zoom on hover (scale 1.06), ambient glow overlay
 - **Mar 11, 2026:** Redesigned Admin Dashboard, completed Admin Experience Enhancements
 - **Mar 9, 2026:** PWA admin, Discord webhook fix, stock per variation, Google login profile completion
 - **Mar 3, 2026:** Self-hosted ad management system verified
