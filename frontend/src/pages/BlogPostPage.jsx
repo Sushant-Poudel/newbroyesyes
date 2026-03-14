@@ -29,7 +29,7 @@ export default function BlogPostPage() {
     return (
       <div className="min-h-screen bg-black">
         <Navbar />
-        <div className="pt-14 sm:pt-16 pb-24 max-w-3xl mx-auto px-4"><div className="h-8 w-48 skeleton rounded mb-4"></div><div className="h-12 w-full skeleton rounded mb-6"></div><div className="h-64 skeleton rounded"></div></div>
+        <div className="pt-14 md:pt-24 pb-20 md:pb-8 max-w-3xl mx-auto px-4"><div className="h-8 w-48 skeleton rounded mb-4"></div><div className="h-12 w-full skeleton rounded mb-6"></div><div className="h-64 skeleton rounded"></div></div>
         <Footer />
       </div>
     );
@@ -39,7 +39,7 @@ export default function BlogPostPage() {
     return (
       <div className="min-h-screen bg-black">
         <Navbar />
-        <div className="pt-14 sm:pt-16 pb-24 max-w-3xl mx-auto px-4 text-center">
+        <div className="pt-14 md:pt-24 pb-20 md:pb-8 max-w-3xl mx-auto px-4 text-center">
           <h1 className="text-2xl font-heading text-white mb-4">Post Not Found</h1>
           <Link to="/blog"><Button variant="outline" className="border-gold-500 text-gold-500">Back to Blog</Button></Link>
         </div>
@@ -51,7 +51,7 @@ export default function BlogPostPage() {
   return (
     <div className="min-h-screen bg-black">
       <Navbar />
-      <main className="pt-14 sm:pt-16 pb-24">
+      <main className="pt-14 md:pt-24 pb-20 md:pb-8">
         <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link to="/blog" className="inline-flex items-center text-white/60 hover:text-gold-500 mb-6 transition-colors"><ArrowLeft className="h-4 w-4 mr-2" />Back to Blog</Link>
           {post.image_url && <img src={post.image_url} alt={post.title} className="w-full h-64 object-cover rounded-lg mb-6" />}

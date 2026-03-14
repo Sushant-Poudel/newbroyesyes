@@ -36,7 +36,7 @@ export default function ResellerPlansPage() {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="pt-16 pb-24 px-4">
+      <section className="pt-14 md:pt-24 pb-20 md:pb-8 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold-500/10 rounded-full border border-gold-500/20 mb-6">
             <Users className="w-4 h-4 text-gold-500" />

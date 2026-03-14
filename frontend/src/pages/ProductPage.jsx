@@ -329,7 +329,7 @@ See invoice: ${invoiceUrl}`;
     return (
       <div className="min-h-screen bg-black">
         <Navbar />
-        <div className="pt-14 sm:pt-16 pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-12">
+        <div className="pt-14 md:pt-24 pb-20 md:pb-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
             <div className="aspect-square skeleton rounded-lg"></div>
             <div className="space-y-4 lg:space-y-6"><div className="h-8 lg:h-10 w-3/4 skeleton rounded"></div><div className="h-6 w-1/4 skeleton rounded"></div><div className="h-32 lg:h-40 skeleton rounded"></div></div>
@@ -344,7 +344,7 @@ See invoice: ${invoiceUrl}`;
     return (
       <div className="min-h-screen bg-black">
         <Navbar />
-        <div className="pt-14 sm:pt-16 pb-24 min-h-[60vh] flex items-center justify-center px-4">
+        <div className="pt-14 md:pt-24 pb-20 md:pb-8 min-h-[60vh] flex items-center justify-center px-4">
           <div className="text-center">
             <h1 className="text-xl lg:text-2xl font-heading text-white mb-4">Product Not Found</h1>
             <Link to="/"><Button variant="outline" className="border-gold-500 text-gold-500">Go Back Home</Button></Link>
@@ -366,7 +366,7 @@ See invoice: ${invoiceUrl}`;
         type="product"
       />
       <Navbar />
-      <main className="pt-14 sm:pt-16 pb-24">
+      <main className="pt-14 md:pt-24 pb-20 md:pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-4">
           <Link to="/" className="inline-flex items-center text-white/60 hover:text-gold-500 transition-colors text-sm" data-testid="back-to-home">
             <ArrowLeft className="h-4 w-4 mr-2" />{t('backToProducts')}

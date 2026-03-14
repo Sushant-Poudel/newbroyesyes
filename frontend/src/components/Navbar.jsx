@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, User, Gift, Users, Smartphone, Star, Home, ShoppingCart } from 'lucide-react';
+import { X, Search, User, Gift, Users, Smartphone, Star, Home, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { CartSidebar } from '@/components/Cart';
@@ -54,10 +54,8 @@ export default function Navbar({ notificationBarHeight = 0 }) {
       setIsSearchOpen(false);
       setSearchQuery('');
       setTimeout(() => {
-        const productsSection = document.querySelector('[data-testid="products-section"]');
-        if (productsSection) {
-          productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        const el = document.querySelector('[data-testid="products-section"]');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 300);
     }
   };
@@ -67,142 +65,156 @@ export default function Navbar({ notificationBarHeight = 0 }) {
 
   return (
     <>
-      {/* Top Bar - Slim logo + search + cart */}
+      {/* ========== DESKTOP / TABLET: Dynamic Island Top Nav (md+) ========== */}
       <div
-        className="fixed top-0 left-0 right-0 z-40 bg-black/90 border-b border-white/[0.06]"
+        className="hidden md:flex fixed top-4 left-1/2 -translate-x-1/2 z-50 items-center gap-2 bg-black/90 border border-white/10 rounded-full px-5 py-2 shadow-2xl shadow-black/40"
         style={{ marginTop: notificationBarHeight }}
-        data-testid="top-bar"
+        data-testid="navbar"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-12 sm:h-14">
-          <Link to="/" className="flex items-center flex-shrink-0" data-testid="nav-logo">
-            <img src={LOGO_URL} alt="GSN" className="h-7 sm:h-8" />
-          </Link>
+        <Link to="/" className="flex items-center mr-2" data-testid="nav-logo">
+          <img src={LOGO_URL} alt="GSN" className="h-7" />
+        </Link>
 
-          <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="w-px h-5 bg-white/10" />
+
+        {navLinks.map((link) => (
+          <Link
+            key={link.href}
+            to={link.href}
+            data-testid={`nav-link-${link.label.toLowerCase().replace(' ', '-')}`}
+            className={`px-3.5 py-1.5 text-sm font-medium transition-colors duration-200 flex items-center gap-1.5 rounded-full ${
+              link.highlight && !isActive(link.href)
+                ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10'
+                : isActive(link.href)
+                  ? 'text-white bg-white/10'
+                  : 'text-white/60 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <link.icon className="w-3.5 h-3.5" />
+            {link.label}
+          </Link>
+        ))}
+
+        <div className="w-px h-5 bg-white/10" />
+
+        {/* Search */}
+        {isSearchOpen ? (
+          <form onSubmit={handleSearch} className="flex items-center gap-1">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search..."
+              className="bg-white/10 border border-white/15 rounded-full px-3 py-1.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-amber-500/50 w-40"
+              autoFocus
+              data-testid="search-input"
+            />
+            <button type="button" onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }} className="text-white/40 hover:text-white p-1">
+              <X className="h-4 w-4" />
+            </button>
+          </form>
+        ) : (
+          <button onClick={() => setIsSearchOpen(true)} className="text-white/50 hover:text-white p-1.5 rounded-full hover:bg-white/5 transition-colors" data-testid="search-btn">
+            <Search className="h-4 w-4" />
+          </button>
+        )}
+
+        <CartSidebar />
+
+        {customer ? (
+          <CustomerAccountSidebar />
+        ) : (
+          <Button
+            onClick={() => setShowAuthModal(true)}
+            className="bg-white/10 hover:bg-white/15 text-white rounded-full px-4 py-1.5 text-sm font-medium h-auto"
+            data-testid="customer-login-btn"
+          >
+            Sign In
+          </Button>
+        )}
+
+        <button
+          onClick={() => setShowInstallModal(true)}
+          className="text-white/40 hover:text-amber-400 p-1.5 rounded-full hover:bg-white/5 transition-colors"
+          data-testid="add-to-home-btn"
+          title="Add to Home Screen"
+        >
+          <Smartphone className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* ========== MOBILE: Slim top bar + Bottom tab bar (<md) ========== */}
+      {/* Mobile top bar - logo, search, cart */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-black/95 border-b border-white/[0.06]" data-testid="mobile-top-bar">
+        <div className="flex items-center justify-between px-4 h-12">
+          <Link to="/" className="flex-shrink-0" data-testid="nav-logo-mobile">
+            <img src={LOGO_URL} alt="GSN" className="h-6" />
+          </Link>
+          <div className="flex items-center gap-1">
             {isSearchOpen ? (
-              <form onSubmit={handleSearch} className="flex items-center gap-1.5">
+              <form onSubmit={handleSearch} className="flex items-center gap-1">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search..."
-                  className="bg-white/10 border border-white/15 rounded-full px-3 py-1.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-amber-500/50 w-32 sm:w-44"
+                  className="bg-white/10 border border-white/15 rounded-full px-3 py-1 text-sm text-white placeholder:text-white/40 focus:outline-none w-36"
                   autoFocus
-                  data-testid="search-input"
+                  data-testid="search-input-mobile"
                 />
-                <Button type="button" variant="ghost" size="sm" onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }} className="text-white/40 hover:text-white p-1 h-auto">
+                <button type="button" onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }} className="text-white/40 p-1">
                   <X className="h-4 w-4" />
-                </Button>
+                </button>
               </form>
             ) : (
-              <Button variant="ghost" size="sm" onClick={() => setIsSearchOpen(true)} className="text-white/60 hover:text-white p-2 h-auto rounded-full hover:bg-white/10" data-testid="search-btn">
+              <button onClick={() => setIsSearchOpen(true)} className="text-white/60 p-2 rounded-full" data-testid="search-btn-mobile">
                 <Search className="h-4 w-4" />
-              </Button>
+              </button>
             )}
             <CartSidebar />
-            <CustomerAccountSidebar />
           </div>
         </div>
       </div>
 
-      {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50" data-testid="navbar">
-        {/* Desktop: Floating pill at bottom center */}
-        <div className="hidden md:flex justify-center pb-4">
-          <div className="flex items-center gap-2 bg-black/95 border border-white/10 rounded-full px-6 py-2.5 shadow-2xl shadow-black/50">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                data-testid={`nav-link-${link.label.toLowerCase().replace(' ', '-')}`}
-                className={`px-4 py-2 text-sm font-medium transition-colors duration-200 flex items-center gap-2 rounded-full ${
-                  link.highlight
-                    ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10'
-                    : isActive(link.href)
-                      ? 'text-white bg-white/10'
-                      : 'text-white/70 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <link.icon className="w-4 h-4" />
-                {link.label}
-              </Link>
-            ))}
-
-            <div className="w-px h-5 bg-white/10 mx-1" />
-
-            {customer ? (
-              <Button
-                onClick={() => navigate('/account')}
-                className="bg-white/10 hover:bg-white/20 text-white rounded-full px-4 py-1.5 text-sm font-medium h-auto"
-                data-testid="customer-account-btn"
-              >
-                <User className="h-3.5 w-3.5 mr-1.5" />Account
-              </Button>
-            ) : (
-              <Button
-                onClick={() => setShowAuthModal(true)}
-                className="bg-white/10 hover:bg-white/20 text-white rounded-full px-4 py-1.5 text-sm font-medium h-auto"
-                data-testid="customer-login-btn"
-              >
-                Sign In
-              </Button>
-            )}
-
-            <button
-              onClick={() => setShowInstallModal(true)}
-              className="text-white/50 hover:text-amber-400 p-2 rounded-full hover:bg-white/5 transition-colors"
-              data-testid="add-to-home-btn"
-              title="Add to Home Screen"
+      {/* Mobile bottom tab bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-black/95 border-t border-white/[0.08] pb-[env(safe-area-inset-bottom)]" data-testid="mobile-bottom-nav">
+        <div className="grid grid-cols-5 h-14">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              to={link.href}
+              data-testid={`nav-link-${link.label.toLowerCase().replace(' ', '-')}`}
+              className={`flex flex-col items-center justify-center gap-0.5 transition-colors duration-200 ${
+                link.highlight && !isActive(link.href)
+                  ? 'text-amber-400'
+                  : isActive(link.href)
+                    ? 'text-white'
+                    : 'text-white/40'
+              }`}
             >
-              <Smartphone className="h-4 w-4" />
+              <link.icon className={`h-5 w-5 ${isActive(link.href) ? 'text-amber-500' : ''}`} />
+              <span className="text-[10px] font-medium leading-none">{link.label}</span>
+            </Link>
+          ))}
+          {customer ? (
+            <button
+              onClick={() => navigate('/account')}
+              data-testid="customer-account-btn-mobile"
+              className={`flex flex-col items-center justify-center gap-0.5 transition-colors ${isActive('/account') ? 'text-white' : 'text-white/40'}`}
+            >
+              <User className={`h-5 w-5 ${isActive('/account') ? 'text-amber-500' : ''}`} />
+              <span className="text-[10px] font-medium leading-none">Account</span>
             </button>
-          </div>
-        </div>
-
-        {/* Mobile: Full-width bottom tab bar */}
-        <div className="md:hidden bg-black/95 border-t border-white/[0.08] pb-[env(safe-area-inset-bottom)]">
-          <div className="grid grid-cols-5 h-16">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                data-testid={`nav-link-${link.label.toLowerCase().replace(' ', '-')}`}
-                className={`flex flex-col items-center justify-center gap-0.5 transition-colors duration-200 ${
-                  link.highlight && !isActive(link.href)
-                    ? 'text-amber-400'
-                    : isActive(link.href)
-                      ? 'text-white'
-                      : 'text-white/40'
-                }`}
-              >
-                <link.icon className={`h-5 w-5 ${isActive(link.href) ? 'text-amber-500' : ''}`} />
-                <span className="text-[10px] font-medium leading-none">{link.label}</span>
-              </Link>
-            ))}
-
-            {/* Account / Sign In tab */}
-            {customer ? (
-              <button
-                onClick={() => navigate('/account')}
-                data-testid="customer-account-btn"
-                className={`flex flex-col items-center justify-center gap-0.5 transition-colors duration-200 ${
-                  isActive('/account') ? 'text-white' : 'text-white/40'
-                }`}
-              >
-                <User className={`h-5 w-5 ${isActive('/account') ? 'text-amber-500' : ''}`} />
-                <span className="text-[10px] font-medium leading-none">Account</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => setShowAuthModal(true)}
-                data-testid="customer-login-btn"
-                className="flex flex-col items-center justify-center gap-0.5 text-white/40 transition-colors duration-200"
-              >
-                <User className="h-5 w-5" />
-                <span className="text-[10px] font-medium leading-none">Sign In</span>
-              </button>
-            )}
-          </div>
+          ) : (
+            <button
+              onClick={() => setShowAuthModal(true)}
+              data-testid="customer-login-btn-mobile"
+              className="flex flex-col items-center justify-center gap-0.5 text-white/40"
+            >
+              <User className="h-5 w-5" />
+              <span className="text-[10px] font-medium leading-none">Sign In</span>
+            </button>
+          )}
         </div>
       </nav>
 
@@ -212,7 +224,7 @@ export default function Navbar({ notificationBarHeight = 0 }) {
         onSuccess={(customerData) => setCustomer(customerData)}
       />
 
-      {/* Add to Home Screen Instructions Modal */}
+      {/* Add to Home Screen Modal */}
       <Dialog open={showInstallModal} onOpenChange={setShowInstallModal}>
         <DialogContent className="w-[calc(100%-32px)] sm:max-w-[450px] p-0 bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
           <div className="p-6 border-b border-white/10 text-center">

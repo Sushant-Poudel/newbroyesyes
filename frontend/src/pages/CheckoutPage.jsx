@@ -295,7 +295,7 @@ See invoice: ${invoiceUrl}`;
     return (
       <div className="min-h-screen bg-black">
         <Navbar />
-        <div className="pt-14 sm:pt-16 pb-24 max-w-2xl mx-auto px-4 text-center">
+        <div className="pt-14 md:pt-24 pb-20 md:pb-8 max-w-2xl mx-auto px-4 text-center">
           <ShoppingBag className="w-16 h-16 text-gray-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white mb-2">{t('cartEmpty')}</h1>
           <p className="text-gray-400 mb-6">{t('addProductsToStart')}</p>
@@ -311,7 +311,7 @@ See invoice: ${invoiceUrl}`;
   return (
     <div className="min-h-screen bg-black">
       <Navbar />
-      <main className="pt-14 sm:pt-16 pb-24">
+      <main className="pt-14 md:pt-24 pb-20 md:pb-8">
         <div className="max-w-4xl mx-auto px-4">
           <Link to="/" className="inline-flex items-center text-gray-400 hover:text-amber-500 mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />{t('backToProducts')}

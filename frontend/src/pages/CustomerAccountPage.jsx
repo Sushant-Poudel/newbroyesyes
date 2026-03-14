@@ -206,7 +206,7 @@ export default function CustomerAccountPage() {
     <div className="min-h-screen bg-black">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 pt-14 sm:pt-16 pb-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 pt-14 md:pt-24 pb-20 md:pb-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>

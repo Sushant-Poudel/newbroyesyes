@@ -116,7 +116,7 @@ export default function ReviewsPage() {
     <div className="min-h-screen bg-black">
       <Navbar />
 
-      <div className="pt-14 sm:pt-16 pb-24">
+      <div className="pt-14 md:pt-24 pb-20 md:pb-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Header */}
