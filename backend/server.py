@@ -2599,7 +2599,7 @@ async def complete_order(order_id: str, current_user: dict = Depends(get_current
         try:
             site_url = os.environ.get("SITE_URL", "https://gameshopnepal.com")
             invoice_url = f"{site_url}/invoice/{order_id}"
-            trustpilot_url = "https://www.trustpilot.com/evaluate/gameshopnepal.com"
+            review_url = f"{site_url}/reviews"
             
             # Credits message
             credits_message = ""
@@ -2638,8 +2638,8 @@ async def complete_order(order_id: str, current_user: dict = Depends(get_current
                     
                     <div style="text-align: center; margin: 30px 0; padding: 20px; background: #2a2a2a; border-radius: 10px;">
                         <p style="color: #ccc; margin-bottom: 15px;">Enjoyed your experience? We'd love your feedback!</p>
-                        <a href="{trustpilot_url}" style="display: inline-block; background: #00b67a; color: #fff; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                            ⭐ Leave a Review on Trustpilot
+                        <a href="{review_url}" style="display: inline-block; background: #F5A623; color: #000; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                            Leave a Review
                         </a>
                     </div>
                     
@@ -2649,7 +2649,7 @@ async def complete_order(order_id: str, current_user: dict = Depends(get_current
                 </div>
             </div>
             """
-            text = f"Order #{order_id[:8]} Complete!\n\nYour order has been completed.\n{'You earned Rs ' + str(int(credits_awarded)) + ' in store credits!' if credits_awarded > 0 else ''}\nView Invoice: {invoice_url}\nLeave a Review: {trustpilot_url}"
+            text = f"Order #{order_id[:8]} Complete!\n\nYour order has been completed.\n{'You earned Rs ' + str(int(credits_awarded)) + ' in store credits!' if credits_awarded > 0 else ''}\nView Invoice: {invoice_url}\nLeave a Review: {review_url}"
             
             from email_service import send_email
             send_email(customer_email, subject, html, text)
