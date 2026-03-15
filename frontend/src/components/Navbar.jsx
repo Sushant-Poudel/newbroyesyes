@@ -145,7 +145,7 @@ export default function Navbar({ notificationBarHeight = 0 }) {
 
       {/* ========== MOBILE: Slim top bar + Bottom tab bar (<md) ========== */}
       {/* Mobile top bar - logo, search, cart */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-black/95 border-b border-white/[0.06]" data-testid="mobile-top-bar">
+      <div className="md:hidden fixed left-0 right-0 z-40 bg-black/95 border-b border-white/[0.06]" style={{ top: notificationBarHeight }} data-testid="mobile-top-bar">
         <div className="flex items-center justify-between px-4 h-12">
           <Link to="/" className="flex-shrink-0" data-testid="nav-logo-mobile">
             <img src={LOGO_URL} alt="GSN" className="h-6" />
