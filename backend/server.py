@@ -2453,6 +2453,17 @@ async def create_order(order_data: CreateOrderRequest):
         "message": "Order created successfully"
     }
 
+@api_router.get("/orders/new-confirmed-count")
+async def get_new_confirmed_count(since: str = None, current_user: dict = Depends(get_current_user)):
+    """Get count of confirmed orders since a given timestamp (for admin sound notifications)"""
+    query = {"status": "Confirmed"}
+    if since:
+        query["created_at"] = {"$gt": since}
+    count = await db.orders.count_documents(query)
+    latest = await db.orders.find_one({"status": "Confirmed"}, {"_id": 0, "created_at": 1}, sort=[("created_at", -1)])
+    return {"count": count, "latest_at": latest.get("created_at") if latest else None}
+
+
 @api_router.get("/orders")
 async def get_local_orders(
     current_user: dict = Depends(get_current_user), 

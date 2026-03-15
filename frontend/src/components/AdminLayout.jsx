@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Package, FolderOpen, Star, FileText, Share2, LogOut, Home, Menu, X, 
   HelpCircle, Bell, BookOpen, CreditCard, Ticket, Settings, BarChart3, Users, ShoppingCart, 
   Shield, Mail, Coins, Gift, UserPlus, Zap, ChevronDown, ChevronRight,
-  Store, Megaphone, Palette, Wrench, ClipboardList, Image, Smartphone
+  Store, Megaphone, Palette, Wrench, ClipboardList, Image, Smartphone, Volume2, VolumeX
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { authAPI } from '@/lib/api';
+import { toast } from 'sonner';
+import axios from 'axios';
 
 const LOGO_URL = "https://customer-assets.emergentagent.com/job_8ec93a6a-4f80-4dde-b760-4bc71482fa44/artifacts/4uqt5osn_Staff.zip%20-%201.png";
 
@@ -97,6 +99,60 @@ export default function AdminLayout({ children, title }) {
   const [userPermissions, setUserPermissions] = useState([]);
   const [isMainAdmin, setIsMainAdmin] = useState(false);
   const [showInstallModal, setShowInstallModal] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(() => localStorage.getItem('admin_sound') !== 'off');
+  const lastConfirmedCount = useRef(null);
+  const audioCtxRef = useRef(null);
+
+  // Play a "ting" notification sound using Web Audio API
+  const playTing = useCallback(() => {
+    try {
+      if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      const ctx = audioCtxRef.current;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1200, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.4);
+    } catch (e) {}
+  }, []);
+
+  // Poll for new confirmed orders
+  useEffect(() => {
+    if (!soundEnabled) return;
+    const token = localStorage.getItem('admin_token');
+    if (!token) return;
+
+    const api = axios.create({ baseURL: process.env.REACT_APP_BACKEND_URL, headers: { Authorization: `Bearer ${token}` } });
+
+    const check = async () => {
+      try {
+        const res = await api.get('/api/orders/new-confirmed-count');
+        const newCount = res.data.count;
+        if (lastConfirmedCount.current !== null && newCount > lastConfirmedCount.current) {
+          playTing();
+          toast('New order confirmed!', { icon: '🔔', duration: 4000 });
+        }
+        lastConfirmedCount.current = newCount;
+      } catch (e) {}
+    };
+
+    check();
+    const interval = setInterval(check, 15000);
+    return () => clearInterval(interval);
+  }, [soundEnabled, playTing]);
+
+  const toggleSound = () => {
+    const next = !soundEnabled;
+    setSoundEnabled(next);
+    localStorage.setItem('admin_sound', next ? 'on' : 'off');
+    if (next) playTing(); // Test sound on enable
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -266,6 +322,17 @@ export default function AdminLayout({ children, title }) {
 
         {/* Footer Actions */}
         <div className="p-3 border-t border-white/10 space-y-1">
+          {/* Sound Toggle */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={toggleSound}
+            className={`w-full justify-start h-9 ${soundEnabled ? 'text-green-400 hover:text-green-300 hover:bg-green-500/10' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
+            data-testid="admin-sound-toggle"
+          >
+            {soundEnabled ? <Volume2 className="h-4 w-4 mr-2" /> : <VolumeX className="h-4 w-4 mr-2" />}
+            {soundEnabled ? 'Sound: On' : 'Sound: Off'}
+          </Button>
           {/* Add to Home Screen - Mobile Only */}
           <div className="lg:hidden">
             <Button 
