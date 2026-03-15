@@ -2704,6 +2704,42 @@ async def complete_order(order_id: str, current_user: dict = Depends(get_current
         }}
     )
     
+    # Decrement variation stock for each item
+    for item in order.get("items", []):
+        qty = item.get("quantity", 1)
+        product_id = item.get("product_id")
+        variation_id = item.get("variation_id")
+        variation_name = item.get("variation")
+        
+        try:
+            if product_id and variation_id:
+                # Match by product_id + variation_id
+                await db.products.update_one(
+                    {"id": product_id, "variations.id": variation_id, "variations.stock": {"$gt": 0}},
+                    {"$inc": {"variations.$.stock": -qty}}
+                )
+            elif product_id and variation_name:
+                # Match by product_id + variation name
+                await db.products.update_one(
+                    {"id": product_id, "variations.name": variation_name, "variations.stock": {"$gt": 0}},
+                    {"$inc": {"variations.$.stock": -qty}}
+                )
+            elif variation_name:
+                # Legacy: match by item name + variation name across all products
+                item_name = item.get("name", "")
+                product = await db.products.find_one(
+                    {"variations.name": variation_name},
+                    {"_id": 0, "id": 1}
+                )
+                if product:
+                    await db.products.update_one(
+                        {"id": product["id"], "variations.name": variation_name, "variations.stock": {"$gt": 0}},
+                        {"$inc": {"variations.$.stock": -qty}}
+                    )
+            logger.info(f"Decremented stock for variation '{variation_name or variation_id}' by {qty}")
+        except Exception as e:
+            logger.warning(f"Failed to decrement stock for item: {e}")
+    
     # Send invoice email to customer if email exists
     if customer_email:
         try:
@@ -4028,6 +4064,33 @@ async def update_order_status(order_id: str, status_data: OrderStatusUpdate, cur
             {"id": order_id},
             {"$set": {"completed_at": datetime.now(timezone.utc).isoformat(), "credits_awarded": credits_awarded}}
         )
+        
+        # Decrement variation stock for each item
+        for item in order.get("items", []):
+            qty = item.get("quantity", 1)
+            pid = item.get("product_id")
+            vid = item.get("variation_id")
+            vname = item.get("variation")
+            try:
+                if pid and vid:
+                    await db.products.update_one(
+                        {"id": pid, "variations.id": vid, "variations.stock": {"$gt": 0}},
+                        {"$inc": {"variations.$.stock": -qty}}
+                    )
+                elif pid and vname:
+                    await db.products.update_one(
+                        {"id": pid, "variations.name": vname, "variations.stock": {"$gt": 0}},
+                        {"$inc": {"variations.$.stock": -qty}}
+                    )
+                elif vname:
+                    product = await db.products.find_one({"variations.name": vname}, {"_id": 0, "id": 1})
+                    if product:
+                        await db.products.update_one(
+                            {"id": product["id"], "variations.name": vname, "variations.stock": {"$gt": 0}},
+                            {"$inc": {"variations.$.stock": -qty}}
+                        )
+            except Exception as e:
+                logger.warning(f"Failed to decrement stock for item: {e}")
         
         # Send invoice email automatically when marked as completed
         if customer_email:
