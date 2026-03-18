@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, Star, CheckCircle, XCircle, Clock, MessageSquare, Gift, Settings } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { Plus, Pencil, Trash2, Star, CheckCircle, XCircle, Clock, MessageSquare, Gift, Download } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,20 @@ import { toast } from 'sonner';
 import { reviewsAPI } from '@/lib/api';
 
 const emptyReview = { reviewer_name: '', rating: 5, comment: '', review_date: '' };
+
+// Draw a 5-point star on canvas
+function drawStar(ctx, cx, cy, outerR, innerR) {
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? outerR : innerR;
+    const angle = (Math.PI / 2) * -1 + (Math.PI / 5) * i;
+    const x = cx + r * Math.cos(angle);
+    const y = cy + r * Math.sin(angle);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
 
 export default function AdminReviews() {
   const [reviews, setReviews] = useState([]);
@@ -59,6 +73,106 @@ export default function AdminReviews() {
       setSavingReward(false);
     }
   };
+
+  // Generate review image for sharing
+  const downloadReviewImage = useCallback((review) => {
+    const canvas = document.createElement('canvas');
+    const W = 1080, H = 1080;
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    // White background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    // Compute aggregate stats for footer
+    const approvedReviews = reviews.filter(r => r.status === 'approved' || !r.status);
+    const totalReviews = approvedReviews.length;
+    const avgRating = totalReviews > 0 ? (approvedReviews.reduce((a, r) => a + r.rating, 0) / totalReviews).toFixed(1) : '5.0';
+
+    // Quote text
+    const comment = `\u201C${review.comment}\u201D`;
+    ctx.fillStyle = '#111111';
+    ctx.font = 'bold 52px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.textAlign = 'left';
+
+    // Word-wrap quote
+    const maxW = W - 160;
+    const words = comment.split(' ');
+    const lines = [];
+    let line = '';
+    for (const word of words) {
+      const test = line ? line + ' ' + word : word;
+      if (ctx.measureText(test).width > maxW && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = test;
+      }
+    }
+    if (line) lines.push(line);
+
+    // Center vertically (above stars)
+    const lineH = 68;
+    const textBlockH = lines.length * lineH;
+    const starsY = 620;
+    const startY = Math.max(80, (starsY - textBlockH) / 2 + 40);
+
+    lines.forEach((l, i) => {
+      ctx.fillText(l, 80, startY + i * lineH);
+    });
+
+    // Stars
+    const starSize = 44;
+    const starGap = 8;
+    const starsStartX = 80;
+    for (let i = 0; i < 5; i++) {
+      const x = starsStartX + i * (starSize + starGap);
+      ctx.fillStyle = i < review.rating ? '#F5A623' : '#e0e0e0';
+      drawStar(ctx, x + starSize / 2, starsY + starSize / 2, starSize / 2, starSize / 4);
+    }
+
+    // "by [Name]"
+    const nameX = starsStartX + 5 * (starSize + starGap) + 16;
+    ctx.fillStyle = '#555555';
+    ctx.font = '36px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillText(`by ${review.reviewer_name}`, nameX, starsY + 35);
+
+    // Separator line
+    const sepY = starsY + 80;
+    ctx.strokeStyle = '#e5e5e5';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(80, sepY);
+    ctx.lineTo(W - 80, sepY);
+    ctx.stroke();
+
+    // Footer: "Rated X.X / 5 | N reviews"
+    ctx.fillStyle = '#333333';
+    ctx.font = '32px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillText(`Rated ${avgRating} / 5  |  ${totalReviews} reviews`, 80, sepY + 55);
+
+    // Brand: star icon + "GameShop Nepal"
+    const brandY = sepY + 110;
+    ctx.fillStyle = '#F5A623';
+    drawStar(ctx, 95, brandY, 16, 8);
+    ctx.fillStyle = '#333333';
+    ctx.font = 'bold 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillText('GameShop Nepal', 120, brandY + 10);
+
+    // "gameshopnepal.com" below brand
+    ctx.fillStyle = '#999999';
+    ctx.font = '24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillText('gameshopnepal.com', 80, brandY + 55);
+
+    // Download
+    const link = document.createElement('a');
+    link.download = `review-${review.reviewer_name.replace(/\s+/g, '-').toLowerCase()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    toast.success('Review image downloaded!');
+  }, [reviews]);
 
   const handleOpenDialog = (review = null) => {
     if (review) { 
@@ -296,6 +410,9 @@ export default function AdminReviews() {
                         <Pencil className="h-4 w-4" />
                       </Button>
                     )}
+                    <Button variant="ghost" size="sm" onClick={() => downloadReviewImage(review)} className="text-white/60 hover:text-amber-500 p-2" data-testid={`download-review-${review.id}`} title="Download as image">
+                      <Download className="h-4 w-4" />
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(review.id)} className="text-white/60 hover:text-red-500 p-2" data-testid={`delete-review-${review.id}`}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
