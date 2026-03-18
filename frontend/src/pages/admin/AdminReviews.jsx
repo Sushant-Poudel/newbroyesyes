@@ -84,46 +84,49 @@ export default function AdminReviews() {
       canvas.height = H;
       const ctx = canvas.getContext('2d');
       const FONT = '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif';
+      const GOLD = '#F5A623';
+      const BG = '#1a1a1e';
+      const pad = 72;
 
       // Compute aggregate stats
       const approvedReviews = reviews.filter(r => r.status === 'approved' || !r.status);
       const totalReviews = approvedReviews.length;
       const avgRating = totalReviews > 0 ? (approvedReviews.reduce((a, r) => a + r.rating, 0) / totalReviews).toFixed(1) : '5.0';
 
-      // === SECTION 1: Black top with logo + rating badge ===
-      const topH = 420;
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, W, topH);
+      // === FULL DARK BACKGROUND ===
+      ctx.fillStyle = BG;
+      ctx.fillRect(0, 0, W, H);
 
-      // Draw logo centered
-      const logoSize = 280;
+      // === LOGO (centered at top) ===
+      const logoSize = 300;
       const logoX = (W - logoSize) / 2;
-      const logoY = 40;
+      const logoY = 36;
       ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
 
-      // Rating badge (white rounded rect, centered below logo)
-      const badgeText = `Rated ${avgRating} / 5  |  ${totalReviews} reviews`;
-      ctx.font = `28px ${FONT}`;
-      const badgeW = ctx.measureText(badgeText).width + 48;
-      const badgeH = 48;
+      // === RATING BADGE (outlined pill, centered below logo) ===
+      const badgeStarChar = '\u2605';
+      const badgeText = `Rated ${avgRating} ${badgeStarChar} / 5 | ${totalReviews} reviews`;
+      ctx.font = `26px ${FONT}`;
+      const badgeW = ctx.measureText(badgeText).width + 52;
+      const badgeH = 44;
       const badgeX = (W - badgeW) / 2;
-      const badgeY = logoY + logoSize + 24;
-      ctx.fillStyle = '#ffffff';
+      const badgeY = logoY + logoSize + 16;
+      // Outlined pill
+      ctx.strokeStyle = GOLD;
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 6);
-      ctx.fill();
-      ctx.fillStyle = '#222222';
+      ctx.roundRect(badgeX, badgeY, badgeW, badgeH, badgeH / 2);
+      ctx.stroke();
+      // Badge text
+      ctx.fillStyle = '#cccccc';
       ctx.textAlign = 'center';
-      ctx.fillText(badgeText, W / 2, badgeY + 33);
+      ctx.fillText(badgeText, W / 2, badgeY + 30);
 
-      // === SECTION 2: White middle with review + stars ===
-      const midY = topH;
-      // Word-wrap the review text
+      // === REVIEW QUOTE TEXT (white on dark) ===
       const comment = `\u201C${review.comment}\u201D`;
-      ctx.fillStyle = '#111111';
-      ctx.font = `bold italic 46px ${FONT}`;
+      ctx.font = `bold 50px ${FONT}`;
       ctx.textAlign = 'left';
-      const pad = 72;
+      ctx.fillStyle = '#ffffff';
       const maxTW = W - pad * 2;
       const words = comment.split(' ');
       const lines = [];
@@ -135,68 +138,69 @@ export default function AdminReviews() {
       }
       if (line) lines.push(line);
 
-      const lineH = 60;
-      const starsRowH = 56;
-      const textBlockH = lines.length * lineH;
-      const contentH = textBlockH + 24 + starsRowH;
-      const midH = contentH + 72;
-      const botY = midY + midH;
-
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, midY, W, midH);
-
-      // Draw quote text
-      ctx.fillStyle = '#111111';
-      ctx.font = `bold italic 46px ${FONT}`;
-      const textStartY = midY + 44;
+      const lineH = 66;
+      const textStartY = badgeY + badgeH + 52;
       lines.forEach((l, i) => {
         ctx.fillText(l, pad, textStartY + i * lineH);
       });
 
-      // Stars + "by Name"
-      const starsY = textStartY + textBlockH + 20;
-      const starSize = 36;
-      const starGap = 6;
+      // === STARS + "by Name" ===
+      const starsY = textStartY + lines.length * lineH + 16;
+      const starSize = 32;
+      const starGap = 5;
       for (let i = 0; i < 5; i++) {
         const sx = pad + i * (starSize + starGap);
-        ctx.fillStyle = i < review.rating ? '#F5A623' : '#e0e0e0';
+        ctx.fillStyle = i < review.rating ? GOLD : '#555555';
         drawStar(ctx, sx + starSize / 2, starsY + starSize / 2, starSize / 2, starSize / 4);
       }
-      const nameX = pad + 5 * (starSize + starGap) + 14;
-      ctx.fillStyle = '#555555';
-      ctx.font = `32px ${FONT}`;
-      ctx.textAlign = 'left';
-      ctx.fillText(`by ${review.reviewer_name}`, nameX, starsY + 28);
-
-      // === SECTION 3: Black bottom with brand card ===
-      const botH = H - botY;
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, botY, W, botH);
-
-      // White brand card centered
-      const cardW = 380;
-      const cardH = 90;
-      const cardX = (W - cardW) / 2;
-      const cardY = botY + (botH - cardH) / 2 - 10;
+      const nameX = pad + 5 * (starSize + starGap) + 16;
       ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.roundRect(cardX, cardY, cardW, cardH, 10);
-      ctx.fill();
-
-      // Star icon in card
-      ctx.fillStyle = '#F5A623';
-      drawStar(ctx, cardX + 32, cardY + 30, 14, 7);
-
-      // "GameShop Nepal" in card
-      ctx.fillStyle = '#111111';
       ctx.font = `bold 30px ${FONT}`;
       ctx.textAlign = 'left';
-      ctx.fillText('GameShop Nepal', cardX + 56, cardY + 38);
+      ctx.fillText(`by ${review.reviewer_name}`, nameX, starsY + 26);
 
-      // "gameshopnepal.com" below
-      ctx.fillStyle = '#888888';
-      ctx.font = `22px ${FONT}`;
-      ctx.fillText('gameshopnepal.com', cardX + 56, cardY + 68);
+      // === BOTTOM BRANDING ===
+      // Gold dotted line
+      const lineY = starsY + starSize + 48;
+      ctx.strokeStyle = GOLD;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      ctx.moveTo(pad, lineY);
+      ctx.lineTo(W - pad, lineY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // "GAMESHOP NEPAL" large gold bold text, centered
+      ctx.fillStyle = GOLD;
+      ctx.font = `bold italic 56px ${FONT}`;
+      ctx.textAlign = 'center';
+      ctx.fillText('GAMESHOP NEPAL', W / 2, lineY + 64);
+
+      // Globe icon (circle with cross) + URL
+      const urlY = lineY + 100;
+      ctx.strokeStyle = '#aaaaaa';
+      ctx.lineWidth = 1.5;
+      const gR = 12;
+      const gX = W / 2 - 140;
+      // Globe circle
+      ctx.beginPath();
+      ctx.arc(gX, urlY, gR, 0, Math.PI * 2);
+      ctx.stroke();
+      // Globe horizontal line
+      ctx.beginPath();
+      ctx.moveTo(gX - gR, urlY);
+      ctx.lineTo(gX + gR, urlY);
+      ctx.stroke();
+      // Globe vertical ellipse
+      ctx.beginPath();
+      ctx.ellipse(gX, urlY, gR * 0.5, gR, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = '#cccccc';
+      ctx.font = `24px ${FONT}`;
+      ctx.textAlign = 'left';
+      ctx.fillText('https://gameshopnepal.com', gX + gR + 10, urlY + 8);
 
       // Download
       const link = document.createElement('a');
