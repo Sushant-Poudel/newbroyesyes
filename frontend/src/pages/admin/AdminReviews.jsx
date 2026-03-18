@@ -85,48 +85,24 @@ export default function AdminReviews() {
       const ctx = canvas.getContext('2d');
       const FONT = '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif';
       const GOLD = '#F5A623';
-      const BG = '#000000';
       const pad = 72;
 
-      // Compute aggregate stats
       const approvedReviews = reviews.filter(r => r.status === 'approved' || !r.status);
       const totalReviews = approvedReviews.length;
       const avgRating = totalReviews > 0 ? (approvedReviews.reduce((a, r) => a + r.rating, 0) / totalReviews).toFixed(1) : '5.0';
 
-      // === FULL DARK BACKGROUND ===
-      ctx.fillStyle = BG;
+      // Black background
+      ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, W, H);
 
-      // === LOGO (centered at top) ===
+      // Pre-calculate heights for even spacing
       const logoSize = 300;
-      const logoX = (W - logoSize) / 2;
-      const logoY = 36;
-      ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
-
-      // === RATING BADGE (outlined pill, centered below logo) ===
-      const badgeStarChar = '\u2605';
-      const badgeText = `Rated ${avgRating} ${badgeStarChar} / 5 | ${totalReviews} reviews`;
-      ctx.font = `26px ${FONT}`;
-      const badgeW = ctx.measureText(badgeText).width + 52;
       const badgeH = 44;
-      const badgeX = (W - badgeW) / 2;
-      const badgeY = logoY + logoSize + 16;
-      // Outlined pill
-      ctx.strokeStyle = GOLD;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.roundRect(badgeX, badgeY, badgeW, badgeH, badgeH / 2);
-      ctx.stroke();
-      // Badge text
-      ctx.fillStyle = '#cccccc';
-      ctx.textAlign = 'center';
-      ctx.fillText(badgeText, W / 2, badgeY + 30);
+      const starSize = 32;
+      const brandingH = 130;
 
-      // === REVIEW QUOTE TEXT (white on dark) ===
       const comment = `\u201C${review.comment}\u201D`;
       ctx.font = `bold 50px ${FONT}`;
-      ctx.textAlign = 'left';
-      ctx.fillStyle = '#ffffff';
       const maxTW = W - pad * 2;
       const words = comment.split(' ');
       const lines = [];
@@ -137,66 +113,81 @@ export default function AdminReviews() {
         else { line = test; }
       }
       if (line) lines.push(line);
-
       const lineH = 66;
-      const textStartY = badgeY + badgeH + 52;
-      lines.forEach((l, i) => {
-        ctx.fillText(l, pad, textStartY + i * lineH);
-      });
+      const textBlockH = lines.length * lineH;
 
-      // === STARS + "by Name" ===
-      const starsY = textStartY + lines.length * lineH + 16;
-      const starSize = 32;
-      const starGap = 5;
+      const totalContentH = logoSize + badgeH + textBlockH + starSize + brandingH;
+      const spacing = 50; // fixed spacing between elements
+      const totalWithSpacing = totalContentH + spacing * 4; // 4 gaps between 5 groups
+      const startY = Math.max(30, (H - totalWithSpacing) / 2);
+
+      let curY = startY;
+      ctx.drawImage(logoImg, (W - logoSize) / 2, curY, logoSize, logoSize);
+      curY += logoSize + spacing;
+
+      // Rating badge
+      const badgeStarChar = '\u2605';
+      const badgeText = `Rated ${avgRating} ${badgeStarChar} / 5 | ${totalReviews} reviews`;
+      ctx.font = `26px ${FONT}`;
+      const badgeW = ctx.measureText(badgeText).width + 52;
+      const badgeX = (W - badgeW) / 2;
+      ctx.strokeStyle = GOLD;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(badgeX, curY, badgeW, badgeH, badgeH / 2);
+      ctx.stroke();
+      ctx.fillStyle = '#cccccc';
+      ctx.textAlign = 'center';
+      ctx.fillText(badgeText, W / 2, curY + 30);
+      curY += badgeH + spacing;
+
+      // Review text
+      ctx.font = `bold 50px ${FONT}`;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#ffffff';
+      lines.forEach((l, i) => {
+        ctx.fillText(l, pad, curY + i * lineH);
+      });
+      curY += textBlockH + spacing;
+
+      // Stars + name
+      const starGapPx = 5;
       for (let i = 0; i < 5; i++) {
-        const sx = pad + i * (starSize + starGap);
+        const sx = pad + i * (starSize + starGapPx);
         ctx.fillStyle = i < review.rating ? GOLD : '#555555';
-        drawStar(ctx, sx + starSize / 2, starsY + starSize / 2, starSize / 2, starSize / 4);
+        drawStar(ctx, sx + starSize / 2, curY + starSize / 2, starSize / 2, starSize / 4);
       }
-      const nameX = pad + 5 * (starSize + starGap) + 16;
       ctx.fillStyle = '#ffffff';
       ctx.font = `bold 30px ${FONT}`;
       ctx.textAlign = 'left';
-      ctx.fillText(`by ${review.reviewer_name}`, nameX, starsY + 26);
+      ctx.fillText(`by ${review.reviewer_name}`, pad + 5 * (starSize + starGapPx) + 16, curY + 26);
+      curY += starSize + spacing;
 
-      // === BOTTOM BRANDING ===
-      // Gold dotted line
-      const lineY = starsY + starSize + 48;
+      // Dotted gold line
       ctx.strokeStyle = GOLD;
       ctx.lineWidth = 2;
       ctx.setLineDash([6, 6]);
       ctx.beginPath();
-      ctx.moveTo(pad, lineY);
-      ctx.lineTo(W - pad, lineY);
+      ctx.moveTo(pad, curY);
+      ctx.lineTo(W - pad, curY);
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // "GAMESHOP NEPAL" large gold bold text, centered
+      // GAMESHOP NEPAL
       ctx.fillStyle = GOLD;
       ctx.font = `bold italic 56px ${FONT}`;
       ctx.textAlign = 'center';
-      ctx.fillText('GAMESHOP NEPAL', W / 2, lineY + 64);
+      ctx.fillText('GAMESHOP NEPAL', W / 2, curY + 64);
 
-      // Globe icon (circle with cross) + URL
-      const urlY = lineY + 100;
+      // Globe + URL
+      const urlY = curY + 100;
       ctx.strokeStyle = '#aaaaaa';
       ctx.lineWidth = 1.5;
       const gR = 12;
       const gX = W / 2 - 140;
-      // Globe circle
-      ctx.beginPath();
-      ctx.arc(gX, urlY, gR, 0, Math.PI * 2);
-      ctx.stroke();
-      // Globe horizontal line
-      ctx.beginPath();
-      ctx.moveTo(gX - gR, urlY);
-      ctx.lineTo(gX + gR, urlY);
-      ctx.stroke();
-      // Globe vertical ellipse
-      ctx.beginPath();
-      ctx.ellipse(gX, urlY, gR * 0.5, gR, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
+      ctx.beginPath(); ctx.arc(gX, urlY, gR, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(gX - gR, urlY); ctx.lineTo(gX + gR, urlY); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(gX, urlY, gR * 0.5, gR, 0, 0, Math.PI * 2); ctx.stroke();
       ctx.fillStyle = '#cccccc';
       ctx.font = `24px ${FONT}`;
       ctx.textAlign = 'left';
