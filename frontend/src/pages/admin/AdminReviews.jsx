@@ -75,103 +75,143 @@ export default function AdminReviews() {
   };
 
   // Generate review image for sharing
+  const LOGO_URL = "https://customer-assets.emergentagent.com/job_8ec93a6a-4f80-4dde-b760-4bc71482fa44/artifacts/4uqt5osn_Staff.zip%20-%201.png";
+
   const downloadReviewImage = useCallback((review) => {
-    const canvas = document.createElement('canvas');
-    const W = 1080, H = 1080;
-    canvas.width = W;
-    canvas.height = H;
-    const ctx = canvas.getContext('2d');
+    const logoImg = new Image();
+    logoImg.crossOrigin = 'anonymous';
+    logoImg.onload = () => {
+      const canvas = document.createElement('canvas');
+      const W = 1080, H = 1080;
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext('2d');
+      const FONT = '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif';
 
-    // White background
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, W, H);
+      // Compute aggregate stats
+      const approvedReviews = reviews.filter(r => r.status === 'approved' || !r.status);
+      const totalReviews = approvedReviews.length;
+      const avgRating = totalReviews > 0 ? (approvedReviews.reduce((a, r) => a + r.rating, 0) / totalReviews).toFixed(1) : '5.0';
 
-    // Compute aggregate stats for footer
-    const approvedReviews = reviews.filter(r => r.status === 'approved' || !r.status);
-    const totalReviews = approvedReviews.length;
-    const avgRating = totalReviews > 0 ? (approvedReviews.reduce((a, r) => a + r.rating, 0) / totalReviews).toFixed(1) : '5.0';
+      // === SECTION 1: Black top with logo + rating badge ===
+      const topH = 420;
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, W, topH);
 
-    // Quote text
-    const comment = `\u201C${review.comment}\u201D`;
-    ctx.fillStyle = '#111111';
-    ctx.font = 'bold 52px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-    ctx.textAlign = 'left';
+      // Draw logo centered
+      const logoSize = 280;
+      const logoX = (W - logoSize) / 2;
+      const logoY = 40;
+      ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
 
-    // Word-wrap quote
-    const maxW = W - 160;
-    const words = comment.split(' ');
-    const lines = [];
-    let line = '';
-    for (const word of words) {
-      const test = line ? line + ' ' + word : word;
-      if (ctx.measureText(test).width > maxW && line) {
-        lines.push(line);
-        line = word;
-      } else {
-        line = test;
+      // Rating badge (white rounded rect, centered below logo)
+      const badgeText = `Rated ${avgRating} / 5  |  ${totalReviews} reviews`;
+      ctx.font = `28px ${FONT}`;
+      const badgeW = ctx.measureText(badgeText).width + 48;
+      const badgeH = 48;
+      const badgeX = (W - badgeW) / 2;
+      const badgeY = logoY + logoSize + 24;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 6);
+      ctx.fill();
+      ctx.fillStyle = '#222222';
+      ctx.textAlign = 'center';
+      ctx.fillText(badgeText, W / 2, badgeY + 33);
+
+      // === SECTION 2: White middle with review + stars ===
+      const midY = topH;
+      // Word-wrap the review text
+      const comment = `\u201C${review.comment}\u201D`;
+      ctx.fillStyle = '#111111';
+      ctx.font = `bold italic 46px ${FONT}`;
+      ctx.textAlign = 'left';
+      const pad = 72;
+      const maxTW = W - pad * 2;
+      const words = comment.split(' ');
+      const lines = [];
+      let line = '';
+      for (const word of words) {
+        const test = line ? line + ' ' + word : word;
+        if (ctx.measureText(test).width > maxTW && line) { lines.push(line); line = word; }
+        else { line = test; }
       }
-    }
-    if (line) lines.push(line);
+      if (line) lines.push(line);
 
-    // Center vertically (above stars)
-    const lineH = 68;
-    const textBlockH = lines.length * lineH;
-    const starsY = 620;
-    const startY = Math.max(80, (starsY - textBlockH) / 2 + 40);
+      const lineH = 60;
+      const starsRowH = 56;
+      const textBlockH = lines.length * lineH;
+      const contentH = textBlockH + 24 + starsRowH;
+      const midH = contentH + 72;
+      const botY = midY + midH;
 
-    lines.forEach((l, i) => {
-      ctx.fillText(l, 80, startY + i * lineH);
-    });
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, midY, W, midH);
 
-    // Stars
-    const starSize = 44;
-    const starGap = 8;
-    const starsStartX = 80;
-    for (let i = 0; i < 5; i++) {
-      const x = starsStartX + i * (starSize + starGap);
-      ctx.fillStyle = i < review.rating ? '#F5A623' : '#e0e0e0';
-      drawStar(ctx, x + starSize / 2, starsY + starSize / 2, starSize / 2, starSize / 4);
-    }
+      // Draw quote text
+      ctx.fillStyle = '#111111';
+      ctx.font = `bold italic 46px ${FONT}`;
+      const textStartY = midY + 44;
+      lines.forEach((l, i) => {
+        ctx.fillText(l, pad, textStartY + i * lineH);
+      });
 
-    // "by [Name]"
-    const nameX = starsStartX + 5 * (starSize + starGap) + 16;
-    ctx.fillStyle = '#555555';
-    ctx.font = '36px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-    ctx.fillText(`by ${review.reviewer_name}`, nameX, starsY + 35);
+      // Stars + "by Name"
+      const starsY = textStartY + textBlockH + 20;
+      const starSize = 36;
+      const starGap = 6;
+      for (let i = 0; i < 5; i++) {
+        const sx = pad + i * (starSize + starGap);
+        ctx.fillStyle = i < review.rating ? '#F5A623' : '#e0e0e0';
+        drawStar(ctx, sx + starSize / 2, starsY + starSize / 2, starSize / 2, starSize / 4);
+      }
+      const nameX = pad + 5 * (starSize + starGap) + 14;
+      ctx.fillStyle = '#555555';
+      ctx.font = `32px ${FONT}`;
+      ctx.textAlign = 'left';
+      ctx.fillText(`by ${review.reviewer_name}`, nameX, starsY + 28);
 
-    // Separator line
-    const sepY = starsY + 80;
-    ctx.strokeStyle = '#e5e5e5';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(80, sepY);
-    ctx.lineTo(W - 80, sepY);
-    ctx.stroke();
+      // === SECTION 3: Black bottom with brand card ===
+      const botH = H - botY;
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, botY, W, botH);
 
-    // Footer: "Rated X.X / 5 | N reviews"
-    ctx.fillStyle = '#333333';
-    ctx.font = '32px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-    ctx.fillText(`Rated ${avgRating} / 5  |  ${totalReviews} reviews`, 80, sepY + 55);
+      // White brand card centered
+      const cardW = 380;
+      const cardH = 90;
+      const cardX = (W - cardW) / 2;
+      const cardY = botY + (botH - cardH) / 2 - 10;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.roundRect(cardX, cardY, cardW, cardH, 10);
+      ctx.fill();
 
-    // Brand: star icon + "GameShop Nepal"
-    const brandY = sepY + 110;
-    ctx.fillStyle = '#F5A623';
-    drawStar(ctx, 95, brandY, 16, 8);
-    ctx.fillStyle = '#333333';
-    ctx.font = 'bold 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-    ctx.fillText('GameShop Nepal', 120, brandY + 10);
+      // Star icon in card
+      ctx.fillStyle = '#F5A623';
+      drawStar(ctx, cardX + 32, cardY + 30, 14, 7);
 
-    // "gameshopnepal.com" below brand
-    ctx.fillStyle = '#999999';
-    ctx.font = '24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-    ctx.fillText('gameshopnepal.com', 80, brandY + 55);
+      // "GameShop Nepal" in card
+      ctx.fillStyle = '#111111';
+      ctx.font = `bold 30px ${FONT}`;
+      ctx.textAlign = 'left';
+      ctx.fillText('GameShop Nepal', cardX + 56, cardY + 38);
 
-    // Download
-    const link = document.createElement('a');
-    link.download = `review-${review.reviewer_name.replace(/\s+/g, '-').toLowerCase()}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    toast.success('Review image downloaded!');
+      // "gameshopnepal.com" below
+      ctx.fillStyle = '#888888';
+      ctx.font = `22px ${FONT}`;
+      ctx.fillText('gameshopnepal.com', cardX + 56, cardY + 68);
+
+      // Download
+      const link = document.createElement('a');
+      link.download = `review-${review.reviewer_name.replace(/\s+/g, '-').toLowerCase()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      toast.success('Review image downloaded!');
+    };
+    logoImg.onerror = () => {
+      toast.error('Failed to load logo image');
+    };
+    logoImg.src = LOGO_URL;
   }, [reviews]);
 
   const handleOpenDialog = (review = null) => {
