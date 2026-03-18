@@ -10,7 +10,7 @@ A premium, dark-themed e-commerce website for digital goods, built with React (f
 - **Auth**: JWT tokens (admin + customer), Google OAuth (customer)
 - **Integrations**: Discord webhooks, ImgBB image hosting, Google Sheets
 
-## Architecture (Post-Refactor)
+## Architecture (Post-Refactor - March 2026)
 ```
 /app/backend/
 ├── server.py              # Slim app orchestrator (160 lines)
@@ -29,10 +29,7 @@ A premium, dark-themed e-commerce website for digital goods, built with React (f
 │   ├── analytics.py       # Analytics dashboard + audit logs
 │   ├── engagement.py      # Rewards, referral, newsletter, wishlist
 │   └── chatbot.py         # Chatbot, reseller plans, SEO
-├── models/
-│   └── schemas.py         # Shared Pydantic models
-├── services/
-│   └── __init__.py
+├── models/schemas.py
 ├── email_service.py
 ├── discord_service.py
 ├── imgbb_service.py
@@ -41,7 +38,7 @@ A premium, dark-themed e-commerce website for digital goods, built with React (f
 └── google_sheets_service.py
 ```
 
-## Implemented Features
+## Implemented Features (Complete)
 - Homepage with product grid, customer reviews, ads
 - Product pages with variations, custom fields
 - Multi-step checkout with WhatsApp redirect
@@ -58,8 +55,9 @@ A premium, dark-themed e-commerce website for digital goods, built with React (f
 - Blog, FAQ, static pages
 - PWA support
 - Sound notifications for new orders (admin)
-- Downloadable review images (admin)
+- **Downloadable review images** (admin) - Canvas-based, layout: GSN logo top (black bg), rating badge, review quote (white bg), stars + name, GameShop Nepal branding bottom (black bg)
 - Bottom tab bar (mobile) + dynamic island nav (desktop)
+- **Backend refactored** from 6344-line monolith to 11 modular route files
 
 ## Prioritized Backlog
 

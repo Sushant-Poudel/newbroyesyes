@@ -75,11 +75,8 @@ export default function AdminReviews() {
   };
 
   // Generate review image for sharing
-  const LOGO_URL = "https://customer-assets.emergentagent.com/job_8ec93a6a-4f80-4dde-b760-4bc71482fa44/artifacts/4uqt5osn_Staff.zip%20-%201.png";
-
   const downloadReviewImage = useCallback((review) => {
     const logoImg = new Image();
-    logoImg.crossOrigin = 'anonymous';
     logoImg.onload = () => {
       const canvas = document.createElement('canvas');
       const W = 1080, H = 1080;
@@ -211,7 +208,7 @@ export default function AdminReviews() {
     logoImg.onerror = () => {
       toast.error('Failed to load logo image');
     };
-    logoImg.src = LOGO_URL;
+    logoImg.src = '/favicon.png';
   }, [reviews]);
 
   const handleOpenDialog = (review = null) => {
