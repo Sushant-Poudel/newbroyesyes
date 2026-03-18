@@ -15,180 +15,157 @@ PRODUCT REQUIREMENTS:
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack e-commerce application (FastAPI + React). This session saw extensive development across the application, including:
-- **Core Feature Completion:** Implemented Add to Home Screen for the admin panel and fixed an issue preventing Discord webhooks from showing on the product edit page.
-- **Feature Enhancements:** Added stock management for product variations, implemented a post-Google login flow to collect user's name and WhatsApp number, added advanced sorting to the admin customer list, and integrated color customization into the newsletter tool.
-- **UI/UX Improvements:** Fixed multiple navbar layout issues on mobile devices and cleaned up navigation links.
-- **Code Health & Deployment readiness:** Removed dead code, added a  endpoint to pass deployment checks, moved hardcoded keys to environment variables, and fixed numerous linting errors.
-- **Bug Fixes:** Investigated and hardened the payment screenshot upload flow, adding better error handling and support for HEIC/HEIF image formats.
-- **New Features (In Progress):** Started implementing new admin analytics features, including a daily sales summary email and a peak order hours chart.
+A full-stack FastAPI and React e-commerce application. In this session, the agent successfully replaced the external Trustpilot system with a full-featured, on-site review system. This included a customer-facing review page, admin management (approval/rejection), and a new feature to automatically reward customers with a discount code for approved reviews.
+
+Significant UI/UX and architectural improvements were also made:
+- A major bug preventing variant stock from decrementing on order completion was fixed.
+- The navigation was redesigned to be a bottom tab bar on mobile and a floating dynamic island on desktop.
+- UI polish was added across the app with micro-animations, glassmorphism effects, skeleton loaders, and a new sound notification for admins on new orders.
+- Multiple bugs were fixed, including a critical review eligibility issue, and the application's deployment readiness was confirmed.
 
 **Last working item**:
--   **Last item agent was working:** The agent was implementing three admin experience enhancements requested by the user:
-    1.  **Daily Sales Summary:** An automated daily email with sales stats. The backend scheduler and email logic are in place.
-    2.  **Peak Hours Chart:** A chart on the admin dashboard to visualize when most orders are placed. The backend endpoint and frontend component have been created.
-    3.  **Quick Order Actions:** One-click buttons on the admin orders page. This part has not been started.
--   **Status:** IN PROGRESS
+-   **Last item agent was working:** The user requested a specific layout for a downloadable review image that admins can generate. The agent re-implemented the canvas-based image generation logic in the  component to match the user's new design.
+-   **Status:** USER VERIFICATION PENDING
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** both
-    -   **Backend:** Use  to manually trigger the daily summary () and verify the email is sent. Test the  endpoint.
-    -   **Frontend:** Use the screenshot tool to verify the Peak Hours chart renders correctly on the  page.
+-   **Which testing method agent to use?** Frontend testing agent (The screenshot tool has been unreliable with the admin login flow). The test should focus on the Admin Reviews page and verify the downloaded image format and content.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1:** The user reported an issue where the admin analytics dashboard doesn't always show data for Today or Last 7 days correctly. This is a recurring issue from a previous session that has not been addressed. (Priority: P1)
-
-**Issues Detail:**
--   **Issue 1:**
-    -   **Attempted fixes:** None in this session.
-    -   **Next debug checklist:** The backend API () was previously confirmed to return correct data. The issue is likely in the frontend.
-        1.  Investigate state management in .
-        2.  Check how the date range filter interacts with the data fetching  hook and the Recharts components.
-        3.  Console log the data being passed to the charts when the filter is changed.
-    -   **Why fix this issue and what will be achieved with the fix?** Fixing this will ensure admins see accurate, real-time visit and sales data, which is crucial for business monitoring.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** Frontend
-    -   **Blocked on other issue:** None
+There are no known pending issues.
 
 **In progress Task List**:
--   **Task 1:** Complete Admin Experience Enhancements (Priority: P0)
-    -   **Where to resume:**
-        1.  **Peak Hours Chart:** The component  is integrated into . Verify it visually to ensure it fetches data and renders correctly.
-        2.  **Daily Sales Summary:** The backend scheduler () and email service () are implemented. Verify the scheduler runs and sends the email correctly. Consider adding a Send Test button in the admin panel.
-        3.  **Quick Order Actions:** Implement new action buttons (e.g., Mark Completed, Send WhatsApp) for each order in . This will require new backend logic.
-    -   **What will be achieved with this?** Admins will gain valuable business insights (peak hours), receive automated summaries, and have a more efficient workflow for managing orders.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** Both
-    -   **Blocked on something:** None
+There are no tasks currently in progress.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-  - **(P0) Critical Refactoring:** Break down the monolithic  (>5800 lines) into modular  files (e.g., , ). The agent started creating the directory structure but did not complete the work. This is essential for maintainability.
-  - **(P1) Reorder Product Variations:** Allow admins to drag-and-drop to reorder product variations in the admin panel.
-  - **(P2) Flash Sales Timer:** Implement a countdown timer for special deals to create urgency.
-  - **(P2) Product Bundles:** Allow creating and selling combo deals.
+    - **(P0) Critical Refactoring:** Break down the monolithic  (>6000 lines) into modular  files. This is the most critical technical debt and should be addressed immediately.
+    - **(P1) Reorder Product Variations:** Allow admins to drag-and-drop to reorder product variations in the admin panel.
+    - **(P2) Flash Sales Timer:** Implement a countdown timer for special deals.
+    - **(P2) Product Bundles:** Allow creating and selling combo deals.
 
 - **Future Tasks:**
-  - Live purchase ticker.
-  - eSewa/Khalti payment gateway integration.
-  - Enhanced Loyalty/Rewards and Referral Programs.
-  - Public Order Tracking Page.
-  - Trustpilot / Take.app integrations.
-  - Enhance FAQ Page with categorization and search.
-  - Help Center/Knowledge Base.
+    - Live purchase ticker.
+    - eSewa/Khalti payment gateway integration.
+    - Enhanced Loyalty/Rewards and Referral Programs.
+    - Public Order Tracking Page.
+    - Take.app integration.
+    - Enhance FAQ Page with categorization and search.
+    - Help Center/Knowledge Base.
 
 **Completed work in this session**
-- **PWA for Admin Panel:** Enabled the Add to Home Screen feature in the admin section.
-- **Discord Webhook Fix:** Ensured connected webhooks are correctly displayed on the product edit page.
-- **Product Variation Stock:** Implemented a full-stack stock management system for product variations.
-- **Google Auth Flow:** Added a mandatory post-login step to collect a user's name and WhatsApp number.
-- **Customer Management UI:** Added advanced sorting (Newest, Most Spent, Most Orders) and ranking badges to the admin customer list.
-- **Newsletter Color Customization:** Admins can now customize the colors of email templates.
-- **UI/UX Fixes:** Resolved multiple mobile navbar layout bugs and removed the About link.
-- **Feature Implementation:** Added a sidebar ad slot on the homepage and displayed variation-specific stock on the public product page.
-- **Code Health & Deployment:**
-    - Removed dead code from a previous Google OAuth implementation.
-    - Added  endpoint to satisfy deployment readiness checks.
-    - Moved the Google Client ID to a frontend environment variable.
-    - Fixed several Python linting errors.
-- **Bug Fix & Hardening:** Improved the payment screenshot upload flow with better error handling and HEIC/HEIF image support.
+- **On-Site Review System:**
+    - Implemented a native review system ( page), removing the dependency on Trustpilot.
+    - Created backend endpoints for customers to submit reviews and for the public to view approved reviews.
+    - Updated the admin panel for review moderation (approve/reject).
+    - Updated all order completion emails to link to the new on-site review page ().
+- **Review Reward Feature:**
+    - Implemented an admin-configurable feature to reward customers with a discount for leaving a review.
+    - The system automatically generates a unique, single-use promo code when an admin approves a review.
+- **Critical Bug Fixes:**
+    - **Stock Decrement:** Fixed a critical bug where product variant stock was not decreasing on order completion. Logic was added to both order completion paths in .
+    - **Review Eligibility:** Fixed a bug where customers with Confirmed orders couldn't leave reviews. The backend check now includes , , and  statuses. Also resolved a token conflict where the  would overwrite the , preventing logged-in admins from being recognized as customers.
+- **UI/UX & Design Enhancements:**
+    - **Navigation Redesign:** Re-architected the navbar to be a fixed bottom tab bar on mobile and a floating dynamic island style bar at the top on desktop.
+    - **Micro-animations:** Added staggered loading animations for product grids, hover effects, and smooth page transitions.
+    - **Modern Aesthetics:** Implemented glassmorphism cards, a refined dark mode palette, and an enhanced footer with better organization.
+    - **Polished UX:** Replaced spinners with shimmer-effect skeleton loaders and created custom empty state components for the cart and review pages.
+- **Admin Experience:**
+    - **Sound Notifications:** Added a ting sound effect that plays for admins when a new order is confirmed, with a toggle switch in the sidebar.
+    - **Downloadable Review Images:** Created a feature for admins to download a stylized PNG image of any customer review to share on social media. The design was updated based on user feedback.
+- **General Maintenance:**
+    - Renamed Daily Rewards to Rewards throughout the app.
+    - Fixed a UI bug where the notification bar would hide the search and cart buttons on mobile.
+    - Patched an API endpoint () that returned , causing frontend errors.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Analytics Data Display**
-    -   **Description:** The user reported that the admin analytics dashboard doesn't always show data for Today or Last 7 days correctly. This was not addressed in this session.
-    -   **Debug checklist:** The issue is likely in the frontend. Investigate state management and data rendering in . Check how the date range filter interacts with the data fetching and chart components.
-    -   **Why to solve this issue and what will be achieved with this?** Fixing this will ensure admins see accurate, real-time data for business monitoring.
-    -   **Should Test frontend/backend/both after fix:** Frontend
-    -   **Is recurring issue?** Y
+- None.
 
 **Known issue recurrence from previous fork**
--   None.
+- None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Backend**: FastAPI, Python, Motor (async MongoDB driver),  for scheduled tasks.
-- **Frontend**: React, Tailwind CSS, Shadcn UI, Axios, Recharts.
-- **Database**: MongoDB.
-- **Authentication**: JWT (Admin), Email OTP + JWT (Customer), Direct Google OAuth (Customer).
-- **PWA**: Service Workers, Web App Manifest.
-- **Image Upload**: , ImgBB API,  and  for HEIC conversion.
+- **Backend**: FastAPI, Motor. Logic was added for review management, reward generation, and stock decrementing.
+- **Frontend**: React, Tailwind CSS, Recharts,  for toasts.
+- **Image Generation**: Using the browser's **Canvas API** directly on the frontend () to dynamically draw a styled review image for download.
+- **Polling**: A  loop in  polls a backend endpoint () to check for new orders and trigger a sound notification.
 
 **key DB schema**
--   **customers**: Now includes 
--   **products**:  array objects now include 
--   **reseller_plans**:  is now optional (can be null or 0).
+- **reviews** (new collection): 
+- **settings** (new document): 
+- **products**:  is now decremented on order completion.
 
 **changes in tech stack**
--   **Added**:  for running scheduled background tasks (daily reports).
--   **Added**:  and  to support conversion of HEIC/HEIF image uploads to JPEG.
+- No new technologies were added. The  was used on the frontend for image generation.
 
 **All files of reference**
--   : Heavily modified. Contains new endpoints, scheduler logic, and bug fixes. Still a monolith.
--   : Modified to add the Peak Hours chart.
--   : New component for the analytics page.
--   : New service for generating and sending daily sales reports.
--   : Needs modification for Quick Order Actions.
--   : Heavily modified with new sorting and display logic.
--   : Modified for the post-Google-login profile completion flow.
--   : Modified to improve error handling for screenshot uploads.
+- : Contains all new backend logic and critical bug fixes (stock decrement, review eligibility).
+- : Central hub for review management, reward settings, and the canvas-based image generation logic.
+- : The new customer-facing review page.
+- : Completely refactored for the new responsive desktop/mobile navigation structure.
+- : Contains the fix for the customer authentication token.
+- : Implemented the polling mechanism for new order sound notifications.
 
 **Areas that need refactoring**:
--   ** is a critical monolith (>5800 lines)**. This is the highest priority refactoring task to improve maintainability and was already started by creating a  directory.
--   **Frontend State Management**: Components like  use complex local state. This could be refactored to use a context or state management library for better scalability.
+- ** is a critical monolith (>6000 lines)**. It has become a significant liability, making changes risky and difficult to reason about. This is the highest priority refactoring task.
 
 **key api endpoints**
--   : New endpoint to list all products for the admin panel, including sensitive data.
--   : New endpoint for users to add their name/WhatsApp number after Google login.
--   , : New health check endpoints for deployment monitoring.
--   : New endpoint handling image uploads with HEIC conversion.
--   : New endpoint for peak order time analytics.
--   : New manual trigger for the daily sales report.
+- **Reviews & Rewards:**
+    - : Checks if the current customer can leave a review.
+    - : Submits a customer review.
+    - : Approves/rejects a review and triggers reward promo code generation.
+    - : Manages the review reward configuration.
+- **Order Completion & Stock:**
+    - : Marks order as complete and now decrements stock.
+    - : Bulk updates status and now decrements stock if status is 'Completed'.
+- **Admin Notifications:**
+    - : A lightweight endpoint for the admin panel to poll for new orders.
 
 **Critical Info for New Agent**
--   Your immediate priority is to finish the three Admin Experience Enhancement features. Verify the daily summary scheduler, visually test the peak hours chart, and then implement the quick order actions.
--   After completing the current task, propose the critical refactoring of the monolithic  file to the user. This is essential for the project's long-term health.
--   Be aware of the unfixed frontend bug in the analytics dashboard where visit counts for specific date ranges may not display correctly. This is a carry-over issue that should be addressed.
+- **Verification Needed:** Your first task is to verify the downloadable review image feature on the  page. The screenshot tool may fail due to the admin login flow; use the frontend testing agent for a reliable test.
+- **CRITICAL REFACTOR:** After verifying the last task, you **MUST** propose the refactoring of . The file's size is a major risk to the project's stability. Plan to break it down into smaller, manageable  files (e.g., , , ).
+- **Auth Tokens:** Be aware of the distinction between the  and . A bug was fixed where the admin token interceptor was overriding the customer token header. API calls requiring customer authentication must now explicitly pass the .
 
 **documents and test reports created in this job**
--   
+- 
+- 
+- 
+-  (updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **how can we update some already existing features...**: User asked for suggestions on improving existing features for both customers and admins. (Status: In Progress)
-2.  **Daily Sales Summary...**: User selected three of the agent's suggestions to implement. (Status: In Progress)
-3.  **Find and fix errors before i deploy**: User requested a pre-deployment check. (Status: Completed)
-4.  **On news letter let admin set colors...**: User requested color customization for newsletters. (Status: Completed)
-5.  **On customer section of admin panel. Add these...**: User requested advanced sorting and display options for the customer list. (Status: Completed)
-6.  **failed to process order when uploading screenshot...**: User reported a bug in the payment confirmation step. (Status: Completed)
-7.  **remove the about ssection from hero bar / On reseller program remove x% discount...**: User made two requests to simplify the UI. (Status: Completed)
-8.  **This soesnt look clean fix it**: User reported a broken mobile navbar layout. (Status: Completed)
-9.  **When doing logn via google, after the customer is logged in ask their name and also their whatsapp number...**: User requested a change to the Google login flow. (Status: Completed)
-10. **The hero bar proportion is not correct...**: User reported a UI bug with the navbar alignment. (Status: Completed)
+1. **make it like this...**: User provided a new, more detailed layout for the downloadable review image. (Status: **Completed, pending verification**)
+2. **have a button to download the review image**: User requested the feature to generate and download a review image from the admin panel. (Status: Completed)
+3. **variant stocks arent decreasing...**: User reported a critical bug where stock was not being updated. (Status: Completed)
+4. **when notification bar is active the search button and cart button is not visible**: User reported a mobile UI bug. (Status: Completed)
+5. **send a sound effect like tinn, when new order is confirmed**: User requested an audible notification for new orders in the admin panel. (Status: Completed)
+6. **Have it like dynamic islend...**: User requested to revert the desktop navbar to the top, while keeping the mobile navbar at the bottom. (Status: Completed)
+7. **Instead of having hero bar on top. Have it at bottom**: User requested moving the main navigation to the bottom of the screen. (Status: Superseded by the next request)
+8. **find and fix bugs/ errors**: User requested a general bug hunt. (Status: Completed, found and fixed the  notification bar issue)
+9. **just name it rewards instead of daily rewards**: User requested a simple text change. (Status: Completed)
+10. **what else can we do to make our design better**: User asked for design suggestions. (Status: Completed, agent implemented several enhancements)
 
 **Project Health Check:**
--   **Broken**: No. Core features are functional. New enhancements are in progress.
--   **Mocked**: None.
+- **Broken**: No. The application is stable.
+- **Mocked**: No.
 
 **3rd Party Integrations**
--   **Direct Google OAuth**: For customer login, using .
--   **ImgBB**: For hosting user-uploaded images (payment screenshots).
--   **Discord**: For order notifications via webhook.
--   **OpenAI GPT**: Backend code exists, but not actively used on the frontend.
--   **APScheduler**: For scheduled background tasks (daily reports).
--   **Pillow / pillow-heif**: For server-side image format conversion (HEIC to JPEG).
+- **Direct Google OAuth**: For customer login.
+- **ImgBB**: For hosting user-uploaded payment screenshots.
+- **Discord**: For order and payment notifications via webhooks.
+- **OpenAI GPT**: Backend code exists, but not actively used.
+- **APScheduler**: For scheduled background tasks.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES (For the Admin PWA feature).
--   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**: []
--   **Known regressions**: None.
+- **Testing agent used after significant changes**: YES (used for the on-site review system and reward feature).
+- **Troubleshoot agent used after agent stuck in loop**: NO
+- **Test files created**: None.
+- **Known regressions**: A review eligibility bug was introduced and fixed within this session.
 
 **Credentials to test flow:**
--   **Admin Login:** Use credentials from  and  in  on the  page.
--   **Google OAuth:** Credentials are in . The Client ID is now in  as . Testing requires a real Google account.
+- **Admin Login:** Use credentials from  and  in  on the  page.
+- **Google OAuth:** Requires a real Google account and whitelisting the preview URL in Google Cloud Console.
 
 **What agent forgot to execute**
--   The agent did not resolve the pre-existing analytics dashboard bug where date range filters sometimes fail to update the view.
--   The critical refactoring of  was started (directory creation) but was postponed and not completed.</analysis>
+- The critical refactoring of  has been consistently postponed in favor of user-requested features. This is a deliberate prioritization but remains the most significant piece of unaddressed technical debt.</analysis>
