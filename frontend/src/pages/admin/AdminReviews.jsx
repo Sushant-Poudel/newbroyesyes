@@ -85,7 +85,7 @@ export default function AdminReviews() {
       const ctx = canvas.getContext('2d');
       const FONT = '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif';
       const GOLD = '#F5A623';
-      const BG = '#1a1a1e';
+      const BG = '#000000';
       const pad = 72;
 
       // Compute aggregate stats
