@@ -58,6 +58,7 @@ const AdminCreditSettings = lazy(() => import("@/pages/admin/AdminCreditSettings
 const AdminAuditLogs = lazy(() => import("@/pages/admin/AdminAuditLogs"));
 const AdminAds = lazy(() => import("@/pages/admin/AdminAds"));
 const AdminResellerPlans = lazy(() => import("@/pages/admin/AdminResellerPlans"));
+const AdminWebhooks = lazy(() => import("@/pages/admin/AdminWebhooks"));
 const ResellerPlansPage = lazy(() => import("@/pages/ResellerPlansPage"));
 import AdminDailyReward from "@/pages/admin/AdminDailyReward";
 import AdminReferral from "@/pages/admin/AdminReferral";
@@ -156,6 +157,7 @@ function App() {
                   <Route path="/panelgsnadminbackend/audit-logs" element={<ProtectedRoute requiredPermission="view_analytics"><AdminAuditLogs /></ProtectedRoute>} />
                   <Route path="/panelgsnadminbackend/ads" element={<ProtectedRoute requiredPermission="view_settings"><AdminAds /></ProtectedRoute>} />
                   <Route path="/panelgsnadminbackend/reseller-plans" element={<ProtectedRoute requiredPermission="view_settings"><AdminResellerPlans /></ProtectedRoute>} />
+                  <Route path="/panelgsnadminbackend/webhooks" element={<ProtectedRoute requiredPermission="view_settings"><AdminWebhooks /></ProtectedRoute>} />
                 </Routes>
                 <InstallPWA />
               </BrowserRouter>

@@ -265,7 +265,15 @@ async def upload_payment_screenshot(order_id: str, data: PaymentScreenshotUpload
     )
     
     # Send payment screenshot to dedicated webhook
-    PAYMENT_WEBHOOK = "https://discord.com/api/webhooks/1481673730177372284/ZSwFuiblK2sJ0QaXU45pwsJDaMSZyQQN5_yTYmIWxFnIHI3WVYHPmUYDOfP_ykxpYwE7"
+    payment_webhook_url = None
+    try:
+        wh_settings = await db.site_settings.find_one({"id": "webhook_settings"}, {"_id": 0})
+        if wh_settings and wh_settings.get("payment_webhook"):
+            payment_webhook_url = wh_settings["payment_webhook"]
+    except Exception:
+        pass
+    if not payment_webhook_url:
+        payment_webhook_url = "https://discord.com/api/webhooks/1481673730177372284/ZSwFuiblK2sJ0QaXU45pwsJDaMSZyQQN5_yTYmIWxFnIHI3WVYHPmUYDOfP_ykxpYwE7"
     try:
         import httpx
         order_num = order.get("takeapp_order_number") or order_id[:8]
@@ -288,7 +296,7 @@ async def upload_payment_screenshot(order_id: str, data: PaymentScreenshotUpload
         }
         
         async with httpx.AsyncClient() as client:
-            await client.post(PAYMENT_WEBHOOK, json={"embeds": [embed]}, timeout=10)
+            await client.post(payment_webhook_url, json={"embeds": [embed]}, timeout=10)
         logger.info(f"Payment screenshot webhook sent for order {order_id}")
     except Exception as e:
         logger.warning(f"Failed to send payment screenshot webhook: {e}")
@@ -328,8 +336,15 @@ async def upload_payment_screenshot(order_id: str, data: PaymentScreenshotUpload
             )
         
         # Also send to global confirmed order webhook
-        if DISCORD_ORDER_WEBHOOK:
-            await send_confirmed_order_notification(DISCORD_ORDER_WEBHOOK, updated_order)
+        global_order_webhook = DISCORD_ORDER_WEBHOOK
+        try:
+            wh_settings_global = await db.site_settings.find_one({"id": "webhook_settings"}, {"_id": 0})
+            if wh_settings_global and wh_settings_global.get("order_webhook"):
+                global_order_webhook = wh_settings_global["order_webhook"]
+        except Exception:
+            pass
+        if global_order_webhook:
+            await send_confirmed_order_notification(global_order_webhook, updated_order)
             logger.info(f"Sent global Discord notification for confirmed order {order_id}")
     except Exception as e:
         logger.error(f"Failed to send Discord webhook: {e}")
@@ -654,11 +669,17 @@ async def update_order_status(order_id: str, status_data: OrderStatusUpdate, cur
                 logger.warning(f"Failed to deduct credits for order {order_id}: {e}")
         
         # Send Discord notification for confirmed order (global webhook)
-        if DISCORD_ORDER_WEBHOOK:
+        global_wh = DISCORD_ORDER_WEBHOOK
+        try:
+            wh_s = await db.site_settings.find_one({"id": "webhook_settings"}, {"_id": 0})
+            if wh_s and wh_s.get("order_webhook"):
+                global_wh = wh_s["order_webhook"]
+        except Exception:
+            pass
+        if global_wh:
             try:
-                # Get full order data for notification
                 updated_order = await db.orders.find_one({"id": order_id}, {"_id": 0})
-                await send_confirmed_order_notification(DISCORD_ORDER_WEBHOOK, updated_order)
+                await send_confirmed_order_notification(global_wh, updated_order)
                 logger.info(f"Sent Discord notification for confirmed order {order_id}")
             except Exception as e:
                 logger.warning(f"Failed to send Discord notification for order {order_id}: {e}")

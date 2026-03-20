@@ -53,6 +53,7 @@ from routes.analytics import router as analytics_router
 from routes.engagement import router as engagement_router
 from routes.chatbot import router as chatbot_router
 from routes.customers import router as customers_router
+from routes.webhooks import router as webhooks_router
 
 api_router.include_router(auth_router)
 api_router.include_router(products_router)
@@ -65,6 +66,7 @@ api_router.include_router(analytics_router)
 api_router.include_router(engagement_router)
 api_router.include_router(chatbot_router)
 api_router.include_router(customers_router)
+api_router.include_router(webhooks_router)
 
 
 # ==================== HEALTH CHECK ====================
