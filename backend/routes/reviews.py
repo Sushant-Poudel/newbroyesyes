@@ -309,30 +309,60 @@ async def get_trustpilot_domain():
         return config["value"]
     return TRUSTPILOT_DOMAIN
 
-async def fetch_trustpilot_reviews_from_page(domain: str):
-    """Scrape reviews from Trustpilot page using JSON-LD and __NEXT_DATA__."""
+async def _scrape_single_trustpilot_page(client, domain: str, page_num: int):
+    """Scrape a single Trustpilot page and return parsed reviews."""
     import re
     import json as json_mod
     reviews = []
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(
-                f"https://www.trustpilot.com/review/{domain}",
-                headers={
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                    "Accept-Language": "en-US,en;q=0.5",
-                },
-                timeout=20.0,
-                follow_redirects=True
-            )
-            if response.status_code != 200:
-                logger.warning(f"Trustpilot returned status {response.status_code} for {domain}")
-                return reviews
+    url = f"https://www.trustpilot.com/review/{domain}?page={page_num}"
+    try:
+        response = await client.get(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.5",
+            },
+            timeout=20.0,
+            follow_redirects=True
+        )
+        if response.status_code != 200:
+            return reviews, 0
 
-            html = response.text
+        html = response.text
+        total_pages = 1
+        seen = set()
 
-            # Method 1: JSON-LD structured data
+        # Extract total pages from __NEXT_DATA__
+        next_data_pattern = r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>'
+        next_matches = re.findall(next_data_pattern, html, re.DOTALL)
+        for match in next_matches:
+            try:
+                data = json_mod.loads(match)
+                props = data.get("props", {}).get("pageProps", {})
+                # Get total pages from filters/pagination
+                total_pages = props.get("filters", {}).get("pagination", {}).get("totalPages", 1)
+                review_list = props.get("reviews", [])
+                for r in review_list:
+                    consumer = r.get("consumer", {})
+                    dates = r.get("dates", {})
+                    published_date = dates.get("publishedDate") or dates.get("experiencedDate")
+                    name = consumer.get("displayName", "Anonymous")
+                    comment = r.get("text", r.get("title", ""))
+                    key = (name, comment)
+                    if key not in seen:
+                        reviews.append({
+                            "reviewer_name": name,
+                            "rating": r.get("rating", 5),
+                            "comment": comment,
+                            "review_date": published_date or datetime.now(timezone.utc).isoformat()
+                        })
+                        seen.add(key)
+            except json_mod.JSONDecodeError:
+                continue
+
+        # Fallback: JSON-LD structured data
+        if not reviews:
             json_ld_pattern = r'<script type="application/ld\+json"[^>]*>(.*?)</script>'
             matches = re.findall(json_ld_pattern, html, re.DOTALL)
             for match in matches:
@@ -350,34 +380,45 @@ async def fetch_trustpilot_reviews_from_page(domain: str):
                 except json_mod.JSONDecodeError:
                     continue
 
-            # Method 2: __NEXT_DATA__ (React SSR payload)
-            next_data_pattern = r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>'
-            next_matches = re.findall(next_data_pattern, html, re.DOTALL)
-            seen = {(r["reviewer_name"], r["comment"]) for r in reviews}
-            for match in next_matches:
-                try:
-                    data = json_mod.loads(match)
-                    props = data.get("props", {}).get("pageProps", {})
-                    review_list = props.get("reviews", [])
-                    for r in review_list:
-                        consumer = r.get("consumer", {})
-                        dates = r.get("dates", {})
-                        published_date = dates.get("publishedDate") or dates.get("experiencedDate")
-                        name = consumer.get("displayName", "Anonymous")
-                        comment = r.get("text", r.get("title", ""))
-                        if (name, comment) not in seen:
-                            reviews.append({
-                                "reviewer_name": name,
-                                "rating": r.get("rating", 5),
-                                "comment": comment,
-                                "review_date": published_date or datetime.now(timezone.utc).isoformat()
-                            })
-                            seen.add((name, comment))
-                except json_mod.JSONDecodeError:
-                    continue
-        except Exception as e:
-            logger.error(f"Error scraping Trustpilot: {e}")
-    return reviews
+        return reviews, total_pages
+    except Exception as e:
+        logger.error(f"Error scraping Trustpilot page {page_num}: {e}")
+        return reviews, 0
+
+
+async def fetch_all_trustpilot_reviews(domain: str):
+    """Scrape ALL reviews from Trustpilot by paginating through every page."""
+    import asyncio
+    all_reviews = []
+    seen = set()
+    max_pages = 100  # safety cap
+
+    async with httpx.AsyncClient() as client:
+        # Fetch page 1 to get total pages
+        page_reviews, total_pages = await _scrape_single_trustpilot_page(client, domain, 1)
+        for r in page_reviews:
+            key = (r["reviewer_name"], r["comment"])
+            if key not in seen:
+                all_reviews.append(r)
+                seen.add(key)
+
+        total_pages = min(total_pages, max_pages)
+        logger.info(f"Trustpilot {domain}: {total_pages} total pages detected, page 1 returned {len(page_reviews)} reviews")
+
+        # Fetch remaining pages
+        for page_num in range(2, total_pages + 1):
+            await asyncio.sleep(0.5)  # polite delay
+            page_reviews, _ = await _scrape_single_trustpilot_page(client, domain, page_num)
+            if not page_reviews:
+                break  # no more reviews
+            for r in page_reviews:
+                key = (r["reviewer_name"], r["comment"])
+                if key not in seen:
+                    all_reviews.append(r)
+                    seen.add(key)
+            logger.info(f"Trustpilot page {page_num}: {len(page_reviews)} reviews (total so far: {len(all_reviews)})")
+
+    return all_reviews
 
 @router.post("/reviews/sync-trustpilot")
 async def sync_trustpilot_reviews(current_user: dict = Depends(get_current_user)):
@@ -385,7 +426,7 @@ async def sync_trustpilot_reviews(current_user: dict = Depends(get_current_user)
     domain = await get_trustpilot_domain()
     synced_count = 0
     try:
-        trustpilot_reviews = await fetch_trustpilot_reviews_from_page(domain)
+        trustpilot_reviews = await fetch_all_trustpilot_reviews(domain)
         for tp_review in trustpilot_reviews:
             existing = await db.reviews.find_one({
                 "reviewer_name": tp_review["reviewer_name"],
