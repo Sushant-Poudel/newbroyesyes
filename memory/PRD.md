@@ -61,6 +61,10 @@ A premium, dark-themed e-commerce website for digital goods, built with React (f
 
 ## Prioritized Backlog
 
+### P0 - Active/Recently Fixed
+- ~~Navbar PWA icon on desktop~~ (FIXED - Apr 2026)
+- ~~Account not showing after login~~ (FIXED - Apr 2026)
+
 ### P1 - High Priority
 - Reorder product variations (drag-and-drop in admin)
 - Enhanced FAQ with categories and search
