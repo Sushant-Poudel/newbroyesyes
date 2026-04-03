@@ -8,7 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 from dotenv import load_dotenv
 
-load_dotenv(override=True)
+load_dotenv(override=False)
 logger = logging.getLogger(__name__)
 
 async def cleanup_old_pending_orders():

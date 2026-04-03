@@ -5,7 +5,7 @@ import os
 import secrets
 
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env', override=True)
+load_dotenv(ROOT_DIR / '.env', override=False)
 
 # Create uploads directory
 UPLOADS_DIR = ROOT_DIR / "uploads"
@@ -13,7 +13,7 @@ UPLOADS_DIR.mkdir(exist_ok=True)
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
+client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000)
 db = client[os.environ['DB_NAME']]
 
 # JWT Config
