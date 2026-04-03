@@ -4,7 +4,6 @@ import { X, Search, User, Gift, Users, Smartphone, Star, Home, ShoppingCart } fr
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { CartSidebar } from '@/components/Cart';
-import { CustomerAccountSidebar } from '@/components/CustomerAccount';
 import CustomerAuthModal from '@/components/CustomerAuth';
 
 const LOGO_URL = "https://customer-assets.emergentagent.com/job_8ec93a6a-4f80-4dde-b760-4bc71482fa44/artifacts/4uqt5osn_Staff.zip%20-%201.png";
@@ -18,24 +17,29 @@ export default function Navbar({ notificationBarHeight = 0 }) {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const syncCustomerState = () => {
+    const info = localStorage.getItem('customer_info');
+    if (info) {
+      try { setCustomer(JSON.parse(info)); } catch (e) { setCustomer(null); }
+    } else { setCustomer(null); }
+  };
+
   useEffect(() => {
-    const customerInfo = localStorage.getItem('customer_info');
-    if (customerInfo) {
-      try { setCustomer(JSON.parse(customerInfo)); } catch (e) {}
-    }
-    const handleStorageChange = () => {
-      const info = localStorage.getItem('customer_info');
-      if (info) {
-        try { setCustomer(JSON.parse(info)); } catch (e) { setCustomer(null); }
-      } else { setCustomer(null); }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('customerLogin', handleStorageChange);
+    syncCustomerState();
+    window.addEventListener('storage', syncCustomerState);
+    window.addEventListener('customerLogin', syncCustomerState);
+    window.addEventListener('customerLogout', syncCustomerState);
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('customerLogin', handleStorageChange);
+      window.removeEventListener('storage', syncCustomerState);
+      window.removeEventListener('customerLogin', syncCustomerState);
+      window.removeEventListener('customerLogout', syncCustomerState);
     };
   }, []);
+
+  // Re-sync on route changes to catch any missed state updates
+  useEffect(() => {
+    syncCustomerState();
+  }, [location.pathname]);
 
   const navLinks = [
     { href: '/', label: 'Home', icon: Home },
@@ -122,7 +126,14 @@ export default function Navbar({ notificationBarHeight = 0 }) {
         <CartSidebar />
 
         {customer ? (
-          <CustomerAccountSidebar />
+          <Link
+            to="/account"
+            className="flex items-center gap-1.5 bg-white/10 hover:bg-white/15 text-white rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
+            data-testid="customer-account-btn"
+          >
+            <User className="h-3.5 w-3.5" />
+            Account
+          </Link>
         ) : (
           <Button
             onClick={() => setShowAuthModal(true)}
@@ -133,14 +144,6 @@ export default function Navbar({ notificationBarHeight = 0 }) {
           </Button>
         )}
 
-        <button
-          onClick={() => setShowInstallModal(true)}
-          className="text-white/40 hover:text-amber-400 p-1.5 rounded-full hover:bg-white/5 transition-colors"
-          data-testid="add-to-home-btn"
-          title="Add to Home Screen"
-        >
-          <Smartphone className="h-4 w-4" />
-        </button>
       </div>
 
       {/* ========== MOBILE: Slim top bar + Bottom tab bar (<md) ========== */}
@@ -171,6 +174,14 @@ export default function Navbar({ notificationBarHeight = 0 }) {
                 <Search className="h-4 w-4" />
               </button>
             )}
+            <button
+              onClick={() => setShowInstallModal(true)}
+              className="text-white/50 p-2 rounded-full"
+              data-testid="add-to-home-btn-mobile"
+              title="Add to Home Screen"
+            >
+              <Smartphone className="h-4 w-4" />
+            </button>
             <CartSidebar />
           </div>
         </div>
