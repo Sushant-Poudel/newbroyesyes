@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timezone
 
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
+load_dotenv(ROOT_DIR / '.env', override=True)
 
 logger = logging.getLogger(__name__)
 

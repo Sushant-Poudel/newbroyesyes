@@ -5,7 +5,7 @@ import os
 import secrets
 
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
+load_dotenv(ROOT_DIR / '.env', override=True)
 
 # Create uploads directory
 UPLOADS_DIR = ROOT_DIR / "uploads"
