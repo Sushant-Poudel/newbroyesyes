@@ -22,6 +22,7 @@ export default function HomePage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [reviewStats, setReviewStats] = useState({ total: 0, avg_rating: 0 });
   const [blogPosts, setBlogPosts] = useState([]);
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [notificationBar, setNotificationBar] = useState(null);
@@ -33,16 +34,18 @@ export default function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [productsRes, categoriesRes, reviewsRes, notifRes, blogRes, paymentRes] = await Promise.all([
+        const [productsRes, categoriesRes, reviewsRes, reviewsPublicRes, notifRes, blogRes, paymentRes] = await Promise.all([
           productsAPI.getAll(),
           categoriesAPI.getAll(),
           reviewsAPI.getAll(),
+          reviewsAPI.getPublic(1).catch(() => ({ data: { total: 0, avg_rating: 0 } })),
           notificationBarAPI.get().catch(() => ({ data: null })),
           blogAPI.getAll().catch(() => ({ data: [] })),
           paymentMethodsAPI.getAll().catch(() => ({ data: [] })),
         ]);
         setProducts(productsRes.data);
         setCategories(categoriesRes.data);
+        setReviewStats({ total: reviewsPublicRes.data.total || 0, avg_rating: reviewsPublicRes.data.avg_rating || 0 });
         // Limit reviews to latest 20
         const sortedReviews = reviewsRes.data
           .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -98,17 +101,22 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-0.5">
-                  {[1, 2, 3, 4, 5].map((star, idx) => (
-                    <Star 
-                      key={star} 
-                      className={`h-4 w-4 ${idx < 4 ? 'text-amber-500 fill-amber-500' : 'text-amber-500 fill-amber-500/50'}`} 
-                    />
-                  ))}
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const avg = reviewStats.avg_rating || 0;
+                    const filled = star <= Math.floor(avg);
+                    const half = !filled && star === Math.ceil(avg) && avg % 1 >= 0.3;
+                    return (
+                      <Star 
+                        key={star} 
+                        className={`h-4 w-4 ${filled ? 'text-amber-500 fill-amber-500' : half ? 'text-amber-500 fill-amber-500/50' : 'text-amber-500/30'}`} 
+                      />
+                    );
+                  })}
                 </div>
                 <span className="text-amber-500 font-bold text-sm">
-                  {reviews.length > 0 ? (reviews.reduce((a, r) => a + r.rating, 0) / reviews.length).toFixed(1) : '5.0'}/5
+                  {reviewStats.avg_rating > 0 ? reviewStats.avg_rating.toFixed(1) : '0.0'}/5
                 </span>
-                <span className="text-white/70 text-sm">Based on {reviews.length} review{reviews.length !== 1 ? 's' : ''}</span>
+                <span className="text-white/70 text-sm">Based on {reviewStats.total} review{reviewStats.total !== 1 ? 's' : ''}</span>
               </div>
               <Link to="/reviews">
                 <Button variant="outline" size="sm" className="border-white/15 text-white/70 hover:bg-white/5 hover:text-white text-xs" data-testid="view-all-reviews-btn">
