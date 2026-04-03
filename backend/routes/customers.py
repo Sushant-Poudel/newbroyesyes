@@ -29,6 +29,15 @@ class OTPVerify(BaseModel):
     email: str
     otp: str
 
+class OTPRecord(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    email: str
+    otp: str
+    expires_at: str
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    verified: bool = False
+
 class CustomerLogin(BaseModel):
     email: str
     otp: Optional[str] = None
