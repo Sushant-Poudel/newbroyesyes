@@ -58,6 +58,7 @@ A premium, dark-themed e-commerce website for digital goods, built with React (f
 - **Downloadable review images** (admin) - Canvas-based, layout: GSN logo top (black bg), rating badge, review quote (white bg), stars + name, GameShop Nepal branding bottom (black bg)
 - Bottom tab bar (mobile) + dynamic island nav (desktop)
 - **Backend refactored** from 6344-line monolith to 11 modular route files
+- **Trustpilot Review Sync** (admin) - Configurable domain, one-click sync from Trustpilot, reviews list with stats/distribution, clear all option
 
 ## Prioritized Backlog
 
