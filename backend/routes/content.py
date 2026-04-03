@@ -347,6 +347,73 @@ async def update_site_settings(settings: dict, current_user: dict = Depends(get_
     await db.site_settings.update_one({"id": "main"}, {"$set": settings}, upsert=True)
     return settings
 
+# ==================== SMTP / EMAIL SETTINGS ====================
+
+@router.get("/settings/smtp")
+async def get_smtp_settings(current_user: dict = Depends(get_current_user)):
+    """Get SMTP config from DB (passwords masked)."""
+    import os
+    doc = await db.site_settings.find_one({"id": "smtp_config"}, {"_id": 0})
+    if doc and doc.get("smtp_user"):
+        return {
+            "smtp_host": doc.get("smtp_host", ""),
+            "smtp_port": doc.get("smtp_port", 587),
+            "smtp_user": doc.get("smtp_user", ""),
+            "smtp_password": "••••••••" if doc.get("smtp_password") else "",
+            "smtp_from_email": doc.get("smtp_from_email", ""),
+            "smtp_from_name": doc.get("smtp_from_name", ""),
+            "source": "database",
+        }
+    # Fallback: show env values
+    return {
+        "smtp_host": os.environ.get("SMTP_HOST", ""),
+        "smtp_port": int(os.environ.get("SMTP_PORT", "587")),
+        "smtp_user": os.environ.get("SMTP_USER", ""),
+        "smtp_password": "••••••••" if os.environ.get("SMTP_PASSWORD") else "",
+        "smtp_from_email": os.environ.get("SMTP_FROM_EMAIL", ""),
+        "smtp_from_name": os.environ.get("SMTP_FROM_NAME", ""),
+        "source": "environment",
+    }
+
+@router.put("/settings/smtp")
+async def update_smtp_settings(data: dict, current_user: dict = Depends(get_current_user)):
+    """Save SMTP config to DB so it overrides env vars everywhere."""
+    doc = {
+        "id": "smtp_config",
+        "smtp_host": data.get("smtp_host", "smtp.gmail.com"),
+        "smtp_port": int(data.get("smtp_port", 587)),
+        "smtp_user": data.get("smtp_user", ""),
+        "smtp_from_email": data.get("smtp_from_email", ""),
+        "smtp_from_name": data.get("smtp_from_name", "GameShop Nepal"),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    # Only update password if a real value was provided (not masked)
+    if data.get("smtp_password") and data["smtp_password"] != "••••••••":
+        doc["smtp_password"] = data["smtp_password"]
+    else:
+        # Keep existing password
+        existing = await db.site_settings.find_one({"id": "smtp_config"})
+        if existing:
+            doc["smtp_password"] = existing.get("smtp_password", "")
+        else:
+            import os
+            doc["smtp_password"] = os.environ.get("SMTP_PASSWORD", "")
+    await db.site_settings.update_one({"id": "smtp_config"}, {"$set": doc}, upsert=True)
+    return {"message": "SMTP settings saved", "from_email": doc["smtp_from_email"]}
+
+@router.post("/settings/smtp/test")
+async def test_smtp(data: dict, current_user: dict = Depends(get_current_user)):
+    """Send a test email to verify SMTP config."""
+    to_email = data.get("to_email", "")
+    if not to_email:
+        raise HTTPException(status_code=400, detail="to_email is required")
+    from email_service import send_email
+    result = send_email(to_email, "Test Email - GameShop Nepal", "<h2>SMTP is working!</h2><p>This is a test email from GameShop Nepal.</p>", "SMTP is working! This is a test email from GameShop Nepal.")
+    if result:
+        return {"message": f"Test email sent to {to_email}"}
+    raise HTTPException(status_code=500, detail="Failed to send test email. Check SMTP credentials.")
+
+
 # ==================== WEBHOOK SETTINGS ====================
 
 @router.get("/webhooks/settings")

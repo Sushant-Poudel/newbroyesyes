@@ -1,6 +1,7 @@
 """
 Email Service Module
-Handles all email notifications for the platform
+Handles all email notifications for the platform.
+SMTP config is read from MongoDB (admin-editable) with env var fallback.
 """
 import os
 import smtplib
@@ -11,45 +12,90 @@ import logging
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load environment variables
+# Load environment variables (fallback only)
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env', override=False)
 
 logger = logging.getLogger(__name__)
 
-# Email configuration
-SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
-SMTP_USER = os.environ.get("SMTP_USER", "")
-SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
-SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", "noreply@gameshopnepal.com")
-SMTP_FROM_NAME = os.environ.get("SMTP_FROM_NAME", "GameShop Nepal")
+# Env fallbacks (used only if DB has no config)
+_ENV_SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+_ENV_SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+_ENV_SMTP_USER = os.environ.get("SMTP_USER", "")
+_ENV_SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+_ENV_SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", "")
+_ENV_SMTP_FROM_NAME = os.environ.get("SMTP_FROM_NAME", "GameShop Nepal")
 SITE_URL = os.environ.get("SITE_URL", "https://gameshopnepal.com")
 
+
+def _get_smtp_config_sync():
+    """
+    Get SMTP config from MongoDB synchronously (blocking call for use in sync send_email).
+    Priority: DB settings > .env file > env vars
+    """
+    try:
+        from database import db
+        import asyncio
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # We're inside an async context – use a helper
+            import concurrent.futures
+            import motor.motor_asyncio
+            from database import mongo_url, client as _client
+            # Use synchronous pymongo for this one call
+            from pymongo import MongoClient
+            sync_client = MongoClient(mongo_url, serverSelectionTimeoutMS=3000)
+            db_name = os.environ.get('DB_NAME', 'gameshopnepal')
+            sync_db = sync_client[db_name]
+            smtp_doc = sync_db.site_settings.find_one({"id": "smtp_config"})
+            sync_client.close()
+            if smtp_doc and smtp_doc.get("smtp_user"):
+                return {
+                    "host": smtp_doc.get("smtp_host", _ENV_SMTP_HOST),
+                    "port": int(smtp_doc.get("smtp_port", _ENV_SMTP_PORT)),
+                    "user": smtp_doc.get("smtp_user", _ENV_SMTP_USER),
+                    "password": smtp_doc.get("smtp_password", _ENV_SMTP_PASSWORD),
+                    "from_email": smtp_doc.get("smtp_from_email", _ENV_SMTP_FROM_EMAIL),
+                    "from_name": smtp_doc.get("smtp_from_name", _ENV_SMTP_FROM_NAME),
+                }
+    except Exception as e:
+        logger.debug(f"Could not read SMTP config from DB: {e}")
+
+    # Fallback to env vars
+    return {
+        "host": _ENV_SMTP_HOST,
+        "port": _ENV_SMTP_PORT,
+        "user": _ENV_SMTP_USER,
+        "password": _ENV_SMTP_PASSWORD,
+        "from_email": _ENV_SMTP_FROM_EMAIL,
+        "from_name": _ENV_SMTP_FROM_NAME,
+    }
+
+
 def send_email(to_email: str, subject: str, html_body: str, text_body: Optional[str] = None):
-    """Send email via SMTP"""
-    if not SMTP_USER or not SMTP_PASSWORD:
+    """Send email via SMTP – reads config fresh each time from DB then env."""
+    cfg = _get_smtp_config_sync()
+
+    if not cfg["user"] or not cfg["password"]:
         logger.warning("SMTP credentials not configured. Email not sent.")
         return False
-    
+
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
-        msg["From"] = f"{SMTP_FROM_NAME} <{SMTP_FROM_EMAIL}>"
+        msg["From"] = f"{cfg['from_name']} <{cfg['from_email']}>"
         msg["To"] = to_email
-        
-        # Add text and HTML versions
+
         if text_body:
             msg.attach(MIMEText(text_body, "plain"))
         msg.attach(MIMEText(html_body, "html"))
-        
-        # Send email
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+
+        with smtplib.SMTP(cfg["host"], cfg["port"]) as server:
             server.starttls()
-            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.login(cfg["user"], cfg["password"])
             server.send_message(msg)
-        
-        logger.info(f"Email sent successfully to {to_email}")
+
+        logger.info(f"Email sent to {to_email} from {cfg['from_email']}")
         return True
     except Exception as e:
         logger.error(f"Failed to send email to {to_email}: {e}")
