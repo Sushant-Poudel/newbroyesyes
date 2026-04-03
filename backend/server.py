@@ -139,6 +139,29 @@ async def startup_db_client():
     except Exception as e:
         logger.error(f"Failed to connect to MongoDB: {e}")
 
+    # Seed/update SMTP config in DB from .env file
+    # Uses dotenv_values() to read the FILE directly, bypassing K8s env vars
+    try:
+        from dotenv import dotenv_values
+        env_file_values = dotenv_values(ROOT_DIR / '.env')
+        smtp_user = env_file_values.get("SMTP_USER", "")
+        if smtp_user:
+            smtp_config = {
+                "id": "smtp_config",
+                "smtp_host": env_file_values.get("SMTP_HOST", "smtp.gmail.com"),
+                "smtp_port": int(env_file_values.get("SMTP_PORT", "587")),
+                "smtp_user": smtp_user,
+                "smtp_password": env_file_values.get("SMTP_PASSWORD", ""),
+                "smtp_from_email": env_file_values.get("SMTP_FROM_EMAIL", smtp_user),
+                "smtp_from_name": env_file_values.get("SMTP_FROM_NAME", "GameShop Nepal"),
+            }
+            await db.site_settings.update_one(
+                {"id": "smtp_config"}, {"$set": smtp_config}, upsert=True
+            )
+            logger.info(f"SMTP config synced to DB: {smtp_config['smtp_from_email']}")
+    except Exception as e:
+        logger.warning(f"Failed to seed SMTP config: {e}")
+
     # Start background tasks
     try:
         import asyncio
