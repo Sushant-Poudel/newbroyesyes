@@ -239,6 +239,48 @@ async def update_review_reward_settings(data: dict, current_user: dict = Depends
     await db.site_settings.update_one({"id": "review_reward"}, {"$set": data}, upsert=True)
     return data
 
+# NOTE: Trustpilot config routes MUST be defined BEFORE {review_id} routes to avoid path conflicts
+@router.get("/reviews/trustpilot-config")
+async def get_trustpilot_config(current_user: dict = Depends(get_current_user)):
+    """Get Trustpilot configuration."""
+    domain = await get_trustpilot_domain()
+    last_sync = await db.trustpilot_config.find_one({"key": "last_sync"})
+    tp_review_count = await db.reviews.count_documents({"source": "trustpilot"})
+    return {
+        "domain": domain,
+        "last_sync": last_sync.get("value") if last_sync else None,
+        "trustpilot_reviews_count": tp_review_count,
+    }
+
+@router.put("/reviews/trustpilot-config")
+async def update_trustpilot_config(data: dict, current_user: dict = Depends(get_current_user)):
+    """Update Trustpilot domain configuration."""
+    domain = data.get("domain", "").strip()
+    if not domain:
+        raise HTTPException(status_code=400, detail="Domain is required")
+    await db.trustpilot_config.update_one(
+        {"key": "domain"}, {"$set": {"key": "domain", "value": domain}}, upsert=True
+    )
+    return {"message": "Trustpilot domain updated", "domain": domain}
+
+@router.get("/reviews/trustpilot-reviews")
+async def get_trustpilot_reviews(current_user: dict = Depends(get_current_user)):
+    """Get all synced Trustpilot reviews."""
+    reviews = await db.reviews.find({"source": "trustpilot"}, {"_id": 0}).sort("review_date", -1).to_list(200)
+    for review in reviews:
+        if "created_at" in review and isinstance(review["created_at"], datetime):
+            review["created_at"] = review["created_at"].isoformat()
+        if "review_date" in review and isinstance(review["review_date"], datetime):
+            review["review_date"] = review["review_date"].isoformat()
+    return reviews
+
+@router.delete("/reviews/trustpilot-reviews")
+async def delete_all_trustpilot_reviews(current_user: dict = Depends(get_current_user)):
+    """Delete all synced Trustpilot reviews."""
+    result = await db.reviews.delete_many({"source": "trustpilot"})
+    await db.trustpilot_config.delete_one({"key": "last_sync"})
+    return {"message": f"Deleted {result.deleted_count} Trustpilot reviews"}
+
 @router.put("/reviews/{review_id}")
 async def update_review(review_id: str, review_data: ReviewCreate, current_user: dict = Depends(get_current_user)):
     existing = await db.reviews.find_one({"id": review_id})
@@ -260,96 +302,106 @@ async def delete_review(review_id: str, current_user: dict = Depends(get_current
 
 # ==================== TRUSTPILOT SYNC ====================
 
-async def get_trustpilot_business_unit_id():
-    cached = await db.trustpilot_config.find_one({"key": "business_unit_id"})
-    if cached and cached.get("value"):
-        return cached["value"]
-    async with httpx.AsyncClient() as client:
-        try:
-            if TRUSTPILOT_API_KEY:
-                response = await client.get(
-                    f"https://api.trustpilot.com/v1/business-units/find?name={TRUSTPILOT_DOMAIN}",
-                    headers={"apikey": TRUSTPILOT_API_KEY}, timeout=10.0
-                )
-                if response.status_code == 200:
-                    data = response.json()
-                    buid = data.get("id")
-                    if buid:
-                        await db.trustpilot_config.update_one(
-                            {"key": "business_unit_id"},
-                            {"$set": {"key": "business_unit_id", "value": buid}}, upsert=True
-                        )
-                        return buid
-        except Exception as e:
-            logger.error(f"Error getting business unit ID: {e}")
-    return None
+async def get_trustpilot_domain():
+    """Get the configured Trustpilot domain from DB or fallback to env."""
+    config = await db.trustpilot_config.find_one({"key": "domain"})
+    if config and config.get("value"):
+        return config["value"]
+    return TRUSTPILOT_DOMAIN
 
-async def fetch_trustpilot_reviews_from_page():
+async def fetch_trustpilot_reviews_from_page(domain: str):
+    """Scrape reviews from Trustpilot page using JSON-LD and __NEXT_DATA__."""
+    import re
+    import json as json_mod
     reviews = []
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(
-                f"https://www.trustpilot.com/review/{TRUSTPILOT_DOMAIN}",
-                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}, timeout=15.0
+                f"https://www.trustpilot.com/review/{domain}",
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "Accept-Language": "en-US,en;q=0.5",
+                },
+                timeout=20.0,
+                follow_redirects=True
             )
-            if response.status_code == 200:
-                import re
-                import json
-                html = response.text
-                json_ld_pattern = r'<script type="application/ld\+json"[^>]*>(.*?)</script>'
-                matches = re.findall(json_ld_pattern, html, re.DOTALL)
-                for match in matches:
-                    try:
-                        data = json.loads(match)
-                        if isinstance(data, dict) and data.get("@type") == "LocalBusiness":
-                            if "review" in data:
-                                for r in data["review"]:
-                                    reviews.append({
-                                        "reviewer_name": r.get("author", {}).get("name", "Anonymous"),
-                                        "rating": int(r.get("reviewRating", {}).get("ratingValue", 5)),
-                                        "comment": r.get("reviewBody", ""),
-                                        "review_date": r.get("datePublished", datetime.now(timezone.utc).isoformat())
-                                    })
-                    except json.JSONDecodeError:
-                        continue
-                next_data_pattern = r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>'
-                next_matches = re.findall(next_data_pattern, html, re.DOTALL)
-                for match in next_matches:
-                    try:
-                        data = json.loads(match)
-                        props = data.get("props", {}).get("pageProps", {})
-                        review_list = props.get("reviews", [])
-                        for r in review_list:
-                            consumer = r.get("consumer", {})
-                            dates = r.get("dates", {})
-                            published_date = dates.get("publishedDate") or dates.get("experiencedDate")
+            if response.status_code != 200:
+                logger.warning(f"Trustpilot returned status {response.status_code} for {domain}")
+                return reviews
+
+            html = response.text
+
+            # Method 1: JSON-LD structured data
+            json_ld_pattern = r'<script type="application/ld\+json"[^>]*>(.*?)</script>'
+            matches = re.findall(json_ld_pattern, html, re.DOTALL)
+            for match in matches:
+                try:
+                    data = json_mod.loads(match)
+                    if isinstance(data, dict) and data.get("@type") == "LocalBusiness":
+                        if "review" in data:
+                            for r in data["review"]:
+                                reviews.append({
+                                    "reviewer_name": r.get("author", {}).get("name", "Anonymous"),
+                                    "rating": int(r.get("reviewRating", {}).get("ratingValue", 5)),
+                                    "comment": r.get("reviewBody", ""),
+                                    "review_date": r.get("datePublished", datetime.now(timezone.utc).isoformat())
+                                })
+                except json_mod.JSONDecodeError:
+                    continue
+
+            # Method 2: __NEXT_DATA__ (React SSR payload)
+            next_data_pattern = r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>'
+            next_matches = re.findall(next_data_pattern, html, re.DOTALL)
+            seen = {(r["reviewer_name"], r["comment"]) for r in reviews}
+            for match in next_matches:
+                try:
+                    data = json_mod.loads(match)
+                    props = data.get("props", {}).get("pageProps", {})
+                    review_list = props.get("reviews", [])
+                    for r in review_list:
+                        consumer = r.get("consumer", {})
+                        dates = r.get("dates", {})
+                        published_date = dates.get("publishedDate") or dates.get("experiencedDate")
+                        name = consumer.get("displayName", "Anonymous")
+                        comment = r.get("text", r.get("title", ""))
+                        if (name, comment) not in seen:
                             reviews.append({
-                                "reviewer_name": consumer.get("displayName", "Anonymous"),
+                                "reviewer_name": name,
                                 "rating": r.get("rating", 5),
-                                "comment": r.get("text", r.get("title", "")),
+                                "comment": comment,
                                 "review_date": published_date or datetime.now(timezone.utc).isoformat()
                             })
-                    except json.JSONDecodeError:
-                        continue
+                            seen.add((name, comment))
+                except json_mod.JSONDecodeError:
+                    continue
         except Exception as e:
             logger.error(f"Error scraping Trustpilot: {e}")
     return reviews
 
 @router.post("/reviews/sync-trustpilot")
 async def sync_trustpilot_reviews(current_user: dict = Depends(get_current_user)):
+    """Sync reviews from Trustpilot to the database."""
+    domain = await get_trustpilot_domain()
     synced_count = 0
     try:
-        trustpilot_reviews = await fetch_trustpilot_reviews_from_page()
+        trustpilot_reviews = await fetch_trustpilot_reviews_from_page(domain)
         for tp_review in trustpilot_reviews:
             existing = await db.reviews.find_one({
-                "reviewer_name": tp_review["reviewer_name"], "comment": tp_review["comment"], "source": "trustpilot"
+                "reviewer_name": tp_review["reviewer_name"],
+                "comment": tp_review["comment"],
+                "source": "trustpilot"
             })
             if not existing:
                 review = {
                     "id": f"tp-{str(uuid.uuid4())[:8]}",
-                    "reviewer_name": tp_review["reviewer_name"], "rating": tp_review["rating"],
-                    "comment": tp_review["comment"], "review_date": tp_review["review_date"],
-                    "created_at": datetime.now(timezone.utc).isoformat(), "source": "trustpilot"
+                    "reviewer_name": tp_review["reviewer_name"],
+                    "rating": tp_review["rating"],
+                    "comment": tp_review["comment"],
+                    "review_date": tp_review["review_date"],
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "source": "trustpilot",
+                    "status": "approved"
                 }
                 await db.reviews.insert_one(review)
                 synced_count += 1
@@ -357,18 +409,23 @@ async def sync_trustpilot_reviews(current_user: dict = Depends(get_current_user)
             {"key": "last_sync"},
             {"$set": {"key": "last_sync", "value": datetime.now(timezone.utc).isoformat()}}, upsert=True
         )
-        return {"success": True, "synced_count": synced_count, "total_found": len(trustpilot_reviews),
-                "message": f"Synced {synced_count} new reviews from Trustpilot"}
+        return {
+            "success": True, "synced_count": synced_count,
+            "total_found": len(trustpilot_reviews),
+            "message": f"Synced {synced_count} new reviews from Trustpilot"
+        }
     except Exception as e:
         logger.error(f"Error syncing Trustpilot reviews: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to sync reviews: {str(e)}")
 
 @router.get("/reviews/trustpilot-status")
 async def get_trustpilot_status(current_user: dict = Depends(get_current_user)):
+    """Legacy status endpoint."""
+    domain = await get_trustpilot_domain()
     last_sync = await db.trustpilot_config.find_one({"key": "last_sync"})
     tp_review_count = await db.reviews.count_documents({"source": "trustpilot"})
     return {
-        "domain": TRUSTPILOT_DOMAIN, "last_sync": last_sync.get("value") if last_sync else None,
+        "domain": domain, "last_sync": last_sync.get("value") if last_sync else None,
         "trustpilot_reviews_count": tp_review_count, "api_key_configured": bool(TRUSTPILOT_API_KEY)
     }
 
