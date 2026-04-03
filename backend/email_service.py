@@ -1,7 +1,7 @@
 """
 Email Service Module
 Handles all email notifications for the platform.
-SMTP config is read from MongoDB (admin-editable) with env var fallback.
+SMTP config priority: MongoDB > .env FILE (not env vars)
 """
 import os
 import smtplib
@@ -10,71 +10,65 @@ from email.mime.multipart import MIMEMultipart
 from typing import Optional
 import logging
 from pathlib import Path
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 
-# Load environment variables (fallback only)
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env', override=False)
-
 logger = logging.getLogger(__name__)
 
-# Env fallbacks (used only if DB has no config)
-_ENV_SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-_ENV_SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
-_ENV_SMTP_USER = os.environ.get("SMTP_USER", "")
-_ENV_SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
-_ENV_SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", "")
-_ENV_SMTP_FROM_NAME = os.environ.get("SMTP_FROM_NAME", "GameShop Nepal")
-SITE_URL = os.environ.get("SITE_URL", "https://gameshopnepal.com")
+# Read .env FILE directly — this ALWAYS gets the committed file values,
+# completely bypassing K8s env vars / platform secrets
+_FILE_CONFIG = dotenv_values(ROOT_DIR / '.env')
+_FILE_SMTP_HOST = _FILE_CONFIG.get("SMTP_HOST", "smtp.gmail.com")
+_FILE_SMTP_PORT = int(_FILE_CONFIG.get("SMTP_PORT", "587"))
+_FILE_SMTP_USER = _FILE_CONFIG.get("SMTP_USER", "")
+_FILE_SMTP_PASSWORD = _FILE_CONFIG.get("SMTP_PASSWORD", "")
+_FILE_SMTP_FROM_EMAIL = _FILE_CONFIG.get("SMTP_FROM_EMAIL", "")
+_FILE_SMTP_FROM_NAME = _FILE_CONFIG.get("SMTP_FROM_NAME", "GameShop Nepal")
+SITE_URL = os.environ.get("SITE_URL", _FILE_CONFIG.get("SITE_URL", "https://gameshopnepal.com"))
 
 
-def _get_smtp_config_sync():
+def _get_smtp_config():
     """
-    Get SMTP config from MongoDB synchronously (blocking call for use in sync send_email).
-    Priority: DB settings > .env file > env vars
+    Get SMTP config. Priority: MongoDB > .env FILE.
+    Never falls back to os.environ for SMTP.
     """
+    # Try MongoDB first
     try:
-        from database import db
-        import asyncio
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            # We're inside an async context – use a helper
-            import concurrent.futures
-            import motor.motor_asyncio
-            from database import mongo_url, client as _client
-            # Use synchronous pymongo for this one call
-            from pymongo import MongoClient
-            sync_client = MongoClient(mongo_url, serverSelectionTimeoutMS=3000)
-            db_name = os.environ.get('DB_NAME', 'gameshopnepal')
-            sync_db = sync_client[db_name]
-            smtp_doc = sync_db.site_settings.find_one({"id": "smtp_config"})
-            sync_client.close()
-            if smtp_doc and smtp_doc.get("smtp_user"):
-                return {
-                    "host": smtp_doc.get("smtp_host", _ENV_SMTP_HOST),
-                    "port": int(smtp_doc.get("smtp_port", _ENV_SMTP_PORT)),
-                    "user": smtp_doc.get("smtp_user", _ENV_SMTP_USER),
-                    "password": smtp_doc.get("smtp_password", _ENV_SMTP_PASSWORD),
-                    "from_email": smtp_doc.get("smtp_from_email", _ENV_SMTP_FROM_EMAIL),
-                    "from_name": smtp_doc.get("smtp_from_name", _ENV_SMTP_FROM_NAME),
-                }
+        from pymongo import MongoClient
+        from database import mongo_url
+        db_name = _FILE_CONFIG.get("DB_NAME", os.environ.get("DB_NAME", "gameshopnepal"))
+        sync_client = MongoClient(mongo_url, serverSelectionTimeoutMS=3000)
+        sync_db = sync_client[db_name]
+        smtp_doc = sync_db.site_settings.find_one({"id": "smtp_config"})
+        sync_client.close()
+        if smtp_doc and smtp_doc.get("smtp_user"):
+            logger.debug(f"SMTP config from DB: {smtp_doc.get('smtp_from_email')}")
+            return {
+                "host": smtp_doc.get("smtp_host", _FILE_SMTP_HOST),
+                "port": int(smtp_doc.get("smtp_port", _FILE_SMTP_PORT)),
+                "user": smtp_doc.get("smtp_user"),
+                "password": smtp_doc.get("smtp_password"),
+                "from_email": smtp_doc.get("smtp_from_email"),
+                "from_name": smtp_doc.get("smtp_from_name", _FILE_SMTP_FROM_NAME),
+            }
     except Exception as e:
-        logger.debug(f"Could not read SMTP config from DB: {e}")
+        logger.warning(f"Could not read SMTP from DB, using .env file: {e}")
 
-    # Fallback to env vars
+    # Fallback: .env FILE values (NOT os.environ)
+    logger.info(f"Using SMTP from .env file: {_FILE_SMTP_FROM_EMAIL}")
     return {
-        "host": _ENV_SMTP_HOST,
-        "port": _ENV_SMTP_PORT,
-        "user": _ENV_SMTP_USER,
-        "password": _ENV_SMTP_PASSWORD,
-        "from_email": _ENV_SMTP_FROM_EMAIL,
-        "from_name": _ENV_SMTP_FROM_NAME,
+        "host": _FILE_SMTP_HOST,
+        "port": _FILE_SMTP_PORT,
+        "user": _FILE_SMTP_USER,
+        "password": _FILE_SMTP_PASSWORD,
+        "from_email": _FILE_SMTP_FROM_EMAIL,
+        "from_name": _FILE_SMTP_FROM_NAME,
     }
 
 
 def send_email(to_email: str, subject: str, html_body: str, text_body: Optional[str] = None):
-    """Send email via SMTP – reads config fresh each time from DB then env."""
-    cfg = _get_smtp_config_sync()
+    """Send email via SMTP."""
+    cfg = _get_smtp_config()
 
     if not cfg["user"] or not cfg["password"]:
         logger.warning("SMTP credentials not configured. Email not sent.")

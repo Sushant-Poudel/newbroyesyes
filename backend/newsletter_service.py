@@ -9,21 +9,20 @@ from email.mime.multipart import MIMEMultipart
 from typing import List, Optional, Dict
 import logging
 from pathlib import Path
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 from datetime import datetime, timezone
 
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env', override=False)
-
 logger = logging.getLogger(__name__)
 
-# Newsletter SMTP configuration (using same as main SMTP)
-SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
-SMTP_USER = os.environ.get("SMTP_USER", "")
-SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
-SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", "support@gameshopnepal.com")
-SMTP_FROM_NAME = os.environ.get("SMTP_FROM_NAME", "GameShop Nepal")
+# Read .env FILE directly — bypasses K8s env vars completely
+_FILE_CONFIG = dotenv_values(ROOT_DIR / '.env')
+SMTP_HOST = _FILE_CONFIG.get("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(_FILE_CONFIG.get("SMTP_PORT", "587"))
+SMTP_USER = _FILE_CONFIG.get("SMTP_USER", "")
+SMTP_PASSWORD = _FILE_CONFIG.get("SMTP_PASSWORD", "")
+SMTP_FROM_EMAIL = _FILE_CONFIG.get("SMTP_FROM_EMAIL", "")
+SMTP_FROM_NAME = _FILE_CONFIG.get("SMTP_FROM_NAME", "GameShop Nepal")
 
 # Preset Newsletter Templates
 NEWSLETTER_TEMPLATES = {

@@ -364,15 +364,17 @@ async def get_smtp_settings(current_user: dict = Depends(get_current_user)):
             "smtp_from_name": doc.get("smtp_from_name", ""),
             "source": "database",
         }
-    # Fallback: show env values
+    # Fallback: show .env file values (not K8s env vars)
+    from dotenv import dotenv_values
+    _fc = dotenv_values(Path(__file__).parent.parent / '.env')
     return {
-        "smtp_host": os.environ.get("SMTP_HOST", ""),
-        "smtp_port": int(os.environ.get("SMTP_PORT", "587")),
-        "smtp_user": os.environ.get("SMTP_USER", ""),
-        "smtp_password": "••••••••" if os.environ.get("SMTP_PASSWORD") else "",
-        "smtp_from_email": os.environ.get("SMTP_FROM_EMAIL", ""),
-        "smtp_from_name": os.environ.get("SMTP_FROM_NAME", ""),
-        "source": "environment",
+        "smtp_host": _fc.get("SMTP_HOST", ""),
+        "smtp_port": int(_fc.get("SMTP_PORT", "587")),
+        "smtp_user": _fc.get("SMTP_USER", ""),
+        "smtp_password": "••••••••" if _fc.get("SMTP_PASSWORD") else "",
+        "smtp_from_email": _fc.get("SMTP_FROM_EMAIL", ""),
+        "smtp_from_name": _fc.get("SMTP_FROM_NAME", ""),
+        "source": "env_file",
     }
 
 @router.put("/settings/smtp")
@@ -396,8 +398,9 @@ async def update_smtp_settings(data: dict, current_user: dict = Depends(get_curr
         if existing:
             doc["smtp_password"] = existing.get("smtp_password", "")
         else:
-            import os
-            doc["smtp_password"] = os.environ.get("SMTP_PASSWORD", "")
+            from dotenv import dotenv_values
+            _fc = dotenv_values(Path(__file__).parent.parent / '.env')
+            doc["smtp_password"] = _fc.get("SMTP_PASSWORD", "")
     await db.site_settings.update_one({"id": "smtp_config"}, {"$set": doc}, upsert=True)
     return {"message": "SMTP settings saved", "from_email": doc["smtp_from_email"]}
 
