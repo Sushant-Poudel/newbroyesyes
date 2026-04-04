@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { RefreshCw, Search, Package, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Mail, Phone, User, Calendar, FileText, Image, ExternalLink, Trash2, Square, CheckSquare, Filter, MessageCircle, Send, Copy } from 'lucide-react';
+import { RefreshCw, Search, Package, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Mail, Phone, User, Calendar, FileText, Image, ExternalLink, Trash2, Square, CheckSquare, Filter, MessageCircle, Send, Copy, Download } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -271,6 +271,33 @@ export default function AdminOrders() {
     navigator.clipboard.writeText(text).then(() => toast.success('Order info copied!')).catch(() => toast.error('Failed to copy'));
   };
 
+  const exportOrdersCSV = () => {
+    if (filteredOrders.length === 0) {
+      toast.error('No orders to export');
+      return;
+    }
+    const headers = ['Order ID', 'Customer', 'Item Name', 'Total', 'Status', 'Payment'];
+    const rows = filteredOrders.map(order => {
+      const orderNum = order.order_number || order.id?.slice(-6) || '';
+      const customer = (order.customer_name || order.customer_email || 'N/A').replace(/,/g, ' ');
+      const items = (order.items || []).map(i => (i.product_name || i.name || '')).join(' | ').replace(/,/g, ' ') || order.items_text?.replace(/,/g, ' ') || 'N/A';
+      const total = `Rs ${Math.round(order.total_amount || 0)}`;
+      const status = order.status || 'N/A';
+      const payment = order.payment_method || 'N/A';
+      return [orderNum, customer, items, total, status, payment].map(v => `"${v}"`).join(',');
+    });
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const now = new Date().toISOString().slice(0, 10);
+    a.download = `orders_${statusFilter !== 'all' ? statusFilter + '_' : ''}${now}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${filteredOrders.length} orders`);
+  };
+
   const getBackendUrl = () => {
     return process.env.REACT_APP_BACKEND_URL || '';
   };
@@ -345,6 +372,15 @@ export default function AdminOrders() {
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
+          </Button>
+          <Button
+            onClick={exportOrdersCSV}
+            variant="outline"
+            className="border-green-500/50 text-green-400 hover:bg-green-500/10"
+            data-testid="export-orders-btn"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
           </Button>
         </div>
 
