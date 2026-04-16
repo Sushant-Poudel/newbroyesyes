@@ -136,9 +136,9 @@ export default function AdminResellerPlans() {
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
               <Users className="w-6 h-6 text-gold-500" />
-              Reseller Plans
+              Membership Plans
             </h1>
-            <p className="text-white/60 text-sm mt-1">Manage reseller pricing and benefits</p>
+            <p className="text-white/60 text-sm mt-1">Manage membership pricing and benefits</p>
           </div>
           <Button onClick={openCreateDialog} className="bg-gold-500 hover:bg-gold-600 text-black">
             <Plus className="w-4 h-4 mr-2" />
@@ -154,7 +154,7 @@ export default function AdminResellerPlans() {
         ) : plans.length === 0 ? (
           <div className="text-center py-20 bg-card rounded-xl border border-white/10">
             <Users className="w-16 h-16 text-white/20 mx-auto mb-4" />
-            <p className="text-white/60">No reseller plans yet</p>
+            <p className="text-white/60">No membership plans yet</p>
             <Button onClick={openCreateDialog} className="mt-4 bg-gold-500 hover:bg-gold-600 text-black">
               Create Your First Plan
             </Button>

@@ -35,7 +35,7 @@ const navGroups = [
       { path: '/panelgsnadminbackend/categories', label: 'Categories', icon: FolderOpen, permission: 'view_categories' },
       { path: '/panelgsnadminbackend/reviews', label: 'Reviews', icon: Star, permission: 'view_reviews' },
       { path: '/panelgsnadminbackend/trustpilot', label: 'Trustpilot', icon: Star, permission: 'view_settings' },
-      { path: '/panelgsnadminbackend/reseller-plans', label: 'Reseller Plans', icon: Users, permission: 'view_settings' },
+      { path: '/panelgsnadminbackend/reseller-plans', label: 'Membership', icon: Users, permission: 'view_settings' },
     ]
   },
   {

@@ -168,7 +168,7 @@ export default function Footer() {
                 { to: '/', label: 'Home' },
                 { to: '/reviews', label: 'Reviews' },
                 { to: '/daily-reward', label: 'Rewards' },
-                { to: '/reseller-plans', label: 'Reseller Plans' },
+                { to: '/reseller-plans', label: 'Membership' },
               ].map(link => (
                 <li key={link.to}>
                   <Link to={link.to} className="text-white/50 hover:text-amber-400 text-sm transition-colors duration-200" data-testid={`footer-link-${link.label.toLowerCase().replace(/\s/g, '-')}`}>

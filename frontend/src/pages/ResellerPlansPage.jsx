@@ -28,7 +28,7 @@ export default function ResellerPlansPage() {
   };
 
   const handleContact = (plan) => {
-    const message = `Hi! I'm interested in the ${plan.name} reseller plan (Rs ${plan.price}/${plan.duration}). Please provide more details.`;
+    const message = `Hi! I'm interested in the ${plan.name} membership plan (Rs ${plan.price}/${plan.duration}). Please provide more details.`;
     window.open(`https://wa.me/9779743488871?text=${encodeURIComponent(message)}`, '_blank');
   };
 
@@ -42,14 +42,14 @@ export default function ResellerPlansPage() {
         <div className="max-w-6xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold-500/10 rounded-full border border-gold-500/20 mb-6">
             <Users className="w-4 h-4 text-gold-500" />
-            <span className="text-gold-500 text-sm font-medium">Become a Reseller</span>
+            <span className="text-gold-500 text-sm font-medium">Become a Member</span>
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
-            Reseller <span className="text-gold-500">Plans</span>
+            Membership <span className="text-gold-500">Plans</span>
           </h1>
           <p className="text-lg text-white/60 max-w-2xl mx-auto">
-            Join our reseller program and get exclusive discounts on all products. 
-            Start your own digital business with GameShop Nepal.
+            Join our membership program and get exclusive discounts on all products. 
+            Start saving on digital subscriptions with GameShop Nepal.
           </p>
         </div>
       </section>
@@ -64,7 +64,7 @@ export default function ResellerPlansPage() {
           ) : plans.length === 0 ? (
             <div className="text-center py-20">
               <Crown className="w-16 h-16 text-white/20 mx-auto mb-4" />
-              <p className="text-white/60">No reseller plans available at the moment.</p>
+              <p className="text-white/60">No membership plans available at the moment.</p>
               <p className="text-white/40 text-sm mt-2">Please check back later or contact us for custom plans.</p>
             </div>
           ) : (
@@ -140,10 +140,10 @@ export default function ResellerPlansPage() {
             <div className="bg-card border border-white/10 rounded-2xl p-8 max-w-2xl mx-auto">
               <h3 className="text-xl font-bold text-white mb-2">Need a Custom Plan?</h3>
               <p className="text-white/60 mb-6">
-                Contact us for custom reseller plans tailored to your business needs.
+                Contact us for custom membership plans tailored to your needs.
               </p>
               <Button
-                onClick={() => window.open('https://wa.me/9779743488871?text=Hi! I need a custom reseller plan. Please provide more details.', '_blank')}
+                onClick={() => window.open('https://wa.me/9779743488871?text=Hi! I need a custom membership plan. Please provide more details.', '_blank')}
                 className="bg-green-600 hover:bg-green-700 text-white"
               >
                 <MessageCircle className="w-4 h-4 mr-2" />

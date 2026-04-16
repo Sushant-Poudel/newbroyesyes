@@ -118,9 +118,9 @@ export const SEOConfigs = {
     description: 'Track your Netflix, Spotify, YouTube Premium order status in real-time.',
   },
   reseller: {
-    title: 'Reseller Plans - Earn Money Selling Digital Products | GameShop Nepal',
-    description: 'Become a GameShop Nepal reseller. Earn commissions selling Netflix, Spotify, YouTube Premium subscriptions.',
-    keywords: 'GameShop Nepal reseller, digital products reseller Nepal',
+    title: 'Membership Plans - Exclusive Benefits for Members | GameShop Nepal',
+    description: 'Join GameShop Nepal Membership. Get exclusive discounts on Netflix, Spotify, YouTube Premium subscriptions in Nepal.',
+    keywords: 'GameShop Nepal membership, digital products membership Nepal, subscription discounts Nepal',
   },
 };
 
