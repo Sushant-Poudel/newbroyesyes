@@ -906,3 +906,97 @@ async def get_order_details(order_id: str, current_user: dict = Depends(get_curr
     order["status_history"] = history
     return order
 
+
+
+# ==================== ORDER COMPLAINTS ====================
+
+@router.post("/orders/{order_id}/complaint")
+async def raise_complaint(order_id: str, data: dict):
+    """Raise a complaint for an order — sends to Discord webhook."""
+    whatsapp = data.get("whatsapp", "").strip()
+    email = data.get("email", "").strip()
+    reason = data.get("reason", "").strip()
+
+    if not whatsapp:
+        raise HTTPException(status_code=400, detail="WhatsApp number is required")
+    if not reason or len(reason.split()) < 20:
+        raise HTTPException(status_code=400, detail="Reason must be at least 20 words")
+
+    # Get order details
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    # Get complaint webhook URL
+    settings = await db.site_settings.find_one({"id": "webhook_settings"}, {"_id": 0})
+    complaint_webhook = (settings or {}).get("complaint_webhook", "")
+    if not complaint_webhook:
+        logger.warning("No complaint webhook configured")
+        return {"message": "Complaint submitted successfully"}
+
+    # Build items text
+    items_list = order.get("items", [])
+    items_text = "\n".join([
+        f"{item.get('quantity', 1)}x {item.get('product_name', item.get('name', 'Unknown'))}"
+        for item in items_list
+    ]) if items_list else order.get("items_text", "N/A")
+
+    # Format order date
+    order_date = order.get("created_at", "")
+    if isinstance(order_date, str) and "T" in order_date:
+        order_date = order_date.split("T")[0]
+
+    # Status emoji
+    status = order.get("status", "unknown")
+    status_emojis = {
+        "pending": "⏳", "confirmed": "☑️", "processing": "🔄",
+        "completed": "✅", "cancelled": "❌", "refunded": "💰"
+    }
+    status_display = f"{status.capitalize()} {status_emojis.get(status, '')}"
+
+    customer_name = order.get("customer_name", "Unknown")
+    total = order.get("total_amount", 0)
+
+    # Send to Discord
+    payload = {
+        "embeds": [
+            {
+                "title": "⚠️ Order Complaint Raised",
+                "color": 0xFF4444,
+                "fields": [
+                    {"name": "Customer Name", "value": customer_name, "inline": True},
+                    {"name": "WhatsApp", "value": f"```{whatsapp}```", "inline": True},
+                    {"name": "Mail", "value": email or "Not provided", "inline": True},
+                ],
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            },
+            {
+                "title": "📝 Complaint Details",
+                "color": 0xFF4444,
+                "description": reason,
+            },
+            {
+                "title": "📦 Order Details",
+                "color": 0x2F3136,
+                "fields": [
+                    {"name": "Ordered", "value": items_text, "inline": False},
+                    {"name": "Total Paid", "value": f"Rs {total}", "inline": True},
+                    {"name": "Date of Order", "value": order_date, "inline": True},
+                    {"name": "Order Status", "value": status_display, "inline": True},
+                    {"name": "Order ID", "value": f"```{order_id}```", "inline": False},
+                ],
+            }
+        ]
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(complaint_webhook, json=payload, timeout=15)
+            if resp.status_code in [200, 204]:
+                logger.info(f"Complaint webhook sent for order {order_id}")
+            else:
+                logger.warning(f"Complaint webhook failed: {resp.status_code}")
+    except Exception as e:
+        logger.error(f"Failed to send complaint webhook: {e}")
+
+    return {"message": "Complaint submitted successfully"}

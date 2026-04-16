@@ -26,7 +26,7 @@ const PLACEHOLDER_TAGS = [
 
 export default function AdminWebhooks() {
   const [productWebhooks, setProductWebhooks] = useState([]);
-  const [globalWebhooks, setGlobalWebhooks] = useState({ order_webhook: '', payment_webhook: '' });
+  const [globalWebhooks, setGlobalWebhooks] = useState({ order_webhook: '', payment_webhook: '', complaint_webhook: '' });
   const [templates, setTemplates] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState({});
@@ -45,6 +45,7 @@ export default function AdminWebhooks() {
       setGlobalWebhooks({
         order_webhook: globalRes.data.order_webhook || globalRes.data.env_order_webhook || '',
         payment_webhook: globalRes.data.payment_webhook || '',
+        complaint_webhook: globalRes.data.complaint_webhook || '',
       });
       setTemplates(templRes.data.templates || {});
     } catch (err) {
@@ -205,6 +206,30 @@ export default function AdminWebhooks() {
                   className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:bg-white/10 disabled:opacity-30 transition-colors"
                   title="Send test notification"
                   data-testid="test-payment-webhook"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-white/70 mb-1.5">Complaint Webhook</label>
+              <p className="text-xs text-white/40 mb-2">Receives customer complaint notifications with order details</p>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={globalWebhooks.complaint_webhook}
+                  onChange={e => setGlobalWebhooks(s => ({ ...s, complaint_webhook: e.target.value }))}
+                  placeholder="https://discord.com/api/webhooks/..."
+                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-amber-500/50"
+                  data-testid="complaint-webhook-input"
+                />
+                <button
+                  onClick={() => testWebhook(globalWebhooks.complaint_webhook)}
+                  disabled={testingUrl === globalWebhooks.complaint_webhook || !globalWebhooks.complaint_webhook}
+                  className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white/70 hover:bg-white/10 disabled:opacity-30 transition-colors"
+                  title="Send test notification"
+                  data-testid="test-complaint-webhook"
                 >
                   <Send className="w-4 h-4" />
                 </button>

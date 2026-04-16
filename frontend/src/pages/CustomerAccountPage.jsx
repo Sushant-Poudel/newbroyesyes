@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, User, LogOut, ShoppingBag, Calendar, DollarSign, Edit, Save, X, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Coins, FileText, RefreshCw } from 'lucide-react';
+import { Package, User, LogOut, ShoppingBag, Calendar, DollarSign, Edit, Save, X, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Coins, FileText, RefreshCw, AlertTriangle, MessageCircle } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { creditsAPI } from '@/lib/api';
@@ -26,6 +26,10 @@ export default function CustomerAccountPage() {
   const [saving, setSaving] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [creditBalance, setCreditBalance] = useState(0);
+  const [complaintOrderId, setComplaintOrderId] = useState(null);
+  const [complaintForm, setComplaintForm] = useState({ whatsapp: '', email: '', reason: '' });
+  const [complaintSubmitting, setComplaintSubmitting] = useState(false);
+  const [complaintSuccess, setComplaintSuccess] = useState(false);
 
   const getStatusConfig = (status) => {
     const normalizedStatus = (status || '').toLowerCase();
@@ -42,6 +46,35 @@ export default function CustomerAccountPage() {
 
   const toggleOrderExpand = (orderId) => {
     setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
+  };
+
+  const handleComplaintSubmit = async () => {
+    if (!complaintForm.whatsapp.trim()) {
+      toast.error('WhatsApp number is required');
+      return;
+    }
+    if (!complaintForm.reason.trim() || complaintForm.reason.trim().split(/\s+/).length < 20) {
+      toast.error('Reason must be at least 20 words');
+      return;
+    }
+    setComplaintSubmitting(true);
+    try {
+      const token = localStorage.getItem('customer_token');
+      await axios.post(`${API_URL}/orders/${complaintOrderId}/complaint`, complaintForm, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setComplaintSuccess(true);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to submit complaint');
+    } finally {
+      setComplaintSubmitting(false);
+    }
+  };
+
+  const closeComplaintModal = () => {
+    setComplaintOrderId(null);
+    setComplaintForm({ whatsapp: '', email: '', reason: '' });
+    setComplaintSuccess(false);
   };
 
   useEffect(() => {
@@ -387,6 +420,17 @@ export default function CustomerAccountPage() {
                           </Button>
                         </Link>
                         
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                          onClick={(e) => { e.stopPropagation(); setComplaintOrderId(order.id); }}
+                          data-testid={`raise-complaint-btn-${order.id}`}
+                        >
+                          <AlertTriangle className="mr-2 h-4 w-4" />
+                          Raise Complaint
+                        </Button>
+                        
                         {order.payment_url && order.status === 'pending' && (
                           <Button 
                             onClick={() => window.open(order.payment_url, '_blank')}
@@ -592,6 +636,84 @@ export default function CustomerAccountPage() {
       </div>
 
       <Footer />
+
+      {/* Complaint Modal */}
+      {complaintOrderId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={closeComplaintModal}>
+          <div className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-md p-6 space-y-5" onClick={(e) => e.stopPropagation()} data-testid="complaint-modal">
+            {complaintSuccess ? (
+              <div className="text-center py-6 space-y-4">
+                <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
+                  <CheckCircle className="h-8 w-8 text-green-500" />
+                </div>
+                <h3 className="text-white text-lg font-semibold">Complaint Submitted</h3>
+                <p className="text-white/50 text-sm leading-relaxed">
+                  Your complaint has been raised. Please note that your issue with the order might take up to a week to be resolved. If it takes longer, you will be compensated with extended subscription or other rewards.
+                </p>
+                <Button onClick={closeComplaintModal} className="bg-white/10 hover:bg-white/15 text-white mt-4" data-testid="complaint-close-btn">
+                  Close
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-white text-lg font-semibold flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-red-400" />
+                    Raise Complaint
+                  </h3>
+                  <button onClick={closeComplaintModal} className="text-white/40 hover:text-white">
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-white/70 text-sm">WhatsApp Number <span className="text-red-400">*</span></Label>
+                    <Input
+                      value={complaintForm.whatsapp}
+                      onChange={(e) => setComplaintForm(f => ({ ...f, whatsapp: e.target.value }))}
+                      placeholder="e.g. 9841234567"
+                      className="bg-black/50 border-white/15 text-white mt-1"
+                      data-testid="complaint-whatsapp-input"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-white/70 text-sm">Email Address <span className="text-white/30">(optional)</span></Label>
+                    <Input
+                      value={complaintForm.email}
+                      onChange={(e) => setComplaintForm(f => ({ ...f, email: e.target.value }))}
+                      placeholder="your@email.com"
+                      className="bg-black/50 border-white/15 text-white mt-1"
+                      data-testid="complaint-email-input"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-white/70 text-sm">Reason for Complaint <span className="text-red-400">*</span></Label>
+                    <textarea
+                      value={complaintForm.reason}
+                      onChange={(e) => setComplaintForm(f => ({ ...f, reason: e.target.value }))}
+                      placeholder="Please describe your issue in detail (minimum 20 words)..."
+                      rows={4}
+                      className="w-full bg-black/50 border border-white/15 text-white rounded-md px-3 py-2 mt-1 text-sm placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-amber-500/50 resize-none"
+                      data-testid="complaint-reason-input"
+                    />
+                    <p className="text-white/30 text-xs mt-1">
+                      {complaintForm.reason.trim().split(/\s+/).filter(Boolean).length}/20 words minimum
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleComplaintSubmit}
+                    disabled={complaintSubmitting}
+                    className="w-full bg-red-500/80 hover:bg-red-500 text-white"
+                    data-testid="complaint-submit-btn"
+                  >
+                    {complaintSubmitting ? 'Submitting...' : 'Submit Complaint'}
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

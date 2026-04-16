@@ -53,6 +53,7 @@ AVAILABLE_PLACEHOLDERS = [
 class GlobalWebhookSettings(BaseModel):
     order_webhook: str = ""
     payment_webhook: str = ""
+    complaint_webhook: str = ""
 
 
 class TemplateUpdate(BaseModel):
@@ -94,7 +95,8 @@ async def get_global_webhooks(current_user: dict = Depends(get_current_user)):
         settings = {
             "id": "webhook_settings",
             "order_webhook": DISCORD_ORDER_WEBHOOK or "",
-            "payment_webhook": ""
+            "payment_webhook": "",
+            "complaint_webhook": ""
         }
     # Always include the env var as fallback info
     settings["env_order_webhook"] = DISCORD_ORDER_WEBHOOK or ""
@@ -108,6 +110,7 @@ async def update_global_webhooks(data: GlobalWebhookSettings, current_user: dict
         "id": "webhook_settings",
         "order_webhook": data.order_webhook.strip(),
         "payment_webhook": data.payment_webhook.strip(),
+        "complaint_webhook": data.complaint_webhook.strip(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     await db.site_settings.update_one(
