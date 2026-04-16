@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Star, ChevronLeft, ChevronRight, MessageSquarePlus, Pencil, Send, Gift } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import SEO, { SEOConfigs } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -114,6 +115,7 @@ export default function ReviewsPage() {
 
   return (
     <div className="min-h-screen bg-black">
+      <SEO {...SEOConfigs.reviews} />
       <Navbar />
 
       <div className="pt-14 md:pt-24 pb-20 md:pb-8">

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Check, Star, Zap, Crown, Users, MessageCircle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import SEO, { SEOConfigs } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
 
@@ -33,6 +34,7 @@ export default function ResellerPlansPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO {...SEOConfigs.reseller} />
       <Navbar />
       
       {/* Hero Section */}

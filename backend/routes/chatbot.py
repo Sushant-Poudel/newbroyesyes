@@ -391,66 +391,66 @@ from fastapi.responses import Response
 async def get_sitemap():
     """Generate dynamic sitemap for SEO"""
     base_url = os.environ.get("SITE_URL", "https://gameshopnepal.com")
+    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
     
-    # Static pages
     static_pages = [
         {"loc": "/", "priority": "1.0", "changefreq": "daily"},
-        {"loc": "/about", "priority": "0.7", "changefreq": "monthly"},
-        {"loc": "/faq", "priority": "0.6", "changefreq": "monthly"},
-        {"loc": "/terms", "priority": "0.5", "changefreq": "monthly"},
-        {"loc": "/blog", "priority": "0.8", "changefreq": "weekly"},
+        {"loc": "/reviews", "priority": "0.8", "changefreq": "weekly"},
+        {"loc": "/about", "priority": "0.5", "changefreq": "monthly"},
+        {"loc": "/faq", "priority": "0.7", "changefreq": "weekly"},
+        {"loc": "/blog", "priority": "0.7", "changefreq": "weekly"},
+        {"loc": "/reseller-plans", "priority": "0.6", "changefreq": "monthly"},
+        {"loc": "/terms", "priority": "0.3", "changefreq": "monthly"},
+        {"loc": "/track-order", "priority": "0.4", "changefreq": "monthly"},
+        {"loc": "/daily-reward", "priority": "0.5", "changefreq": "daily"},
     ]
     
-    # Get all active products
-    products = await db.products.find({"is_active": True}, {"slug": 1}).to_list(1000)
+    products = await db.products.find({"is_active": True}, {"slug": 1, "updated_at": 1, "_id": 0}).to_list(500)
+    blog_posts = await db.blog_posts.find({"is_published": True}, {"slug": 1, "updated_at": 1, "_id": 0}).to_list(200)
+    categories = await db.categories.find({}, {"slug": 1, "_id": 0}).to_list(100)
     
-    # Get all published blog posts
-    blog_posts = await db.blog_posts.find({"is_published": True}, {"slug": 1}).to_list(100)
-    
-    # Get all categories
-    categories = await db.categories.find({}, {"slug": 1}).to_list(100)
-    
-    # Build sitemap XML
     xml_content = '<?xml version="1.0" encoding="UTF-8"?>\n'
     xml_content += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     
-    # Add static pages
     for page in static_pages:
         xml_content += f'''  <url>
     <loc>{base_url}{page["loc"]}</loc>
+    <lastmod>{today}</lastmod>
     <changefreq>{page["changefreq"]}</changefreq>
     <priority>{page["priority"]}</priority>
   </url>\n'''
     
-    # Add products
     for product in products:
         if product.get("slug"):
+            lastmod = product.get("updated_at", today)
+            if isinstance(lastmod, str) and 'T' in lastmod:
+                lastmod = lastmod.split('T')[0]
+            elif not isinstance(lastmod, str):
+                lastmod = today
             xml_content += f'''  <url>
     <loc>{base_url}/product/{product["slug"]}</loc>
+    <lastmod>{lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>\n'''
     
-    # Add blog posts
     for post in blog_posts:
         if post.get("slug"):
             xml_content += f'''  <url>
     <loc>{base_url}/blog/{post["slug"]}</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.6</priority>
   </url>\n'''
     
-    # Add categories
     for category in categories:
         if category.get("slug"):
             xml_content += f'''  <url>
     <loc>{base_url}/category/{category["slug"]}</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>\n'''
     
     xml_content += '</urlset>'
-    
     return Response(content=xml_content, media_type="application/xml")
 
 @router.get("/seo/meta/{page_type}/{slug}")

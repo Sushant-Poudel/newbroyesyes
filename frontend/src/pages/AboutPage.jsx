@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import SEO, { SEOConfigs } from '@/components/SEO';
 import { pagesAPI } from '@/lib/api';
 
 export default function AboutPage() {
@@ -13,6 +14,7 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-black">
+      <SEO {...SEOConfigs.about} />
       <Navbar />
       <main className="pt-14 md:pt-24 pb-20 md:pb-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16" data-testid="about-page">

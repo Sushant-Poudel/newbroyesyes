@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Search, HelpCircle, ShoppingCart, CreditCard, Headphones, Package } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import SEO, { SEOConfigs } from '@/components/SEO';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import { faqsAPI } from '@/lib/api';
@@ -54,8 +55,20 @@ export default function FAQPage() {
     return acc;
   }, {});
 
+  // Build FAQ JSON-LD from loaded FAQs
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.slice(0, 20).map(faq => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: { '@type': 'Answer', text: faq.answer?.replace(/<[^>]*>/g, '') || '' }
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-black">
+      <SEO {...SEOConfigs.faq} schema={faqSchema} />
       <Navbar />
       <main className="pt-14 md:pt-24 pb-20 md:pb-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16" data-testid="faq-page">

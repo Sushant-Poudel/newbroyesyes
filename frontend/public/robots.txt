@@ -1,19 +1,15 @@
 User-agent: *
 Allow: /
 Disallow: /panelgsnadminbackend/
-Disallow: /admin/
 Disallow: /api/
+Disallow: /checkout
+Disallow: /payment/
+Disallow: /account
 
-# Sitemaps
-Sitemap: https://dark-commerce-dev.preview.emergentagent.com/sitemap.xml
-
-# Crawl-delay for better server performance
-Crawl-delay: 1
-
-# Allow Google bots full access
 User-agent: Googlebot
 Allow: /
 
-# Allow Bing bots
 User-agent: Bingbot
 Allow: /
+
+Sitemap: https://gameshopnepal.com/api/sitemap.xml

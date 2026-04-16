@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import SEO, { getBlogSEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { blogAPI } from '@/lib/api';
 
@@ -50,6 +51,7 @@ export default function BlogPostPage() {
 
   return (
     <div className="min-h-screen bg-black">
+      <SEO {...getBlogSEO(post)} />
       <Navbar />
       <main className="pt-14 md:pt-24 pb-20 md:pb-8">
         <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">

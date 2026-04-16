@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Star, Search, X, Shield, Clock, Headphones, Lock, Zap, ChevronRight } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import SEO, { SEOConfigs } from '@/components/SEO';
 import ProductCard from '@/components/ProductCard';
 import ReviewCard from '@/components/ReviewCard';
 import { AdBanner, AdPopup } from '@/components/AdBanner';
@@ -86,6 +87,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-black">
+      <SEO {...SEOConfigs.home} />
       {hasNotification && (
         <div className="fixed top-0 left-0 right-0 z-[60] py-2 px-4 text-center text-sm font-medium backdrop-blur-xl" style={{ backgroundColor: notificationBar.bg_color, color: notificationBar.text_color }}>
           {notificationBar.link ? <a href={notificationBar.link} className="hover:underline">{notificationBar.text}</a> : notificationBar.text}

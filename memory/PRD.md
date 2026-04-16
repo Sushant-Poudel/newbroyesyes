@@ -59,6 +59,8 @@ A premium, dark-themed e-commerce website for digital goods, built with React (f
 - Bottom tab bar (mobile) + dynamic island nav (desktop)
 - **Backend refactored** from 6344-line monolith to 11 modular route files
 - **Trustpilot Review Sync** (admin) - Configurable domain, one-click sync from Trustpilot, reviews list with stats/distribution, clear all option
+- **SEO Optimization** - react-helmet-async for dynamic per-page meta tags, Open Graph, Twitter cards, JSON-LD structured data (Product, FAQPage, BlogPosting, Organization schemas), dynamic sitemap.xml with all products/blogs/categories, robots.txt, canonical URLs. All URLs point to gameshopnepal.com production domain.
+- **Order CSV Export** - Admin can export filtered orders to CSV (Order ID, Customer, Items, Total, Status, Payment)
 
 ## Prioritized Backlog
 

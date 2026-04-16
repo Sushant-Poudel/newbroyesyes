@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FileText, ArrowRight } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import SEO, { SEOConfigs } from '@/components/SEO';
 import { blogAPI } from '@/lib/api';
 
 export default function BlogPage() {
@@ -25,6 +26,7 @@ export default function BlogPage() {
 
   return (
     <div className="min-h-screen bg-black">
+      <SEO {...SEOConfigs.blog} />
       <Navbar />
       <main className="pt-14 md:pt-24 pb-20 md:pb-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
