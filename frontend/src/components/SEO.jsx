@@ -17,30 +17,34 @@ export default function SEO({
   type = 'website',
   schema = null
 }) {
-  const fullUrl = url || (typeof window !== 'undefined' ? window.location.href.replace(/https?:\/\/[^/]+/, SITE_URL) : SITE_URL);
+  const safeTitle = String(title || 'GameShop Nepal | Digital Products at Best Prices');
+  const safeDesc = String(description || 'Buy Netflix, Spotify Premium, YouTube Premium, Amazon Prime Video subscriptions at best prices in Nepal. Instant delivery guaranteed!');
+  const safeImage = String(image || DEFAULT_IMAGE);
+  const safeUrl = String(url || (typeof window !== 'undefined' ? window.location.href.replace(/https?:\/\/[^/]+/, SITE_URL) : SITE_URL));
+  const safeType = String(type || 'website');
 
   return (
     <Helmet>
-      <title>{title}</title>
-      <meta name="description" content={description} />
-      <meta name="keywords" content={keywords} />
-      <link rel="canonical" href={fullUrl} />
+      <title>{safeTitle}</title>
+      <meta name="description" content={safeDesc} />
+      <meta name="keywords" content={String(keywords || '')} />
+      <link rel="canonical" href={safeUrl} />
 
       {/* Open Graph */}
-      <meta property="og:type" content={type} />
-      <meta property="og:url" content={fullUrl} />
-      <meta property="og:title" content={title} />
-      <meta property="og:description" content={description} />
-      <meta property="og:image" content={image} />
+      <meta property="og:type" content={safeType} />
+      <meta property="og:url" content={safeUrl} />
+      <meta property="og:title" content={safeTitle} />
+      <meta property="og:description" content={safeDesc} />
+      <meta property="og:image" content={safeImage} />
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:locale" content="ne_NP" />
       <meta property="og:locale:alternate" content="en_US" />
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={title} />
-      <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={image} />
+      <meta name="twitter:title" content={safeTitle} />
+      <meta name="twitter:description" content={safeDesc} />
+      <meta name="twitter:image" content={safeImage} />
 
       {/* JSON-LD Structured Data */}
       {schema && (
@@ -148,7 +152,7 @@ export function getProductSEO(product) {
 
 // Blog post SEO helper
 export function getBlogSEO(post) {
-  if (!post) return SEOConfigs.blog;
+  if (!post || !post.title) return SEOConfigs.blog;
   return {
     title: `${post.title} | GameShop Nepal Blog`,
     description: post.excerpt || post.content?.replace(/<[^>]*>/g, '').slice(0, 160),
@@ -168,3 +172,4 @@ export function getBlogSEO(post) {
 }
 
 export { SITE_URL, SITE_NAME, DEFAULT_IMAGE };
+;
