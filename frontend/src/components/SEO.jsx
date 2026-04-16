@@ -1,60 +1,88 @@
-import { Helmet } from 'react-helmet-async';
+import { useEffect } from 'react';
 
 const SITE_URL = 'https://gameshopnepal.com';
 const SITE_NAME = 'GameShop Nepal';
 const DEFAULT_IMAGE = 'https://customer-assets.emergentagent.com/job_f826d6c3-4354-45f7-8eac-b606d3ae45c3/artifacts/8kg7y2go_Staff.jpg';
 
-/**
- * SEO Component — Uses react-helmet-async to inject meta tags into <head>
- * Crawlers see these tags even before JS finishes executing
- */
-export default function SEO({ 
-  title = 'GameShop Nepal | Netflix, Spotify, YouTube Premium & Prime Video at Best Prices',
-  description = 'Buy Netflix, Spotify Premium, YouTube Premium, Amazon Prime Video subscriptions at best prices in Nepal. Instant delivery guaranteed!',
-  keywords = 'Netflix Nepal, Spotify Premium Nepal, YouTube Premium Nepal, Prime Video Nepal, streaming services Nepal, digital subscription Nepal',
-  image = DEFAULT_IMAGE,
-  url,
-  type = 'website',
-  schema = null
-}) {
-  const safeTitle = String(title || 'GameShop Nepal | Digital Products at Best Prices');
-  const safeDesc = String(description || 'Buy Netflix, Spotify Premium, YouTube Premium, Amazon Prime Video subscriptions at best prices in Nepal. Instant delivery guaranteed!');
-  const safeImage = String(image || DEFAULT_IMAGE);
-  const safeUrl = String(url || (typeof window !== 'undefined' ? window.location.href.replace(/https?:\/\/[^/]+/, SITE_URL) : SITE_URL));
-  const safeType = String(type || 'website');
-
-  return (
-    <Helmet>
-      <title>{safeTitle}</title>
-      <meta name="description" content={safeDesc} />
-      <meta name="keywords" content={String(keywords || '')} />
-      <link rel="canonical" href={safeUrl} />
-
-      {/* Open Graph */}
-      <meta property="og:type" content={safeType} />
-      <meta property="og:url" content={safeUrl} />
-      <meta property="og:title" content={safeTitle} />
-      <meta property="og:description" content={safeDesc} />
-      <meta property="og:image" content={safeImage} />
-      <meta property="og:site_name" content={SITE_NAME} />
-      <meta property="og:locale" content="ne_NP" />
-      <meta property="og:locale:alternate" content="en_US" />
-
-      {/* Twitter */}
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={safeTitle} />
-      <meta name="twitter:description" content={safeDesc} />
-      <meta name="twitter:image" content={safeImage} />
-
-      {/* JSON-LD Structured Data */}
-      {schema && (
-        <script type="application/ld+json">{JSON.stringify(schema)}</script>
-      )}
-    </Helmet>
-  );
+function setMeta(attr, key, content) {
+  if (!content) return;
+  let el = document.querySelector(`meta[${attr}="${key}"]`);
+  if (!el) {
+    el = document.createElement('meta');
+    el.setAttribute(attr, key);
+    document.head.appendChild(el);
+  }
+  el.setAttribute('content', content);
 }
 
-// Pre-built SEO configs for common pages
+function setCanonical(url) {
+  let el = document.querySelector('link[rel="canonical"]');
+  if (!el) {
+    el = document.createElement('link');
+    el.setAttribute('rel', 'canonical');
+    document.head.appendChild(el);
+  }
+  el.setAttribute('href', url);
+}
+
+function setJsonLd(schema, id = 'seo-jsonld') {
+  let el = document.getElementById(id);
+  if (schema) {
+    if (!el) {
+      el = document.createElement('script');
+      el.id = id;
+      el.type = 'application/ld+json';
+      document.head.appendChild(el);
+    }
+    el.textContent = JSON.stringify(schema);
+  } else if (el) {
+    el.remove();
+  }
+}
+
+export default function SEO({
+  title = 'GameShop Nepal | Digital Products at Best Prices',
+  description = 'Buy Netflix, Spotify Premium, YouTube Premium, Amazon Prime Video subscriptions at best prices in Nepal. Instant delivery guaranteed!',
+  keywords = '',
+  image,
+  url,
+  type = 'website',
+  schema = null,
+}) {
+  useEffect(() => {
+    const t = title || 'GameShop Nepal | Digital Products at Best Prices';
+    const d = description || '';
+    const img = image || DEFAULT_IMAGE;
+    const canonical = url || window.location.href.replace(/https?:\/\/[^/]+/, SITE_URL);
+
+    document.title = t;
+
+    setMeta('name', 'description', d);
+    setMeta('name', 'keywords', keywords);
+    setCanonical(canonical);
+
+    // Open Graph
+    setMeta('property', 'og:type', type);
+    setMeta('property', 'og:url', canonical);
+    setMeta('property', 'og:title', t);
+    setMeta('property', 'og:description', d);
+    setMeta('property', 'og:image', img);
+    setMeta('property', 'og:site_name', SITE_NAME);
+
+    // Twitter
+    setMeta('name', 'twitter:card', 'summary_large_image');
+    setMeta('name', 'twitter:title', t);
+    setMeta('name', 'twitter:description', d);
+    setMeta('name', 'twitter:image', img);
+
+    // JSON-LD
+    setJsonLd(schema);
+  }, [title, description, keywords, image, url, type, schema]);
+
+  return null;
+}
+
+// Pre-built SEO configs
 export const SEOConfigs = {
   home: {
     title: 'Netflix, Spotify Premium, YouTube Premium Nepal | GameShop Nepal',
@@ -63,94 +91,70 @@ export const SEOConfigs = {
   },
   about: {
     title: 'About Us - Trusted Digital Products Store | GameShop Nepal',
-    description: 'GameShop Nepal — Nepal\'s most trusted digital products store. Buy Netflix, Spotify, YouTube Premium with instant delivery. 100% genuine products.',
-    keywords: 'GameShop Nepal about, trusted digital store Nepal, Netflix seller Nepal, Spotify dealer Nepal',
+    description: "GameShop Nepal — Nepal's most trusted digital products store. Buy Netflix, Spotify, YouTube Premium with instant delivery. 100% genuine products.",
+    keywords: 'GameShop Nepal about, trusted digital store Nepal, Netflix seller Nepal',
   },
   faq: {
     title: 'FAQ - How to Buy Netflix, Spotify in Nepal? | GameShop Nepal',
     description: 'How to buy Netflix, Spotify Premium, YouTube Premium in Nepal? Payment methods, delivery time, all answers here.',
-    keywords: 'how to buy Netflix Nepal, Spotify Premium Nepal FAQ, YouTube Premium Nepal FAQ, streaming subscription guide Nepal',
-    schema: {
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      mainEntity: []
-    }
+    keywords: 'how to buy Netflix Nepal, Spotify Premium Nepal FAQ, YouTube Premium Nepal FAQ',
   },
   blog: {
     title: 'Netflix, Spotify, YouTube Tips & Guides | GameShop Nepal Blog',
     description: 'Netflix guides, Spotify Premium features, YouTube Premium benefits. Streaming guides, gaming tips, and digital product tutorials.',
-    keywords: 'Netflix guide Nepal, Spotify tips, YouTube Premium features, streaming guide Nepal',
+    keywords: 'Netflix guide Nepal, Spotify tips, YouTube Premium features',
   },
   reviews: {
     title: 'Customer Reviews - Trusted by Thousands | GameShop Nepal',
     description: 'Read real customer reviews of GameShop Nepal. Rated 4.7/5 on Trustpilot. See why thousands trust us for Netflix, Spotify, YouTube Premium subscriptions.',
-    keywords: 'GameShop Nepal reviews, GameShop Nepal trustpilot, Netflix Nepal reviews, digital subscription reviews Nepal',
+    keywords: 'GameShop Nepal reviews, GameShop Nepal trustpilot, Netflix Nepal reviews',
   },
   terms: {
     title: 'Terms of Service | GameShop Nepal',
     description: 'Terms and conditions for using GameShop Nepal services.',
-    keywords: 'GameShop Nepal terms, service terms Nepal',
   },
   track: {
     title: 'Track Your Order | GameShop Nepal',
     description: 'Track your Netflix, Spotify, YouTube Premium order status in real-time.',
-    keywords: 'track order Nepal, order status Nepal, delivery tracking Nepal',
   },
   reseller: {
     title: 'Reseller Plans - Earn Money Selling Digital Products | GameShop Nepal',
-    description: 'Become a GameShop Nepal reseller. Earn commissions selling Netflix, Spotify, YouTube Premium subscriptions. Multiple tier plans available.',
-    keywords: 'GameShop Nepal reseller, digital products reseller Nepal, Netflix reseller Nepal, earn money Nepal',
+    description: 'Become a GameShop Nepal reseller. Earn commissions selling Netflix, Spotify, YouTube Premium subscriptions.',
+    keywords: 'GameShop Nepal reseller, digital products reseller Nepal',
   },
 };
 
-// Product SEO helper
 export function getProductSEO(product) {
-  if (!product) return SEOConfigs.home;
-  
-  const minPrice = product.variations?.length 
+  if (!product || !product.name) return SEOConfigs.home;
+  const minPrice = product.variations?.length
     ? Math.min(...product.variations.map(v => v.price))
     : 0;
-  
-  const cleanDescription = product.description
-    ?.replace(/<[^>]*>/g, '')
-    ?.slice(0, 160) || '';
-
+  const desc = product.description?.replace(/<[^>]*>/g, '')?.slice(0, 160) || '';
   return {
     title: `Buy ${product.name} in Nepal - Rs ${minPrice} | GameShop Nepal`,
-    description: `${product.name} at best price in Nepal. Starting Rs ${minPrice}. Instant delivery. ${cleanDescription}`,
-    keywords: `${product.name} Nepal, ${product.name} price Nepal, buy ${product.name} Nepal, ${product.name} subscription Nepal`,
+    description: `${product.name} at best price in Nepal. Starting Rs ${minPrice}. Instant delivery. ${desc}`,
+    keywords: `${product.name} Nepal, buy ${product.name} Nepal, ${product.name} price Nepal`,
     image: product.image_url,
     type: 'product',
     schema: {
       '@context': 'https://schema.org',
       '@type': 'Product',
       name: product.name,
-      description: cleanDescription || `Buy ${product.name} at best price in Nepal`,
+      description: desc || `Buy ${product.name} at best price in Nepal`,
       image: product.image_url,
       url: `${SITE_URL}/product/${product.slug}`,
-      brand: {
-        '@type': 'Brand',
-        name: product.name.split(' ')[0]
-      },
+      brand: { '@type': 'Brand', name: product.name.split(' ')[0] },
       offers: {
         '@type': 'AggregateOffer',
         lowPrice: minPrice,
         priceCurrency: 'NPR',
-        availability: product.is_sold_out 
-          ? 'https://schema.org/OutOfStock'
-          : 'https://schema.org/InStock',
-        seller: {
-          '@type': 'Organization',
-          name: 'GameShop Nepal',
-          url: SITE_URL
-        },
-        priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      }
+        availability: product.is_sold_out ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+        seller: { '@type': 'Organization', name: 'GameShop Nepal', url: SITE_URL },
+      },
     },
   };
 }
 
-// Blog post SEO helper
 export function getBlogSEO(post) {
   if (!post || !post.title) return SEOConfigs.blog;
   return {
@@ -172,4 +176,3 @@ export function getBlogSEO(post) {
 }
 
 export { SITE_URL, SITE_NAME, DEFAULT_IMAGE };
-;

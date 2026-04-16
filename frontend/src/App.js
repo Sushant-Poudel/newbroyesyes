@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
-import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/sonner";
 import { WishlistProvider } from "@/components/Wishlist";
 import { CartProvider } from "@/components/Cart";
@@ -108,7 +107,6 @@ function App() {
   }, []);
 
   return (
-    <HelmetProvider>
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <LanguageProvider>
         <CustomerProvider>
@@ -170,7 +168,6 @@ function App() {
         </CustomerProvider>
       </LanguageProvider>
     </GoogleOAuthProvider>
-    </HelmetProvider>
   );
 }
 
