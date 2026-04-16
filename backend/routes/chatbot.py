@@ -436,8 +436,14 @@ async def get_sitemap():
     
     for post in blog_posts:
         if post.get("slug"):
+            lastmod = post.get("updated_at", today)
+            if isinstance(lastmod, str) and 'T' in lastmod:
+                lastmod = lastmod.split('T')[0]
+            elif not isinstance(lastmod, str):
+                lastmod = today
             xml_content += f'''  <url>
     <loc>{base_url}/blog/{post["slug"]}</loc>
+    <lastmod>{lastmod}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>\n'''

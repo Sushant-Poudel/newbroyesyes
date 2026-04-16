@@ -59,8 +59,31 @@
   },
   "scripts": {
     "start": "craco start",
-    "build": "craco build",
+    "build": "craco build && react-snap",
     "test": "craco test"
+  },
+  "reactSnap": {
+    "source": "build",
+    "minifyHtml": {
+      "collapseWhitespace": false,
+      "removeComments": false
+    },
+    "puppeteerArgs": ["--no-sandbox", "--disable-setuid-sandbox"],
+    "crawl": true,
+    "include": [
+      "/",
+      "/about",
+      "/faq",
+      "/terms",
+      "/blog",
+      "/reviews",
+      "/reseller-plans",
+      "/track-order"
+    ],
+    "skipThirdPartyRequests": true,
+    "headless": true,
+    "inlineCss": false,
+    "saveAs": "html"
   },
   "browserslist": {
     "production": [
@@ -75,6 +98,7 @@
     ]
   },
   "devDependencies": {
+    "react-snap": "^1.23.0",
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@craco/craco": "^7.1.0",
     "@eslint/js": "9.23.0",
