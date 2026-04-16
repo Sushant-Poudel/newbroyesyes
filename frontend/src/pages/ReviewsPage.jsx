@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Star, ChevronLeft, ChevronRight, MessageSquarePlus, Pencil, Send, Gift } from 'lucide-react';
+import { Star, ChevronLeft, ChevronRight, MessageSquarePlus, Pencil, Send, ExternalLink } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import SEO, { SEOConfigs } from '@/components/SEO';
@@ -9,16 +9,37 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { toast } from 'sonner';
 import { reviewsAPI } from '@/lib/api';
 
-function RatingBar({ label, count, total }) {
+const TRUSTPILOT_URL = 'https://www.trustpilot.com/review/gameshopnepal.com';
+
+function RatingBar({ label, count, total, isActive, onClick }) {
   const pct = total > 0 ? (count / total) * 100 : 0;
   return (
-    <div className="flex items-center gap-3 text-sm">
-      <span className="text-white/60 w-7 text-right">{label}</span>
-      <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500 flex-shrink-0" />
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 text-sm rounded-lg px-2 py-1 transition-colors ${
+        isActive ? 'bg-amber-500/10' : 'hover:bg-white/5'
+      }`}
+    >
+      <span className={`w-7 text-right font-medium ${isActive ? 'text-amber-400' : 'text-white/60'}`}>{label}</span>
+      <Star className={`h-3.5 w-3.5 flex-shrink-0 ${isActive ? 'text-amber-400 fill-amber-400' : 'text-amber-500 fill-amber-500'}`} />
       <div className="flex-1 h-2 bg-white/[0.06] rounded-full overflow-hidden">
-        <div className="h-full bg-amber-500 rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${isActive ? 'bg-amber-400' : 'bg-amber-500'}`}
+          style={{ width: `${pct}%` }}
+        />
       </div>
-      <span className="text-white/40 w-8 text-right">{count}</span>
+      <span className={`w-8 text-right ${isActive ? 'text-amber-400 font-semibold' : 'text-white/40'}`}>{count}</span>
+    </button>
+  );
+}
+
+function StarDisplay({ rating, size = 'md' }) {
+  const s = size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4';
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map(n => (
+        <Star key={n} className={`${s} ${n <= rating ? 'text-amber-500 fill-amber-500' : 'text-white/10'}`} />
+      ))}
     </div>
   );
 }
@@ -26,6 +47,7 @@ function RatingBar({ label, count, total }) {
 export default function ReviewsPage() {
   const [data, setData] = useState({ reviews: [], total: 0, pages: 1, avg_rating: 0, distribution: {} });
   const [page, setPage] = useState(1);
+  const [activeFilter, setActiveFilter] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [myReview, setMyReview] = useState(null);
@@ -42,12 +64,14 @@ export default function ReviewsPage() {
     if (token) fetchMyReview();
   }, []);
 
-  useEffect(() => { fetchReviews(); }, [page]);
+  useEffect(() => { setPage(1); }, [activeFilter]);
+
+  useEffect(() => { fetchReviews(); }, [page, activeFilter]);
 
   const fetchReviews = async () => {
     setIsLoading(true);
     try {
-      const res = await reviewsAPI.getPublic(page);
+      const res = await reviewsAPI.getPublic(page, activeFilter);
       setData(res.data);
     } catch (e) {
       console.error(e);
@@ -65,9 +89,7 @@ export default function ReviewsPage() {
         setFormRating(res.data.review.rating);
         setFormComment(res.data.review.comment);
       }
-    } catch (e) {
-      // Not logged in or error
-    }
+    } catch (e) {}
   };
 
   const handleSubmit = async () => {
@@ -92,6 +114,10 @@ export default function ReviewsPage() {
     }
   };
 
+  const handleFilterClick = (star) => {
+    setActiveFilter(prev => prev === star ? null : star);
+  };
+
   const openEditForm = () => {
     setIsEditing(true);
     setFormRating(myReview.rating);
@@ -112,6 +138,7 @@ export default function ReviewsPage() {
   };
 
   const { reviews, total, pages, avg_rating, distribution } = data;
+  const totalAllReviews = Object.values(distribution).reduce((a, b) => a + b, 0);
 
   return (
     <div className="min-h-screen bg-black">
@@ -128,7 +155,7 @@ export default function ReviewsPage() {
           </div>
 
           {/* Stats Card */}
-          <div className="bg-zinc-900/60 border border-white/[0.06] rounded-2xl p-6 sm:p-8 mb-8" data-testid="reviews-stats">
+          <div className="bg-zinc-900/60 border border-white/[0.06] rounded-2xl p-6 sm:p-8 mb-6" data-testid="reviews-stats">
             <div className="flex flex-col sm:flex-row gap-8">
               {/* Average Rating */}
               <div className="flex flex-col items-center justify-center sm:min-w-[160px]">
@@ -138,35 +165,70 @@ export default function ReviewsPage() {
                     <Star key={s} className={`h-4 w-4 ${s <= Math.round(avg_rating) ? 'text-amber-500 fill-amber-500' : 'text-white/10'}`} />
                   ))}
                 </div>
-                <span className="text-white/40 text-sm mt-1.5">{total} review{total !== 1 ? 's' : ''}</span>
+                <span className="text-white/40 text-sm mt-1.5">{totalAllReviews} review{totalAllReviews !== 1 ? 's' : ''}</span>
+                {activeFilter && (
+                  <span className="mt-2 text-xs text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">
+                    Showing {activeFilter}★ only
+                  </span>
+                )}
               </div>
 
-              {/* Distribution */}
-              <div className="flex-1 space-y-2">
+              {/* Distribution — clickable filters */}
+              <div className="flex-1 space-y-1">
+                <p className="text-white/30 text-xs mb-2 px-2">Click a row to filter by stars</p>
                 {[5, 4, 3, 2, 1].map(r => (
-                  <RatingBar key={r} label={r} count={distribution[String(r)] || 0} total={total} />
+                  <RatingBar
+                    key={r}
+                    label={r}
+                    count={distribution[String(r)] || 0}
+                    total={totalAllReviews}
+                    isActive={activeFilter === r}
+                    onClick={() => handleFilterClick(r)}
+                  />
                 ))}
+                {activeFilter && (
+                  <button
+                    onClick={() => setActiveFilter(null)}
+                    className="w-full text-center text-xs text-white/40 hover:text-white/70 mt-2 py-1 transition-colors"
+                  >
+                    Clear filter ✕
+                  </button>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Reward Incentive */}
-          <div className="flex items-center justify-center gap-3 mb-6 bg-amber-500/5 border border-amber-500/15 rounded-xl px-5 py-3" data-testid="review-reward-banner">
-            <Gift className="h-5 w-5 text-amber-500 flex-shrink-0" />
-            <p className="text-white/70 text-sm">Leave a review and get a <span className="text-amber-500 font-semibold">discount code</span> for your next purchase!</p>
-          </div>
+          {/* Trustpilot Banner */}
+          <a
+            href={TRUSTPILOT_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between gap-3 mb-6 bg-[#00b67a]/5 border border-[#00b67a]/20 rounded-xl px-5 py-3.5 hover:bg-[#00b67a]/10 transition-colors group"
+            data-testid="trustpilot-link"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-[#00b67a] rounded flex items-center justify-center flex-shrink-0">
+                <Star className="h-4 w-4 text-white fill-white" />
+              </div>
+              <div>
+                <p className="text-white text-sm font-semibold">Verified on Trustpilot</p>
+                <p className="text-white/50 text-xs">See all our independent customer reviews</p>
+              </div>
+            </div>
+            <ExternalLink className="h-4 w-4 text-[#00b67a] flex-shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          </a>
 
-          {/* Action Button */}
+          {/* Write Review Action */}
           <div className="flex justify-center mb-8">
             {isLoggedIn ? (
               canReview ? (
                 myReview ? (
                   <div className="flex flex-col items-center gap-2">
                     <div className="bg-zinc-900/60 border border-amber-500/20 rounded-xl p-4 text-center">
-                      <p className="text-white/60 text-sm mb-1">Your review {myReview.status === 'pending' ? '(pending approval)' : myReview.status === 'approved' ? '(published)' : `(${myReview.status})`}</p>
-                      <div className="flex items-center justify-center gap-0.5 mb-1">
-                        {[1,2,3,4,5].map(s => <Star key={s} className={`h-3.5 w-3.5 ${s <= myReview.rating ? 'text-amber-500 fill-amber-500' : 'text-white/10'}`} />)}
-                      </div>
+                      <p className="text-white/60 text-sm mb-1">
+                        Your review {myReview.status === 'pending' ? '(pending approval)' : myReview.status === 'approved' ? '(published)' : `(${myReview.status})`}
+                      </p>
+                      <div className="flex justify-center mb-1"><StarDisplay rating={myReview.rating} size="sm" /></div>
                       <p className="text-white/70 text-sm">"{myReview.comment}"</p>
                     </div>
                     <Button onClick={openEditForm} variant="outline" size="sm" className="border-white/15 text-white/70 hover:bg-white/5" data-testid="edit-my-review-btn">
@@ -194,26 +256,23 @@ export default function ReviewsPage() {
           <div className="space-y-4" data-testid="reviews-list">
             {isLoading ? (
               <div className="space-y-4">
-                {[1,2,3].map(i => <div key={i} className="h-32 bg-zinc-900/50 rounded-xl animate-pulse" />)}
+                {[1, 2, 3].map(i => <div key={i} className="h-32 bg-zinc-900/50 rounded-xl animate-pulse" />)}
               </div>
             ) : reviews.length > 0 ? (
               reviews.map(review => (
-                <div key={review.id} className="bg-zinc-900/60 border border-white/[0.06] rounded-xl p-5 hover:border-white/10 transition-colors" data-testid={`public-review-${review.id}`}>
-                  <div className="flex items-center gap-0.5 mb-2.5">
-                    {[1,2,3,4,5].map(s => (
-                      <Star key={s} className={`h-4 w-4 ${s <= review.rating ? 'text-amber-500 fill-amber-500' : 'text-white/10'}`} />
-                    ))}
-                  </div>
-                  <p className="text-white/70 text-sm leading-relaxed mb-3">"{review.comment}"</p>
+                <div
+                  key={review.id}
+                  className="bg-zinc-900/60 border border-white/[0.06] rounded-xl p-5 hover:border-white/10 transition-colors"
+                  data-testid={`public-review-${review.id}`}
+                >
+                  <StarDisplay rating={review.rating} />
+                  <p className="text-white/70 text-sm leading-relaxed mt-2.5 mb-3">"{review.comment}"</p>
                   <div className="flex items-center justify-between border-t border-white/5 pt-3">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full bg-amber-500/15 flex items-center justify-center">
                         <span className="text-amber-500 text-xs font-bold">{review.reviewer_name?.[0]?.toUpperCase() || '?'}</span>
                       </div>
                       <span className="text-white font-medium text-sm">{review.reviewer_name}</span>
-                      {review.is_customer_review && (
-                        <span className="text-xs bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-full">Verified Buyer</span>
-                      )}
                     </div>
                     <span className="text-white/25 text-xs">{formatDate(review.review_date)}</span>
                   </div>
@@ -227,8 +286,14 @@ export default function ReviewsPage() {
                     <Star className="h-8 w-8 text-white/25" strokeWidth={1.5} />
                   </div>
                 </div>
-                <h3 className="font-heading text-lg font-semibold text-white/80 mb-2">No reviews yet</h3>
-                <p className="text-white/40 text-sm">Be the first to share your experience!</p>
+                <h3 className="font-heading text-lg font-semibold text-white/80 mb-2">
+                  {activeFilter ? `No ${activeFilter}-star reviews yet` : 'No reviews yet'}
+                </h3>
+                <p className="text-white/40 text-sm">
+                  {activeFilter ? (
+                    <button onClick={() => setActiveFilter(null)} className="text-amber-500 hover:underline">Clear filter</button>
+                  ) : 'Be the first to share your experience!'}
+                </p>
               </div>
             )}
           </div>
@@ -272,7 +337,7 @@ export default function ReviewsPage() {
             <div>
               <label className="text-white/60 text-sm mb-2 block">Your Rating</label>
               <div className="flex items-center gap-1.5">
-                {[1,2,3,4,5].map(s => (
+                {[1, 2, 3, 4, 5].map(s => (
                   <button key={s} type="button" onClick={() => setFormRating(s)} className="p-1 transition-transform hover:scale-110" data-testid={`rating-star-${s}`}>
                     <Star className={`h-7 w-7 transition-colors ${s <= formRating ? 'text-amber-500 fill-amber-500' : 'text-white/20'}`} />
                   </button>

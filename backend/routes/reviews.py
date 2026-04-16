@@ -70,29 +70,33 @@ async def get_reviews():
     return reviews
 
 @router.get("/reviews/public")
-async def get_reviews_public(page: int = 1, limit: int = 20):
+async def get_reviews_public(page: int = 1, limit: int = 20, rating: int = None):
     skip = (page - 1) * limit
-    total = await db.reviews.count_documents({"status": {"$in": ["approved", None]}})
-    reviews = await db.reviews.find({"status": {"$in": ["approved", None]}}, {"_id": 0}).sort("review_date", -1).skip(skip).limit(limit).to_list(limit)
+    base_match = {"status": {"$in": ["approved", None]}}
+    filtered_match = {**base_match, **({"rating": rating} if rating else {})}
+
+    total = await db.reviews.count_documents(filtered_match)
+    reviews = await db.reviews.find(filtered_match, {"_id": 0}).sort("review_date", -1).skip(skip).limit(limit).to_list(limit)
     for review in reviews:
         if "created_at" in review and isinstance(review["created_at"], datetime):
             review["created_at"] = review["created_at"].isoformat()
         if "review_date" in review and isinstance(review["review_date"], datetime):
             review["review_date"] = review["review_date"].isoformat()
-    pipeline = [
-        {"$match": {"status": {"$in": ["approved", None]}}},
+
+    stats_result = await db.reviews.aggregate([
+        {"$match": base_match},
         {"$group": {"_id": None, "avg_rating": {"$avg": "$rating"}, "count": {"$sum": 1}}}
-    ]
-    stats_result = await db.reviews.aggregate(pipeline).to_list(1)
+    ]).to_list(1)
     avg_rating = round(stats_result[0]["avg_rating"], 1) if stats_result else 0
-    dist_pipeline = [
-        {"$match": {"status": {"$in": ["approved", None]}}},
+
+    dist_result = await db.reviews.aggregate([
+        {"$match": base_match},
         {"$group": {"_id": "$rating", "count": {"$sum": 1}}}
-    ]
-    dist_result = await db.reviews.aggregate(dist_pipeline).to_list(5)
+    ]).to_list(5)
     distribution = {str(i): 0 for i in range(1, 6)}
     for d in dist_result:
         distribution[str(d["_id"])] = d["count"]
+
     return {
         "reviews": reviews, "total": total, "page": page,
         "pages": (total + limit - 1) // limit if limit > 0 else 1,

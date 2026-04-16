@@ -82,7 +82,7 @@ const customerHeaders = () => {
 
 export const reviewsAPI = {
   getAll: () => api.get('/reviews'),
-  getPublic: (page = 1) => api.get(`/reviews/public?page=${page}`),
+  getPublic: (page = 1, rating = null) => api.get(`/reviews/public?page=${page}${rating ? `&rating=${rating}` : ''}`),
   getAdmin: () => api.get('/reviews/admin'),
   create: (data) => api.post('/reviews', data),
   update: (id, data) => api.put(`/reviews/${id}`, data),
